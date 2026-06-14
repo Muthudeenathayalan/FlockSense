@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "522217107399",
+    "project_id": "flocksense-app",
+    "storage_bucket": "flocksense-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:522217107399:android:fbcb7e50007d28a094b3e2",
+        "android_client_info": {
+          "package_name": "com.flocksense.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "522217107399-g6ul8tfsr3o9g6jfu677n6jsv90vqg8k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.flocksense.app",
+            "certificate_hash": "8eb0338332c803788f73c3c235a9c0de6cd1f3c3"
+          }
+        },
+        {
+          "client_id": "522217107399-v0imip34laefgmndsg2dtj3lgsmlvoet.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBkllx22TkV5JVuDeZVCwEK4CG0WBUguMI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "522217107399-v0imip34laefgmndsg2dtj3lgsmlvoet.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
