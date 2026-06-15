@@ -1,0 +1,3 @@
+class MedicineFeature {
+  MedicineFeature._();
+}

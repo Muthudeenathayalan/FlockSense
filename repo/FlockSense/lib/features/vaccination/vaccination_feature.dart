@@ -1,0 +1,3 @@
+class VaccinationFeature {
+  VaccinationFeature._();
+}

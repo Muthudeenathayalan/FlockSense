@@ -1,0 +1,3 @@
+class FarmsFeature {
+  FarmsFeature._();
+}

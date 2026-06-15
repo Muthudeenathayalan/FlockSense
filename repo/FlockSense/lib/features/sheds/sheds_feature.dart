@@ -1,0 +1,3 @@
+class ShedsFeature {
+  ShedsFeature._();
+}

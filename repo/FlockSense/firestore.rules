@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - allow authenticated users to read/write their own document
+    match /users/{userId} {
+      allow read: if request.auth.uid == userId;
+      allow create, update: if request.auth.uid == userId;
+      allow delete: if request.auth.uid == userId;
+    }
+
+    // Farms collection - allow authenticated users to create/read/update/delete their own farms
+    match /farms/{farmId} {
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
+      allow read: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      allow update: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+    }
+
+    // Batches collection - allow authenticated users to create/manage batches in their farms
+    match /batches/{batchId} {
+      allow create: if request.auth != null && request.resource.data.farmId != null;
+      allow read: if request.auth != null;
+      allow update: if request.auth != null && resource.data.farmId != null;
+      allow delete: if request.auth != null;
+    }
+
+    // Daily records collection - allow authenticated users to create/manage daily records
+    match /daily_records/{recordId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow update: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

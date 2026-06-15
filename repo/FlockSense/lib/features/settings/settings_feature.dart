@@ -1,0 +1,3 @@
+class SettingsFeature {
+  SettingsFeature._();
+}
