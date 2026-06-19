@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flock_sense/models/flock.dart';
+import 'package:flock_sense/features/flock/domain/flock.dart';
 
 void main() {
   test('Flock serialization round trip', () {

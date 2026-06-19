@@ -4,7 +4,6 @@ import 'package:flock_sense/features/auth/data/user_state_service.dart';
 import 'package:flock_sense/features/auth/presentation/providers/auth_providers.dart';
 import 'package:flock_sense/features/auth/presentation/screens/login_screen.dart';
 import 'package:flock_sense/features/onboarding/presentation/screens/onboarding_screen.dart';
-import 'package:flock_sense/features/farms/presentation/screens/farm_setup_screen.dart';
 import 'package:flock_sense/features/main_shell/presentation/screens/main_shell_screen.dart';
 
 /// Wrapper widget that handles routing based on user authentication state
@@ -20,7 +19,8 @@ class AuthWrapper extends ConsumerWidget {
       case UserState.onboarding:
         return const OnboardingScreen();
       case UserState.farmSetup:
-        return const FarmSetupScreen();
+        // Farm setup should only open from explicit Farm flow actions.
+        return const MainShellScreen();
       case UserState.authenticated:
         return const MainShellScreen();
     }

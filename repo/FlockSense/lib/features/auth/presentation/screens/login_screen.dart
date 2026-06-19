@@ -2,11 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flock_sense/config/routes/app_routes.dart';
 import 'package:flock_sense/features/auth/data/auth_service.dart';
-import 'package:flock_sense/shared/widgets/custom_button.dart';
+import 'package:flock_sense/features/auth/presentation/widgets/auth_header.dart';
 import 'package:flock_sense/shared/widgets/custom_text_field.dart';
 import 'package:flock_sense/shared/widgets/error_widget.dart';
-import 'package:flock_sense/shared/widgets/loading_widget.dart';
-import 'package:flock_sense/features/auth/presentation/widgets/auth_header.dart';
+import 'package:flock_sense/core/widgets/primary_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _showPassword = false;
   String? _errorMessage;
 
   @override
@@ -26,6 +26,12 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _togglePasswordVisibility() {
+    setState(() {
+      _showPassword = !_showPassword;
+    });
   }
 
   Future<void> _login() async {
@@ -77,49 +83,82 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const AuthHeader(
-                  title: 'Welcome back',
-                  subtitle: 'Sign in to continue to your poultry management dashboard.',
-                ),
-                const SizedBox(height: 32),
-                CustomTextField(controller: _emailController, hintText: 'Email'),
-                const SizedBox(height: 16),
-                CustomTextField(
-                  controller: _passwordController,
-                  hintText: 'Password',
-                  obscureText: true,
-                ),
-                const SizedBox(height: 24),
-                if (_errorMessage != null)
-                  AppErrorWidget(message: _errorMessage!),
-                if (_isLoading)
-                  const LoadingWidget()
-                else
-                  CustomButton(label: 'Login', onPressed: _login),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: () => Navigator.pushNamed(context, AppRoutes.forgotPassword),
-                  child: const Text('Forgot password?'),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('Don\'t have an account?'),
-                    TextButton(
-                      onPressed: () => Navigator.pushNamed(context, AppRoutes.register),
-                      child: const Text('Register'),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 16),
+                  const AuthHeader(
+                    title: 'Welcome back',
+                    subtitle: 'Sign in to manage your poultry farms with FlockSense.',
+                  ),
+                  const SizedBox(height: 32),
+                  Card(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    elevation: 2,
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          CustomTextField(
+                            controller: _emailController,
+                            labelText: 'Email',
+                            hintText: 'you@farm.com',
+                            enabled: !_isLoading,
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          const SizedBox(height: 16),
+                          CustomTextField(
+                            controller: _passwordController,
+                            labelText: 'Password',
+                            hintText: 'Enter your password',
+                            obscureText: !_showPassword,
+                            enabled: !_isLoading,
+                            suffixIcon: IconButton(
+                              icon: Icon(_showPassword ? Icons.visibility_off : Icons.visibility),
+                              onPressed: _togglePasswordVisibility,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () => Navigator.pushNamed(context, AppRoutes.forgotPassword),
+                              child: const Text('Forgot password?'),
+                            ),
+                          ),
+                          if (_errorMessage != null) ...[
+                            AppErrorWidget(message: _errorMessage!),
+                          ],
+                          PrimaryButton(
+                            label: 'Login',
+                            onPressed: _login,
+                            isLoading: _isLoading,
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('New to FlockSense?'),
+                      TextButton(
+                        onPressed: () => Navigator.pushNamed(context, AppRoutes.register),
+                        child: const Text('Create account'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

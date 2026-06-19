@@ -21,33 +21,29 @@ class _MainShellScreenState extends State<MainShellScreen> {
     ProfileScreen(),
   ];
 
-  static const List<BottomNavigationBarItem> _items = [
-    BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-    BottomNavigationBarItem(icon: Icon(Icons.agriculture), label: 'My Farms'),
-    BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: 'More'),
-    BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        items: _items,
-        selectedItemColor: Colors.green.shade700,
-        unselectedItemColor: Colors.grey,
-        backgroundColor: Colors.white,
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) {
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) {
           setState(() {
             _currentIndex = index;
           });
         },
+        elevation: 16,
+        height: 72,
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
+          NavigationDestination(icon: Icon(Icons.agriculture_outlined), selectedIcon: Icon(Icons.agriculture), label: 'Farms'),
+          NavigationDestination(icon: Icon(Icons.grid_view_outlined), selectedIcon: Icon(Icons.grid_view), label: 'More'),
+          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
+        ],
       ),
     );
   }

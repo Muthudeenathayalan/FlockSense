@@ -112,7 +112,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 8),
                 if (farm != null) ...[
                   Text(
-                    '${farm.farmName} • ${FarmService.getFormattedFarmType(farm.farmType)}',
+                    '${farm.farmName} • ${FarmService.getFormattedFarmType(farm.flockType)}',
                     style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                 ] else ...[
@@ -139,10 +139,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('Location:', style: TextStyle(color: Colors.white70)),
-                            Text(farm.location, style: const TextStyle(color: Colors.white)),
-                          ],
+                            children: [
+                              const Text('Location:', style: TextStyle(color: Colors.white70)),
+                              Text(farm.address, style: const TextStyle(color: Colors.white)),
+                            ],
                         ),
                         const SizedBox(height: 8),
                         Row(
@@ -150,7 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             const Text('Total Capacity:', style: TextStyle(color: Colors.white70)),
                             Text(
-                              '${farm.totalCapacity} birds',
+                              '${farm.birdCapacity} birds',
                               style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
                             ),
                           ],
@@ -159,18 +159,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  GridView.count(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: [
-                      _buildSummaryCard(context, 'Total Birds', '${farm.totalCapacity}', Icons.pets),
-                      _buildSummaryCard(context, 'Active Batches', '0', Icons.group),
-                      _buildSummaryCard(context, 'Feed Stock', '0 kg', Icons.inventory_2),
-                      _buildSummaryCard(context, 'Alerts', '0', Icons.warning_amber),
-                    ],
+                  FutureBuilder<List<FarmModel>>(
+                    future: FarmService.getUserFarms(),
+                    builder: (context, farmsSnap) {
+                      final farms = farmsSnap.data ?? [];
+                      final totalBirds = farms.fold<int>(0, (sum, f) => sum + f.birdCapacity);
+                      return GridView.count(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 16,
+                        crossAxisSpacing: 16,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          _buildSummaryCard(context, 'Total Birds', '$totalBirds', Icons.pets),
+                          _buildSummaryCard(context, 'Active Batches', '0', Icons.group),
+                          _buildSummaryCard(context, 'Feed Stock', '0 kg', Icons.inventory_2),
+                          _buildSummaryCard(context, 'Alerts', '0', Icons.warning_amber),
+                        ],
+                      );
+                    },
                   ),
                 ],
                 const Spacer(),

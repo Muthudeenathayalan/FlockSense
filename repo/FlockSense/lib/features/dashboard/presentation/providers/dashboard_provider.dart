@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flock_sense/features/dashboard/domain/entities/dashboard_metrics.dart';
 import 'package:flock_sense/features/flock/presentation/providers/flock_provider.dart';
 
-final dashboardMetricsProvider = Provider<DashboardMetrics>((ref) {
+final dashboardMetricsProvider = AutoDisposeProvider<DashboardMetrics>((ref) {
   final flocksAsync = ref.watch(flockListProvider);
 
   return flocksAsync.when(

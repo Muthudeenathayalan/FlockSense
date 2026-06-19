@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flock_sense/models/daily_record.dart';
+import 'package:flock_sense/features/flock/domain/daily_record.dart';
 
 void main() {
   test('DailyRecord serialization round trip', () {

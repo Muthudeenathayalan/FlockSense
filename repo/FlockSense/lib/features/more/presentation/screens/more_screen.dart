@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flock_sense/core/widgets/action_tile.dart';
+import 'package:flock_sense/core/widgets/section_header.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
@@ -6,69 +8,38 @@ class MoreScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(
+        title: const Text('More'),
+        elevation: 0,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+      ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'More',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 24),
+              const SectionHeader(title: 'Explore more tools', subtitle: 'Helpful services and farm resources'),
+              const SizedBox(height: 20),
               Expanded(
                 child: GridView.count(
                   crossAxisCount: 2,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
-                  children: const [
-                    _MoreTile(title: 'FlockSense AI', icon: Icons.smart_toy),
-                    _MoreTile(title: 'Report', icon: Icons.bar_chart),
-                    _MoreTile(title: 'Weather', icon: Icons.cloud),
-                    _MoreTile(title: 'FCR', icon: Icons.show_chart),
-                    _MoreTile(title: 'FAQ', icon: Icons.help_outline),
-                    _MoreTile(title: 'Contact Us', icon: Icons.support_agent),
+                  children: [
+                    ActionTile(icon: Icons.smart_toy, label: 'FlockSense AI', onTap: () {}),
+                    ActionTile(icon: Icons.bar_chart, label: 'Reports', onTap: () {}),
+                    ActionTile(icon: Icons.cloud, label: 'Weather', onTap: () {}),
+                    ActionTile(icon: Icons.show_chart, label: 'FCR', onTap: () {}),
+                    ActionTile(icon: Icons.help_outline, label: 'FAQ', onTap: () {}),
+                    ActionTile(icon: Icons.support_agent, label: 'Contact Us', onTap: () {}),
                   ],
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _MoreTile extends StatelessWidget {
-  final String title;
-  final IconData icon;
-
-  const _MoreTile({required this.title, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 6)),
-        ],
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: Colors.green.shade700,
-            child: Icon(icon, color: Colors.white, size: 20),
-          ),
-          const SizedBox(height: 16),
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-        ],
       ),
     );
   }

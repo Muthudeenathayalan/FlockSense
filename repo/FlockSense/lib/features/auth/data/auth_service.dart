@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flock_sense/features/auth/domain/user_model.dart';
 
 class AuthService {
   AuthService._();
@@ -64,16 +63,21 @@ class AuthService {
     );
     final user = result.user!;
     await user.updateDisplayName(name);
-    final userModel = UserModel(
-      uid: user.uid,
-      name: name,
-      email: user.email ?? email,
-      role: 'owner',
-      hasCompletedOnboarding: false,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-    await _firestore.collection('users').doc(user.uid).set(userModel.toJson());
+    final userData = {
+      'uid': user.uid,
+      'name': name,
+      'email': user.email ?? email,
+      'role': 'owner',
+      'hasCompletedOnboarding': false,
+      'hasFarm': false,
+      'activeFarmId': null,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    await _firestore.collection('users').doc(user.uid).set(
+          userData,
+          SetOptions(merge: true),
+        );
     return user;
   }
 

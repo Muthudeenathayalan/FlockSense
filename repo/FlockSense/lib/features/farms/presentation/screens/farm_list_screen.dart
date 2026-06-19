@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flock_sense/config/routes/app_routes.dart';
 import 'package:flock_sense/features/farms/data/farm_service.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
+import 'package:flock_sense/features/farms/presentation/screens/farm_command_center_screen.dart';
+import 'package:flock_sense/features/farms/presentation/widgets/empty_farm_widget.dart';
+import 'package:flock_sense/features/farms/presentation/widgets/farm_card.dart';
 
 class FarmListScreen extends StatefulWidget {
   const FarmListScreen({super.key});
@@ -15,7 +19,13 @@ class _FarmListScreenState extends State<FarmListScreen> {
   @override
   void initState() {
     super.initState();
-    _farmsFuture = FarmService.getUserFarms();
+    _refreshFarms();
+  }
+
+  Future<void> _refreshFarms() async {
+    setState(() {
+      _farmsFuture = FarmService.getUserFarms();
+    });
   }
 
   Future<void> _setActiveFarm(String farmId) async {
@@ -56,9 +66,7 @@ class _FarmListScreenState extends State<FarmListScreen> {
       try {
         await FarmService.deleteFarm(farmId);
         if (mounted) {
-          setState(() {
-            _farmsFuture = FarmService.getUserFarms();
-          });
+          await _refreshFarms();
         }
       } catch (e) {
         if (mounted) {
@@ -73,10 +81,9 @@ class _FarmListScreenState extends State<FarmListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text('My Farms'),
-        backgroundColor: Colors.grey.shade900,
       ),
       body: FutureBuilder<List<FarmModel>>(
         future: _farmsFuture,
@@ -87,9 +94,13 @@ class _FarmListScreenState extends State<FarmListScreen> {
 
           if (snapshot.hasError) {
             return Center(
-              child: Text(
-                'Error loading farms: ${snapshot.error}',
-                style: const TextStyle(color: Colors.white70),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Error loading farms: ${snapshot.error}',
+                  style: const TextStyle(color: Colors.black54),
+                  textAlign: TextAlign.center,
+                ),
               ),
             );
           }
@@ -97,68 +108,56 @@ class _FarmListScreenState extends State<FarmListScreen> {
           final farms = snapshot.data ?? [];
 
           if (farms.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.agriculture, size: 64, color: Colors.white30),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No farms yet',
-                    style: TextStyle(color: Colors.white70, fontSize: 18),
-                  ),
-                ],
-              ),
+            return EmptyFarmWidget(
+              onCreate: () => Navigator.pushNamed(context, AppRoutes.farmSetup).then((res) {
+                if (res == true) _refreshFarms();
+              }),
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
             itemCount: farms.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final farm = farms[index];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade900,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ListTile(
-                  title: Text(
-                    farm.farmName,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 4),
-                      Text(
-                        '${FarmService.getFormattedFarmType(farm.farmType)} • ${farm.totalCapacity} birds',
-                        style: const TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                      Text(
-                        farm.location,
-                        style: const TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                  trailing: PopupMenuButton(
-                    itemBuilder: (context) => [
-                      PopupMenuItem(
-                        child: const Text('Set Active'),
-                        onTap: () => _setActiveFarm(farm.farmId),
-                      ),
-                      PopupMenuItem(
-                        child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                        onTap: () => _deleteFarm(farm.farmId, farm.farmName),
-                      ),
-                    ],
-                  ),
+
+                return FarmCard(
+                farm: farm,
+                onTap: () => Navigator.of(context)
+                    .push(MaterialPageRoute(builder: (_) => FarmCommandCenterScreen(farm: farm)))
+                    .then((_) => _refreshFarms()),
+                trailing: PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, color: Colors.green),
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'active',
+                      child: const Text('Set Active'),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                  onSelected: (value) {
+                    if (value == 'active') {
+                      _setActiveFarm(farm.id);
+                    } else if (value == 'delete') {
+                      _deleteFarm(farm.id, farm.farmName);
+                    }
+                  },
                 ),
               );
             },
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.pushNamed(context, AppRoutes.farmSetup).then((res) {
+          if (res == true) _refreshFarms();
+        }),
+        tooltip: 'Create Farm',
+        child: const Icon(Icons.add),
       ),
     );
   }

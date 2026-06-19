@@ -1,10 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:flock_sense/shared/widgets/custom_button.dart';
-import 'package:flock_sense/shared/widgets/custom_text_field.dart';
+import 'package:flock_sense/core/widgets/app_card.dart';
+import 'package:flock_sense/core/widgets/primary_button.dart';
+import 'package:flock_sense/features/farms/presentation/widgets/farm_capacity_field.dart';
+import 'package:flock_sense/features/farms/presentation/widgets/farm_type_dropdown.dart';
+import 'package:flock_sense/features/farms/presentation/widgets/flock_type_dropdown.dart';
 import 'package:flock_sense/shared/widgets/error_widget.dart';
 
 class FarmForm extends StatefulWidget {
-  final Function(String farmName, String location, String farmType, int totalCapacity) onSubmit;
+  final Function(
+    String farmName,
+    String farmType,
+    String flockType,
+    String address,
+    int birdCapacity,
+    String? district,
+    String? state,
+    double? lengthFt,
+    double? widthFt,
+    String? notes,
+  ) onSubmit;
   final bool isLoading;
   final String? errorMessage;
 
@@ -20,69 +34,86 @@ class FarmForm extends StatefulWidget {
 }
 
 class _FarmFormState extends State<FarmForm> {
+  final _formKey = GlobalKey<FormState>();
   final _farmNameController = TextEditingController();
-  final _locationController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _districtController = TextEditingController();
+  final _stateController = TextEditingController();
   final _capacityController = TextEditingController();
+  final _lengthController = TextEditingController();
+  final _widthController = TextEditingController();
+  final _notesController = TextEditingController();
   String? _selectedFarmType;
+  String? _selectedFlockType;
   String? _validationError;
-
-  final List<String> _farmTypeOptions = ['Broiler', 'Layer', 'Breeder', 'Mixed'];
+  String? _selectedDistrict;
+  String? _selectedState;
 
   @override
   void dispose() {
     _farmNameController.dispose();
-    _locationController.dispose();
+    _addressController.dispose();
+    _districtController.dispose();
+    _stateController.dispose();
     _capacityController.dispose();
+    _lengthController.dispose();
+    _widthController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
   void _submit() {
+    debugPrint('[FarmForm] Save button pressed');
     setState(() {
       _validationError = null;
     });
 
+    if (!_formKey.currentState!.validate()) {
+      debugPrint('[FarmForm] Form validation failed');
+      return;
+    }
+
+    debugPrint('[FarmForm] Form validation passed');
     final farmName = _farmNameController.text.trim();
-    final location = _locationController.text.trim();
+    final district = _selectedDistrict ?? _districtController.text.trim();
+    final state = _selectedState ?? _stateController.text.trim();
+    final address = _addressController.text.trim();
     final farmType = _selectedFarmType;
-    final capacityStr = _capacityController.text.trim();
-
-    if (farmName.isEmpty) {
-      setState(() {
-        _validationError = 'Farm name is required.';
-      });
-      return;
-    }
-
-    if (location.isEmpty) {
-      setState(() {
-        _validationError = 'Location is required.';
-      });
-      return;
-    }
+    final flockType = _selectedFlockType;
+    final capacity = int.tryParse(_capacityController.text.trim()) ?? 0;
+    final length = double.tryParse(_lengthController.text.trim());
+    final width = double.tryParse(_widthController.text.trim());
+    final notes = _notesController.text.trim();
 
     if (farmType == null || farmType.isEmpty) {
+      debugPrint('[FarmForm] Farm type not selected');
       setState(() {
         _validationError = 'Please select a farm type.';
       });
       return;
     }
 
-    if (capacityStr.isEmpty) {
+    if (flockType == null || flockType.isEmpty) {
+      debugPrint('[FarmForm] Flock type not selected');
       setState(() {
-        _validationError = 'Total capacity is required.';
+        _validationError = 'Please select a flock type.';
       });
       return;
     }
 
-    final capacity = int.tryParse(capacityStr);
-    if (capacity == null || capacity <= 0) {
-      setState(() {
-        _validationError = 'Please enter a valid capacity number.';
-      });
-      return;
-    }
-
-    widget.onSubmit(farmName, location, farmType.toLowerCase(), capacity);
+    debugPrint('[FarmForm] Submitting farm data: farmName=$farmName, farmType=$farmType, flockType=$flockType, address=$address, capacity=$capacity, district=$district, state=$state');
+    widget.onSubmit(
+      farmName,
+      farmType,
+      flockType!,
+      address,
+      capacity,
+      district.isNotEmpty ? district : null,
+      state.isNotEmpty ? state : null,
+      length,
+      width,
+      notes.isNotEmpty ? notes : null,
+    );
   }
 
   @override
@@ -90,84 +121,227 @@ class _FarmFormState extends State<FarmForm> {
     final displayError = _validationError ?? widget.errorMessage;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Setup Your Farm',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
+          Text('Create Farm', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          const Text(
-            'Tell us about your farm to get started.',
-            style: TextStyle(color: Colors.white70, fontSize: 14),
-          ),
-          const SizedBox(height: 32),
-          CustomTextField(
-            controller: _farmNameController,
-            hintText: 'Farm name',
-            enabled: !widget.isLoading,
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            controller: _locationController,
-            hintText: 'Location',
-            enabled: !widget.isLoading,
-          ),
-          const SizedBox(height: 16),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.grey.shade900,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade700),
+          Text('Add your farm details below to get started quickly.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54)),
+          const SizedBox(height: 24),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Farm information', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 18),
+                TextFormField(
+                  controller: _farmNameController,
+                  enabled: !widget.isLoading,
+                  textInputAction: TextInputAction.next,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Farm name is required.';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(labelText: 'Farm name'),
+                ),
+                const SizedBox(height: 16),
+                FarmTypeDropdown(
+                  value: _selectedFarmType,
+                  enabled: !widget.isLoading,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a farm type.';
+                    }
+                    return null;
+                  },
+                  onChanged: widget.isLoading
+                      ? null
+                      : (value) {
+                          setState(() {
+                            _selectedFarmType = value;
+                          });
+                        },
+                ),
+              ],
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: DropdownButton<String>(
-              value: _selectedFarmType,
-              isExpanded: true,
-              underline: const SizedBox(),
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-              dropdownColor: Colors.grey.shade900,
-              hint: const Text('Select farm type', style: TextStyle(color: Colors.white70)),
-              items: _farmTypeOptions.map((type) {
-                return DropdownMenuItem(
-                  value: type,
-                  child: Text(type),
-                );
-              }).toList(),
-              onChanged: widget.isLoading ? null : (value) {
-                setState(() {
-                  _selectedFarmType = value;
-                });
-              },
-            ),
-          ),
-          const SizedBox(height: 16),
-          CustomTextField(
-            controller: _capacityController,
-            hintText: 'Total bird capacity',
-            keyboardType: TextInputType.number,
-            enabled: !widget.isLoading,
           ),
           const SizedBox(height: 24),
-          if (displayError != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: AppErrorWidget(message: displayError),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Location', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 18),
+                TextFormField(
+                  controller: _addressController,
+                  enabled: !widget.isLoading,
+                  textInputAction: TextInputAction.next,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Address is required.';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(labelText: 'Address', hintText: 'Street or farm location'),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: _selectedDistrict ?? (_districtController.text.isNotEmpty ? _districtController.text : null),
+                  decoration: const InputDecoration(labelText: 'District'),
+                  items: [
+                    'Ariyalur',
+                    'Chengalpattu',
+                    'Chennai',
+                    'Coimbatore',
+                    'Cuddalore',
+                    'Dharmapuri',
+                    'Dindigul',
+                    'Erode',
+                    'Kallakurichi',
+                    'Kanchipuram',
+                    'Karur',
+                    'Krishnagiri',
+                    'Madurai',
+                    'Mayiladuthurai',
+                    'Nagapattinam',
+                    'Namakkal',
+                    'Perambalur',
+                    'Pudukkottai',
+                    'Ramanathapuram',
+                    'Ranipet',
+                    'Salem',
+                    'Sivaganga',
+                    'Tenkasi',
+                    'Thanjavur',
+                    'Theni',
+                    'Thoothukudi',
+                    'Tiruchirappalli',
+                    'Tirunelveli',
+                    'Tirupathur',
+                    'Tiruvallur',
+                    'Tiruvannamalai',
+                    'Tiruvarur',
+                    'Vellore',
+                    'Viluppuram',
+                    'Virudhunagar',
+                  ].map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
+                  onChanged: widget.isLoading
+                      ? null
+                      : (v) {
+                          setState(() {
+                            _selectedDistrict = v;
+                          });
+                        },
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: _selectedState ?? (_stateController.text.isNotEmpty ? _stateController.text : null),
+                  decoration: const InputDecoration(labelText: 'State'),
+                  items: ['Tamil Nadu']
+                      .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                      .toList(),
+                  onChanged: widget.isLoading
+                      ? null
+                      : (v) {
+                          setState(() {
+                            _selectedState = v;
+                          });
+                        },
+                ),
+              ],
             ),
-          if (widget.isLoading)
-            const Center(
-              child: CircularProgressIndicator(),
-            )
-          else
-            CustomButton(
-              label: 'Create Farm',
-              onPressed: _submit,
+          ),
+          const SizedBox(height: 24),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Farm details', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 18),
+                FarmCapacityField(
+                  controller: _capacityController,
+                  enabled: !widget.isLoading,
+                  validator: (value) {
+                    final parsed = int.tryParse(value?.trim() ?? '');
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Bird capacity is required.';
+                    }
+                    if (parsed == null || parsed <= 0) {
+                      return 'Please enter a valid number.';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                FlockTypeDropdown(
+                  value: _selectedFlockType,
+                  enabled: !widget.isLoading,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Please select a flock type.';
+                    return null;
+                  },
+                  onChanged: widget.isLoading
+                      ? null
+                      : (v) {
+                          setState(() {
+                            _selectedFlockType = v;
+                          });
+                        },
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _lengthController,
+                        enabled: !widget.isLoading,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: 'Length (ft)'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _widthController,
+                        enabled: !widget.isLoading,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: 'Width (ft)'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text('Optional. Add farm footprint details for future planning.', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.black54)),
+              ],
             ),
+          ),
+          const SizedBox(height: 24),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('Additional notes', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 18),
+                TextFormField(
+                  controller: _notesController,
+                  enabled: !widget.isLoading,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'Notes',
+                    hintText: 'Optional farm notes',
+                    alignLabelWithHint: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          if (displayError != null) AppErrorWidget(message: displayError),
+          PrimaryButton(label: 'Save farm', onPressed: _submit, isLoading: widget.isLoading),
+          const SizedBox(height: 24),
         ],
       ),
     );

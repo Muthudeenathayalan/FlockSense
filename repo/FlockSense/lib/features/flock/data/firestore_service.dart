@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flock_sense/models/daily_record.dart';
-import 'package:flock_sense/models/flock.dart';
+import 'package:flock_sense/features/flock/domain/daily_record.dart';
+import 'package:flock_sense/features/flock/domain/flock.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore;

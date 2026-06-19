@@ -1,10 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flock_sense/core/widgets/app_card.dart';
+import 'package:flock_sense/core/widgets/primary_button.dart';
 import 'package:flock_sense/features/auth/data/auth_service.dart';
-import 'package:flock_sense/shared/widgets/custom_button.dart';
-import 'package:flock_sense/shared/widgets/custom_text_field.dart';
 import 'package:flock_sense/shared/widgets/error_widget.dart';
-import 'package:flock_sense/shared/widgets/loading_widget.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -64,28 +63,51 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(title: const Text('Forgot Password')),
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text(
-                  'Enter your email to receive a password reset link.',
-                  style: TextStyle(fontSize: 16),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Reset Password', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    Text('Enter your email address and we\'ll send you a link to reset your password.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54)),
+                  ],
                 ),
-                const SizedBox(height: 24),
-                CustomTextField(controller: _emailController, hintText: 'Email'),
-                const SizedBox(height: 24),
-                if (_message != null) AppErrorWidget(message: _message!),
-                if (_isLoading)
-                  const LoadingWidget()
-                else
-                  CustomButton(label: 'Send reset email', onPressed: _sendResetEmail),
-              ],
-            ),
+              ),
+              const SizedBox(height: 24),
+              AppCard(
+                child: TextFormField(
+                  controller: _emailController,
+                  enabled: !_isLoading,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.done,
+                  decoration: const InputDecoration(labelText: 'Email address', hintText: 'Enter your email'),
+                ),
+              ),
+              const SizedBox(height: 24),
+              if (_message != null) ...[AppErrorWidget(message: _message!), const SizedBox(height: 16)],
+              PrimaryButton(
+                label: _isLoading ? 'Sending...' : 'Send reset link',
+                onPressed: () {
+                  if (!_isLoading) _sendResetEmail();
+                },
+                isLoading: _isLoading,
+              ),
+              const SizedBox(height: 16),
+              Center(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Back to login', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+                ),
+              ),
+            ],
           ),
         ),
       ),
