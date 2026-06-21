@@ -62,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await AuthService.login(email: email, password: password);
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, AppRoutes.main);
+      Navigator.pushReplacementNamed(context, AppRoutes.initial);
     } on FirebaseAuthException catch (exception) {
       setState(() {
         _errorMessage = AuthService.mapAuthException(exception);
@@ -96,11 +96,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 16),
                   const AuthHeader(
                     title: 'Welcome back',
-                    subtitle: 'Sign in to manage your poultry farms with FlockSense.',
+                    subtitle:
+                        'Sign in to manage your poultry farms with FlockSense.',
                   ),
                   const SizedBox(height: 32),
                   Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     elevation: 2,
                     child: Padding(
                       padding: const EdgeInsets.all(24),
@@ -122,7 +125,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             obscureText: !_showPassword,
                             enabled: !_isLoading,
                             suffixIcon: IconButton(
-                              icon: Icon(_showPassword ? Icons.visibility_off : Icons.visibility),
+                              icon: Icon(
+                                _showPassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
                               onPressed: _togglePasswordVisibility,
                             ),
                           ),
@@ -130,7 +137,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () => Navigator.pushNamed(context, AppRoutes.forgotPassword),
+                              onPressed: () => Navigator.pushNamed(
+                                context,
+                                AppRoutes.forgotPassword,
+                              ),
                               child: const Text('Forgot password?'),
                             ),
                           ),
@@ -152,7 +162,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       const Text('New to FlockSense?'),
                       TextButton(
-                        onPressed: () => Navigator.pushNamed(context, AppRoutes.register),
+                        onPressed: () =>
+                            Navigator.pushNamed(context, AppRoutes.register),
                         child: const Text('Create account'),
                       ),
                     ],

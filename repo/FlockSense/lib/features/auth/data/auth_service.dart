@@ -62,22 +62,42 @@ class AuthService {
       password: password,
     );
     final user = result.user!;
-    await user.updateDisplayName(name);
-    final userData = {
-      'uid': user.uid,
-      'name': name,
-      'email': user.email ?? email,
-      'role': 'owner',
-      'hasCompletedOnboarding': false,
-      'hasFarm': false,
-      'activeFarmId': null,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
-    await _firestore.collection('users').doc(user.uid).set(
-          userData,
-          SetOptions(merge: true),
-        );
+    
+    try {
+      await user.updateDisplayName(name);
+    } catch (e) {
+      throw FirebaseException(
+        plugin: 'firebase_auth',
+        code: 'profile-update-failed',
+        message: 'Failed to update user profile: $e',
+      );
+    }
+
+    try {
+      final userData = {
+        'uid': user.uid,
+        'name': name,
+        'email': user.email ?? email,
+        'role': 'owner',
+        'hasCompletedOnboarding': false,
+        'hasFarm': false,
+        'activeFarmId': null,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+      await _firestore.collection('users').doc(user.uid).set(
+            userData,
+            SetOptions(merge: true),
+          );
+    } catch (e) {
+      await user.delete();
+      throw FirebaseException(
+        plugin: 'cloud_firestore',
+        code: 'user-data-save-failed',
+        message: 'Failed to save user data. User account deleted: $e',
+      );
+    }
+    
     return user;
   }
 

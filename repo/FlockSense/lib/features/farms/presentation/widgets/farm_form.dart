@@ -75,8 +75,8 @@ class _FarmFormState extends State<FarmForm> {
 
     debugPrint('[FarmForm] Form validation passed');
     final farmName = _farmNameController.text.trim();
-    final district = _selectedDistrict ?? _districtController.text.trim();
-    final state = _selectedState ?? _stateController.text.trim();
+    final district = _selectedDistrict ?? '';
+    final state = _selectedState ?? '';
     final address = _addressController.text.trim();
     final farmType = _selectedFarmType;
     final flockType = _selectedFlockType;
@@ -97,6 +97,22 @@ class _FarmFormState extends State<FarmForm> {
       debugPrint('[FarmForm] Flock type not selected');
       setState(() {
         _validationError = 'Please select a flock type.';
+      });
+      return;
+    }
+
+    if (_selectedDistrict == null || _selectedDistrict!.isEmpty) {
+      debugPrint('[FarmForm] District not selected');
+      setState(() {
+        _validationError = 'Please select a district.';
+      });
+      return;
+    }
+
+    if (_selectedState == null || _selectedState!.isEmpty) {
+      debugPrint('[FarmForm] State not selected');
+      setState(() {
+        _validationError = 'Please select a state.';
       });
       return;
     }
@@ -122,14 +138,16 @@ class _FarmFormState extends State<FarmForm> {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text('Create Farm', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Text('Add your farm details below to get started quickly.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54)),
-          const SizedBox(height: 24),
-          AppCard(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Create Farm', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text('Add your farm details below to get started quickly.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54)),
+            const SizedBox(height: 24),
+            AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -189,7 +207,7 @@ class _FarmFormState extends State<FarmForm> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _selectedDistrict ?? (_districtController.text.isNotEmpty ? _districtController.text : null),
+                  value: _selectedDistrict,
                   decoration: const InputDecoration(labelText: 'District'),
                   items: [
                     'Ariyalur',
@@ -238,7 +256,7 @@ class _FarmFormState extends State<FarmForm> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _selectedState ?? (_stateController.text.isNotEmpty ? _stateController.text : null),
+                  value: _selectedState,
                   decoration: const InputDecoration(labelText: 'State'),
                   items: ['Tamil Nadu']
                       .map((s) => DropdownMenuItem(value: s, child: Text(s)))
@@ -339,10 +357,11 @@ class _FarmFormState extends State<FarmForm> {
             ),
           ),
           const SizedBox(height: 24),
-          if (displayError != null) AppErrorWidget(message: displayError),
-          PrimaryButton(label: 'Save farm', onPressed: _submit, isLoading: widget.isLoading),
-          const SizedBox(height: 24),
-        ],
+            if (displayError != null) AppErrorWidget(message: displayError),
+            PrimaryButton(label: 'Save farm', onPressed: _submit, isLoading: widget.isLoading),
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }

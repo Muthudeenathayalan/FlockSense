@@ -8,6 +8,8 @@ void main() {
     final createdAt = DateTime(2025, 1, 2, 12);
     final flock = Flock(
       id: 'batch-1',
+      userId: 'user-123',
+      farmId: 'farm-456',
       name: 'Batch One',
       birdType: 'Broiler',
       breed: 'Cobb 500',

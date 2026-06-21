@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flock_sense/features/farms/data/farm_service.dart';
 import 'package:flock_sense/features/farms/presentation/widgets/farm_form.dart';
+import 'package:flock_sense/core/exceptions/app_exceptions.dart';
 
 class FarmSetupScreen extends StatefulWidget {
   const FarmSetupScreen({super.key});
@@ -26,7 +27,7 @@ class _FarmSetupScreenState extends State<FarmSetupScreen> {
     double? widthFt,
     String? notes,
   ) async {
-    debugPrint('[FarmSetupScreen] onSubmit called with: farmName=$farmName, farmType=$farmType, flockType=$flockType, address=$address, capacity=$birdCapacity');
+    debugPrint('[FarmSetupScreen] onSubmit called with: farmName=$farmName, farmType=$farmType');
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -54,17 +55,35 @@ class _FarmSetupScreenState extends State<FarmSetupScreen> {
       );
       // Return to previous screen and signal refresh
       Navigator.pop(context, true);
+    } on ValidationException catch (e) {
+      debugPrint('[FarmSetupScreen] Validation error: ${e.message}');
+      setState(() {
+        _errorMessage = e.message;
+      });
+    } on AuthException catch (e) {
+      debugPrint('[FarmSetupScreen] Auth error: ${e.message}');
+      setState(() {
+        _errorMessage = ErrorMessages.getDisplayMessage(e);
+      });
+    } on PermissionException catch (e) {
+      debugPrint('[FarmSetupScreen] Permission error: ${e.message}');
+      setState(() {
+        _errorMessage = 'You do not have permission to create a farm. Please check your Firebase settings.';
+      });
+    } on FirestoreException catch (e) {
+      debugPrint('[FarmSetupScreen] Firestore error: code=${e.code}, message=${e.message}');
+      setState(() {
+        _errorMessage = ErrorMessages.getDisplayMessage(e);
+      });
+    } on AppException catch (e) {
+      debugPrint('[FarmSetupScreen] App error: ${e.message}');
+      setState(() {
+        _errorMessage = ErrorMessages.getDisplayMessage(e);
+      });
     } on FirebaseException catch (e) {
       debugPrint('[FarmSetupScreen] Firebase error: code=${e.code}, message=${e.message}');
       setState(() {
-        if (e.code == 'permission-denied') {
-          _errorMessage =
-              'You do not have permission to create a farm. Please check your Firebase Firestore rules or sign in with the correct account.';
-        } else if (e.code == 'unauthenticated') {
-          _errorMessage = 'You must be signed in to create a farm.';
-        } else {
-          _errorMessage = e.message ?? 'Failed to create farm. Please try again.';
-        }
+        _errorMessage = e.message ?? 'Failed to create farm. Please try again.';
       });
     } catch (e) {
       debugPrint('[FarmSetupScreen] Unexpected error: $e');
@@ -94,3 +113,4 @@ class _FarmSetupScreenState extends State<FarmSetupScreen> {
     );
   }
 }
+

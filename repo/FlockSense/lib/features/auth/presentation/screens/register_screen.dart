@@ -91,7 +91,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       await AuthService.register(name: name, email: email, password: password);
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, AppRoutes.main);
+      Navigator.pushReplacementNamed(context, AppRoutes.initial);
     } on FirebaseAuthException catch (exception) {
       setState(() {
         _errorMessage = AuthService.mapAuthException(exception);
@@ -130,11 +130,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 16),
                   const AuthHeader(
                     title: 'Create account',
-                    subtitle: 'Start managing your poultry farm with FlockSense.',
+                    subtitle:
+                        'Start managing your poultry farm with FlockSense.',
                   ),
                   const SizedBox(height: 32),
                   Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     elevation: 2,
                     child: Padding(
                       padding: const EdgeInsets.all(24),
@@ -163,7 +166,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             obscureText: !_showPassword,
                             enabled: !_isLoading,
                             suffixIcon: IconButton(
-                              icon: Icon(_showPassword ? Icons.visibility_off : Icons.visibility),
+                              icon: Icon(
+                                _showPassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
                               onPressed: _togglePasswordVisibility,
                             ),
                           ),
@@ -175,7 +182,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             obscureText: !_showConfirmPassword,
                             enabled: !_isLoading,
                             suffixIcon: IconButton(
-                              icon: Icon(_showConfirmPassword ? Icons.visibility_off : Icons.visibility),
+                              icon: Icon(
+                                _showConfirmPassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
                               onPressed: _toggleConfirmPasswordVisibility,
                             ),
                           ),
