@@ -1,225 +1,158 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flock_sense/config/routes/app_routes.dart';
+import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/features/auth/data/auth_service.dart';
-import 'package:flock_sense/features/auth/presentation/widgets/auth_header.dart';
-import 'package:flock_sense/shared/widgets/custom_text_field.dart';
-import 'package:flock_sense/shared/widgets/error_widget.dart';
-import 'package:flock_sense/core/widgets/primary_button.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
-
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  bool _isLoading = false;
-  bool _showPassword = false;
-  bool _showConfirmPassword = false;
-  String? _errorMessage;
+  final _name     = TextEditingController();
+  final _email    = TextEditingController();
+  final _pass     = TextEditingController();
+  final _confirm  = TextEditingController();
+  final _formKey  = GlobalKey<FormState>();
+  bool _loading   = false;
+  bool _showPass  = false;
+  bool _showConf  = false;
+  String? _error;
 
   @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
-  }
-
-  void _togglePasswordVisibility() {
-    setState(() {
-      _showPassword = !_showPassword;
-    });
-  }
-
-  void _toggleConfirmPasswordVisibility() {
-    setState(() {
-      _showConfirmPassword = !_showConfirmPassword;
-    });
-  }
+  void dispose() { _name.dispose(); _email.dispose(); _pass.dispose(); _confirm.dispose(); super.dispose(); }
 
   Future<void> _register() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    final name = _nameController.text.trim();
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
-    final confirmPassword = _confirmPasswordController.text.trim();
-
-    if (name.isEmpty) {
-      setState(() {
-        _errorMessage = 'Name is required.';
-        _isLoading = false;
-      });
-      return;
-    }
-
-    if (email.isEmpty || !email.contains('@')) {
-      setState(() {
-        _errorMessage = 'Please enter a valid email address.';
-        _isLoading = false;
-      });
-      return;
-    }
-
-    if (password.length < 6) {
-      setState(() {
-        _errorMessage = 'Password must be at least 6 characters.';
-        _isLoading = false;
-      });
-      return;
-    }
-
-    if (confirmPassword != password) {
-      setState(() {
-        _errorMessage = 'Passwords do not match.';
-        _isLoading = false;
-      });
-      return;
-    }
-
+    if (!_formKey.currentState!.validate()) return;
+    setState(() { _loading = true; _error = null; });
     try {
-      await AuthService.register(name: name, email: email, password: password);
+      await AuthService.register(
+        name: _name.text.trim(),
+        email: _email.text.trim(),
+        password: _pass.text.trim(),
+      );
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, AppRoutes.initial);
-    } on FirebaseAuthException catch (exception) {
-      setState(() {
-        _errorMessage = AuthService.mapAuthException(exception);
-      });
-    } on FirebaseException catch (exception) {
-      setState(() {
-        _errorMessage = AuthService.mapFirebaseException(exception);
-      });
-    } catch (error) {
-      debugPrint('Register error: $error');
-      setState(() {
-        _errorMessage = 'Something went wrong. Please try again.';
-      });
+      // FIX: navigate through AuthWrapper so onboarding / farm-setup flow
+      // is handled automatically instead of jumping straight to main shell.
+      // This also ensures the welcome quotes screen shows for first-time users.
+      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.initial, (_) => false);
+    } on FirebaseAuthException catch (e) {
+      setState(() => _error = AuthService.mapAuthException(e));
+    } on FirebaseException catch (e) {
+      setState(() => _error = AuthService.mapFirebaseException(e));
+    } catch (_) {
+      setState(() => _error = 'Something went wrong. Please try again.');
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 16),
-                  const AuthHeader(
-                    title: 'Create account',
-                    subtitle:
-                        'Start managing your poultry farm with FlockSense.',
-                  ),
-                  const SizedBox(height: 32),
-                  Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          CustomTextField(
-                            controller: _nameController,
-                            labelText: 'Full name',
-                            hintText: 'Your display name',
-                            enabled: !_isLoading,
-                          ),
-                          const SizedBox(height: 16),
-                          CustomTextField(
-                            controller: _emailController,
-                            labelText: 'Email',
-                            hintText: 'you@farm.com',
-                            enabled: !_isLoading,
-                            keyboardType: TextInputType.emailAddress,
-                          ),
-                          const SizedBox(height: 16),
-                          CustomTextField(
-                            controller: _passwordController,
-                            labelText: 'Password',
-                            hintText: 'Create a strong password',
-                            obscureText: !_showPassword,
-                            enabled: !_isLoading,
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _showPassword
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                              ),
-                              onPressed: _togglePasswordVisibility,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          CustomTextField(
-                            controller: _confirmPasswordController,
-                            labelText: 'Confirm password',
-                            hintText: 'Re-enter your password',
-                            obscureText: !_showConfirmPassword,
-                            enabled: !_isLoading,
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _showConfirmPassword
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                              ),
-                              onPressed: _toggleConfirmPasswordVisibility,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          if (_errorMessage != null) ...[
-                            AppErrorWidget(message: _errorMessage!),
-                          ],
-                          PrimaryButton(
-                            label: 'Register',
-                            onPressed: _register,
-                            isLoading: _isLoading,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Already have an account?'),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Login'),
-                      ),
-                    ],
-                  ),
-                ],
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          child: Form(
+            key: _formKey,
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              const SizedBox(height: 16),
+              Center(
+                child: Container(
+                  width: 72, height: 72,
+                  decoration: BoxDecoration(gradient: AppColors.primaryGradient, borderRadius: BorderRadius.circular(20)),
+                  child: const Icon(Icons.agriculture, size: 38, color: Colors.white),
+                ),
               ),
-            ),
+              const SizedBox(height: 16),
+              const Center(child: Text('Join FlockSense', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: AppColors.primary))),
+              const Center(child: Text('Create your account to get started', style: TextStyle(fontSize: 13, color: AppColors.textSecondary))),
+              const SizedBox(height: 32),
+
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: const [BoxShadow(color: AppColors.shadow, blurRadius: 20, offset: Offset(0, 6))],
+                  border: Border.all(color: AppColors.border, width: 0.8),
+                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  _field(_name, 'Full name', Icons.person_outline,
+                      validator: (v) => (v?.trim().isEmpty ?? true) ? 'Enter your name' : null),
+                  const SizedBox(height: 14),
+                  _field(_email, 'Email address', Icons.email_outlined,
+                      type: TextInputType.emailAddress,
+                      validator: (v) => (v?.trim().isEmpty ?? true) || !(v!.contains('@'))
+                          ? 'Enter a valid email' : null),
+                  const SizedBox(height: 14),
+                  _passField(_pass, 'Password', _showPass, () => setState(() => _showPass = !_showPass),
+                      validator: (v) => (v?.length ?? 0) < 6 ? 'Min 6 characters' : null),
+                  const SizedBox(height: 14),
+                  _passField(_confirm, 'Confirm password', _showConf, () => setState(() => _showConf = !_showConf),
+                      validator: (v) => v != _pass.text ? 'Passwords do not match' : null),
+                  const SizedBox(height: 20),
+                  if (_error != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 14),
+                      decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.red.shade200)),
+                      child: Row(children: [
+                        Icon(Icons.error_outline, color: Colors.red.shade700, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(_error!, style: TextStyle(color: Colors.red.shade700, fontSize: 13))),
+                      ]),
+                    ),
+                  ],
+                  FilledButton(
+                    onPressed: _loading ? null : _register,
+                    child: _loading
+                        ? const SizedBox(height: 22, width: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+                        : const Text('Create Account'),
+                  ),
+                ]),
+              ),
+              const SizedBox(height: 24),
+              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                const Text('Already have an account? ', style: TextStyle(color: AppColors.textSecondary)),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Sign in', style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
+              ]),
+            ]),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _field(TextEditingController c, String label, IconData icon,
+      {TextInputType? type, String? Function(String?)? validator}) {
+    return TextFormField(
+      controller: c, keyboardType: type,
+      decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
+      validator: validator,
+    );
+  }
+
+  Widget _passField(TextEditingController c, String label, bool show, VoidCallback toggle,
+      {String? Function(String?)? validator}) {
+    return TextFormField(
+      controller: c, obscureText: !show,
+      decoration: InputDecoration(
+        labelText: label, prefixIcon: const Icon(Icons.lock_outline),
+        suffixIcon: IconButton(
+          icon: Icon(show ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+          onPressed: toggle,
+        ),
+      ),
+      validator: validator,
     );
   }
 }

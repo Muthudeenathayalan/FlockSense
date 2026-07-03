@@ -83,10 +83,10 @@ class _FarmCardContent extends StatelessWidget {
         const SizedBox(height: 14),
         Row(
           children: [
-            Icon(Icons.pets, size: 16, color: Theme.of(context).colorScheme.primary),
+            Icon(Icons.info_outlined, size: 16, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 8),
             Text(
-              '${farm.birdCapacity} birds',
+              farm.status,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.black54),
             ),
             const SizedBox(width: 16),

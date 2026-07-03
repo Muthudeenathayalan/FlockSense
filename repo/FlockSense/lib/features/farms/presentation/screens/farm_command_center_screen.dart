@@ -1,143 +1,117 @@
 import 'package:flutter/material.dart';
-import 'package:flock_sense/core/widgets/action_tile.dart';
-import 'package:flock_sense/core/widgets/dashboard_card.dart';
-import 'package:flock_sense/core/widgets/section_header.dart';
-import 'package:flock_sense/core/widgets/status_badge.dart';
-import 'package:flock_sense/features/farms/data/farm_service.dart';
+import 'package:flock_sense/features/batches/presentation/screens/batch_list_screen.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
+import 'package:flock_sense/features/farms/presentation/screens/farm_setup_screen.dart';
 
+/// Detail view for a single farm. Exposes Sheds and (future) Batches as tabs.
 class FarmCommandCenterScreen extends StatelessWidget {
   const FarmCommandCenterScreen({super.key, required this.farm});
-
   final FarmModel farm;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(
-        title: const Text('Farm Command Center'),
-        elevation: 0,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-                child: Padding(
-                  padding: const EdgeInsets.all(22),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(farm.farmName, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Text(FarmService.getFormattedFarmType(farm.flockType), style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.black54)),
-                          const SizedBox(width: 12),
-                          const StatusBadge(label: 'Active'),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      Text('Manage farm operations, view health metrics, and track batch performance.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54)),
-                    ],
-                  ),
-                ),
+    return DefaultTabController(
+      length: 3,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(farm.farmName),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Edit farm',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const FarmSetupScreen()),
               ),
-              const SizedBox(height: 20),
-              GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 14,
-                mainAxisSpacing: 14,
-                childAspectRatio: 1.12,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  DashboardCard(title: 'Bird Capacity', value: '${farm.birdCapacity}', icon: Icons.pets, accentColor: Colors.green),
-                  DashboardCard(title: 'Active Batches', value: '0', icon: Icons.groups, accentColor: Colors.teal),
-                  DashboardCard(title: 'Today Mortality', value: '0', icon: Icons.healing, accentColor: Colors.redAccent),
-                  DashboardCard(title: 'Farm Health', value: '100%', icon: Icons.insights, accentColor: Colors.indigo),
-                ],
-              ),
-              const SizedBox(height: 24),
-              const SectionHeader(title: 'Quick actions', subtitle: 'Access the farm tools you need right now.'),
-              const SizedBox(height: 14),
-              GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 14,
-                mainAxisSpacing: 14,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  ActionTile(icon: Icons.group, label: 'Batches', onTap: () {}),
-                  ActionTile(icon: Icons.calendar_today, label: 'Daily Records', onTap: () {}),
-                  ActionTile(icon: Icons.inventory_2, label: 'Feed Stock', onTap: () {}),
-                  ActionTile(icon: Icons.account_balance_wallet, label: 'Finance', onTap: () {}),
-                  ActionTile(icon: Icons.pie_chart, label: 'Reports', onTap: () {}),
-                  ActionTile(icon: Icons.insights, label: 'AI Insights', onTap: () {}),
-                  ActionTile(icon: Icons.settings, label: 'Settings', onTap: () {}),
-                ],
-              ),
-              const SizedBox(height: 24),
-              const SectionHeader(title: 'Active Batches', subtitle: 'Monitor the current flock activity.'),
-              const SizedBox(height: 12),
-              Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                elevation: 1,
-                child: Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('No active batches yet', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 10),
-                      Text('Add your first batch to see live performance data and farm insights.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54)),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const SectionHeader(title: 'Alerts', subtitle: 'Important farm notifications.'),
-              const SizedBox(height: 12),
-              Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                elevation: 1,
-                child: Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Text('No alerts for this farm', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54)),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const SectionHeader(title: 'Today’s tasks', subtitle: 'Keep your farm running smoothly.'),
-              const SizedBox(height: 12),
-              Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                elevation: 1,
-                child: ListTile(
-                  title: const Text('No tasks scheduled'),
-                  subtitle: Text('Add tasks once your first farm is set up.', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.black54)),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const SectionHeader(title: 'Recent activity', subtitle: 'Farm actions and updates.'),
-              const SizedBox(height: 12),
-              Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                elevation: 1,
-                child: ListTile(
-                  title: const Text('No recent activity'),
-                  subtitle: Text('Activities will appear here once your farm starts operating.', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.black54)),
-                ),
-              ),
+            ),
+          ],
+          bottom: const TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.inventory_2_outlined), text: 'Batches'),
+              Tab(icon: Icon(Icons.info_outline), text: 'Details'),
+              Tab(icon: Icon(Icons.bar_chart_outlined), text: 'Reports'),
             ],
           ),
+        ),
+        body: TabBarView(
+          children: [
+            BatchListScreen(farmId: farm.id, farmName: farm.farmName),
+            _FarmDetailsTab(farm: farm),
+            const Center(child: Text('Reports coming soon')),
+          ],
         ),
       ),
     );
   }
+}
+
+class _FarmDetailsTab extends StatelessWidget {
+  const _FarmDetailsTab({required this.farm});
+  final FarmModel farm;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = [
+      ('Farm type', farm.farmType),
+      ('Flock type', farm.flockType),
+      ('Address', farm.address),
+      if (farm.location?.isNotEmpty ?? false) ('Location', farm.location!),
+      if (farm.ownerName?.isNotEmpty ?? false) ('Owner', farm.ownerName!),
+      if (farm.phone?.isNotEmpty ?? false) ('Phone', farm.phone!),
+      if (farm.notes?.isNotEmpty ?? false) ('Notes', farm.notes!),
+      ('Status', farm.status),
+      ('Created', _fmt(farm.createdAt)),
+    ];
+
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        Card(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            title: const Text('Batch Placement', style: TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: const Text('Create and manage chick batches'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BatchListScreen(
+                    farmId: farm.id,
+                    farmName: farm.farmName,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...List.generate(rows.length, (i) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 130,
+                  child: Text(
+                    rows[i].$1,
+                    style: const TextStyle(color: Colors.black45, fontSize: 13),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    rows[i].$2,
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  String _fmt(DateTime d) => '${d.day}/${d.month}/${d.year}';
 }

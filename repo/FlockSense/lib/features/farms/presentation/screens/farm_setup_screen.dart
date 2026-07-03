@@ -1,9 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flock_sense/features/farms/data/farm_service.dart';
 import 'package:flock_sense/features/farms/presentation/widgets/farm_form.dart';
-import 'package:flock_sense/core/exceptions/app_exceptions.dart';
 
+/// Create a new farm
 class FarmSetupScreen extends StatefulWidget {
   const FarmSetupScreen({super.key});
 
@@ -12,105 +11,78 @@ class FarmSetupScreen extends StatefulWidget {
 }
 
 class _FarmSetupScreenState extends State<FarmSetupScreen> {
-  bool _isLoading = false;
-  String? _errorMessage;
+  bool _saving = false;
 
-  Future<void> _handleCreateFarm(
+  Future<void> _onSubmit(
     String farmName,
     String farmType,
     String flockType,
     String address,
-    int birdCapacity,
+    String? areaName,
     String? district,
     String? state,
-    double? lengthFt,
-    double? widthFt,
+    String? farmerName,
+    String? phoneNumber,
     String? notes,
+    double lengthFt,
+    double widthFt,
+    int? capacity,
   ) async {
-    debugPrint('[FarmSetupScreen] onSubmit called with: farmName=$farmName, farmType=$farmType');
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
+    setState(() => _saving = true);
     try {
-      debugPrint('[FarmSetupScreen] Calling FarmService.createFarm()');
       await FarmService.createFarm(
         farmName: farmName,
         farmType: farmType,
         flockType: flockType,
         address: address,
-        birdCapacity: birdCapacity,
+        areaName: areaName,
         district: district,
         state: state,
+        farmerName: farmerName,
+        phoneNumber: phoneNumber,
+        notes: notes,
         lengthFt: lengthFt,
         widthFt: widthFt,
-        notes: notes,
+        capacity: capacity,
       );
-
-      debugPrint('[FarmSetupScreen] Farm created successfully!');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Farm created successfully!')),
-      );
-      // Return to previous screen and signal refresh
-      Navigator.pop(context, true);
-    } on ValidationException catch (e) {
-      debugPrint('[FarmSetupScreen] Validation error: ${e.message}');
-      setState(() {
-        _errorMessage = e.message;
-      });
-    } on AuthException catch (e) {
-      debugPrint('[FarmSetupScreen] Auth error: ${e.message}');
-      setState(() {
-        _errorMessage = ErrorMessages.getDisplayMessage(e);
-      });
-    } on PermissionException catch (e) {
-      debugPrint('[FarmSetupScreen] Permission error: ${e.message}');
-      setState(() {
-        _errorMessage = 'You do not have permission to create a farm. Please check your Firebase settings.';
-      });
-    } on FirestoreException catch (e) {
-      debugPrint('[FarmSetupScreen] Firestore error: code=${e.code}, message=${e.message}');
-      setState(() {
-        _errorMessage = ErrorMessages.getDisplayMessage(e);
-      });
-    } on AppException catch (e) {
-      debugPrint('[FarmSetupScreen] App error: ${e.message}');
-      setState(() {
-        _errorMessage = ErrorMessages.getDisplayMessage(e);
-      });
-    } on FirebaseException catch (e) {
-      debugPrint('[FarmSetupScreen] Firebase error: code=${e.code}, message=${e.message}');
-      setState(() {
-        _errorMessage = e.message ?? 'Failed to create farm. Please try again.';
-      });
-    } catch (e) {
-      debugPrint('[FarmSetupScreen] Unexpected error: $e');
-      setState(() {
-        _errorMessage = 'An unexpected error occurred. Please try again.';
-      });
-    } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Farm saved! It will sync to the cloud when online.'),
+          ),
+        );
+        Navigator.of(context).pop();
       }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: SafeArea(
-        child: FarmForm(
-          onSubmit: _handleCreateFarm,
-          isLoading: _isLoading,
-          errorMessage: _errorMessage,
-        ),
-      ),
+      appBar: AppBar(title: const Text('Create Farm')),
+      body: _saving
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Saving farm...'),
+                ],
+              ),
+            )
+          : FarmForm(onSubmit: _onSubmit),
     );
   }
 }
-

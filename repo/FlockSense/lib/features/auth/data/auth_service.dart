@@ -1,111 +1,201 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:math';
 
 class AuthService {
   AuthService._();
 
   static final _auth = FirebaseAuth.instance;
-  static final _firestore = FirebaseFirestore.instance;
+  static final _db = FirebaseFirestore.instance;
+  static final _rng = Random.secure();
+
+  // ── Standard sign-in ────────────────────────────────────────────────────
 
   static Future<User> login({
     required String email,
     required String password,
   }) async {
-    final result = await _auth.signInWithEmailAndPassword(
-      email: email,
+    final r = await _auth.signInWithEmailAndPassword(
+      email: email.trim(),
+      password: password.trim(),
+    );
+    return r.user!;
+  }
+
+  // ── Email OTP ────────────────────────────────────────────────────────────
+  // Generates a 4-digit code, stores it in Firestore with a 10-minute expiry.
+  // In production a Cloud Function would email the code; in dev mode the code
+  // is returned so the UI can display it for testing.
+
+  static Future<String> sendEmailOtp(String email) async {
+    final code = (_rng.nextInt(9000) + 1000).toString();
+    final key = _otpKey(email);
+
+    await _db.collection('otp_requests').doc(key).set({
+      'email': email.trim().toLowerCase(),
+      'code': code,
+      'expiresAt': DateTime.now()
+          .add(const Duration(minutes: 10))
+          .toIso8601String(),
+      'attempts': 0,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    debugPrint(
+      '[AuthService] Email OTP for ${email.trim()} → $code  (dev only)',
+    );
+    return code;
+  }
+
+  static Future<bool> verifyEmailOtp(String email, String entered) async {
+    final key = _otpKey(email);
+    final doc = await _db.collection('otp_requests').doc(key).get();
+    if (!doc.exists) return false;
+
+    final d = doc.data()!;
+    final expires = DateTime.parse(d['expiresAt'] as String);
+    final stored = d['code'] as String;
+    final attempts = (d['attempts'] as int? ?? 0);
+
+    if (DateTime.now().isAfter(expires) || attempts >= 3) return false;
+    await doc.reference.update({'attempts': attempts + 1});
+
+    if (entered.trim() == stored) {
+      await doc.reference.delete();
+      return true;
+    }
+    return false;
+  }
+
+  static String _otpKey(String email) => email
+      .trim()
+      .toLowerCase()
+      .replaceAll('@', '_at_')
+      .replaceAll('.', '_dot_');
+
+  // ── Phone OTP (Firebase phone auth) ──────────────────────────────────────
+
+  static Future<String> sendPhoneOtp({
+    required String phoneNumber,
+    required void Function(String err) onError,
+  }) {
+    final comp = Completer<String>();
+
+    _auth.verifyPhoneNumber(
+      phoneNumber: phoneNumber,
+      timeout: const Duration(seconds: 60),
+      verificationCompleted: (cred) {
+        // Android auto-retrieval: resolve immediately.
+        if (!comp.isCompleted) comp.complete(cred.smsCode ?? '');
+      },
+      verificationFailed: (e) {
+        onError(mapAuthException(e));
+        if (!comp.isCompleted) comp.completeError(e);
+      },
+      codeSent: (verificationId, _) {
+        if (!comp.isCompleted) comp.complete(verificationId);
+      },
+      codeAutoRetrievalTimeout: (_) {
+        if (!comp.isCompleted) comp.complete('');
+      },
+    );
+
+    return comp.future;
+  }
+
+  static Future<bool> verifyPhoneOtp(
+    String verificationId,
+    String smsCode,
+  ) async {
+    try {
+      final cred = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: smsCode,
+      );
+      await _auth.signInWithCredential(cred);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ── Create account (after OTP verified) ─────────────────────────────────
+
+  static Future<User> createAccount({
+    required String name,
+    required String email,
+    required String password,
+    String? phone,
+  }) async {
+    final r = await _auth.createUserWithEmailAndPassword(
+      email: email.trim(),
       password: password,
     );
-    return result.user!;
+    final user = r.user!;
+    await user.updateDisplayName(name.trim());
+
+    await _db.collection('users').doc(user.uid).set({
+      'uid': user.uid,
+      'name': name.trim(),
+      'email': email.trim(),
+      'phone': phone?.trim() ?? '',
+      'role': 'owner',
+      'hasCompletedOnboarding': false,
+      'hasFarm': false,
+      'activeFarmId': null,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    return user;
   }
 
-  static String mapAuthException(FirebaseAuthException exception) {
-    switch (exception.code) {
-      case 'network-request-failed':
-        return 'No internet connection. Please check your network and try again.';
-      case 'email-already-in-use':
-        return 'This email is already registered. Please login instead.';
-      case 'invalid-email':
-        return 'Please enter a valid email address.';
-      case 'weak-password':
-        return 'Password must be at least 6 characters.';
-      case 'too-many-requests':
-        return 'Too many attempts. Please try again later.';
-      default:
-        return exception.message ?? 'Something went wrong. Please try again.';
-    }
-  }
-
-  static String mapFirebaseException(FirebaseException exception) {
-    if (exception is FirebaseAuthException) {
-      return mapAuthException(exception);
-    }
-
-    switch (exception.code) {
-      case 'permission-denied':
-        return 'Unable to save your account. Please make sure app permissions are allowed.';
-      case 'unavailable':
-        return 'Firebase service unavailable. Please try again later.';
-      case 'deadline-exceeded':
-        return 'Request timed out. Please try again.';
-      default:
-        return exception.message ?? 'Something went wrong. Please try again.';
-    }
-  }
-
+  // Alias kept so nothing else breaks.
   static Future<User> register({
     required String name,
     required String email,
     required String password,
-  }) async {
-    final result = await _auth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
-    final user = result.user!;
-    
-    try {
-      await user.updateDisplayName(name);
-    } catch (e) {
-      throw FirebaseException(
-        plugin: 'firebase_auth',
-        code: 'profile-update-failed',
-        message: 'Failed to update user profile: $e',
-      );
-    }
+  }) => createAccount(name: name, email: email, password: password);
 
-    try {
-      final userData = {
-        'uid': user.uid,
-        'name': name,
-        'email': user.email ?? email,
-        'role': 'owner',
-        'hasCompletedOnboarding': false,
-        'hasFarm': false,
-        'activeFarmId': null,
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
-      await _firestore.collection('users').doc(user.uid).set(
-            userData,
-            SetOptions(merge: true),
-          );
-    } catch (e) {
-      await user.delete();
-      throw FirebaseException(
-        plugin: 'cloud_firestore',
-        code: 'user-data-save-failed',
-        message: 'Failed to save user data. User account deleted: $e',
-      );
+  // ── Misc ─────────────────────────────────────────────────────────────────
+
+  static Future<void> sendPasswordReset({required String email}) =>
+      _auth.sendPasswordResetEmail(email: email.trim());
+
+  static Future<void> logout() => _auth.signOut();
+
+  static String mapAuthException(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'network-request-failed':
+        return 'No internet connection.';
+      case 'email-already-in-use':
+        return 'This email is already registered.';
+      case 'invalid-email':
+        return 'Enter a valid email address.';
+      case 'weak-password':
+        return 'Password must be at least 6 characters.';
+      case 'user-not-found':
+        return 'No account found for this email.';
+      case 'wrong-password':
+        return 'Incorrect password.';
+      case 'too-many-requests':
+        return 'Too many attempts. Try again later.';
+      default:
+        return e.message ?? 'Something went wrong.';
     }
-    
-    return user;
   }
 
-  static Future<void> sendPasswordReset({required String email}) async {
-    await _auth.sendPasswordResetEmail(email: email);
-  }
-
-  static Future<void> logout() async {
-    await _auth.signOut();
+  static String mapFirebaseException(FirebaseException e) {
+    if (e is FirebaseAuthException) return mapAuthException(e);
+    switch (e.code) {
+      case 'permission-denied':
+        return 'Permission denied. Check your Firestore rules.';
+      case 'unavailable':
+        return 'Service unavailable. Try again.';
+      default:
+        return e.message ?? 'Something went wrong.';
+    }
   }
 }

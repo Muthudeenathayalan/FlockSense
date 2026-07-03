@@ -31,19 +31,16 @@ void main() {
     expect(json['expectedHarvestDay'], 42);
     expect((json['createdAt'] as Timestamp).toDate(), createdAt);
 
-    final copy = Flock.fromMap(
-      {
-        'name': 'Batch One',
-        'birdType': 'Broiler',
-        'breed': 'Cobb 500',
-        'placementDate': Timestamp.fromDate(placementDate),
-        'openingCount': 1200,
-        'targetFcr': 1.75,
-        'expectedHarvestDay': 42,
-        'createdAt': Timestamp.fromDate(createdAt),
-      },
-      'batch-1',
-    );
+    final copy = Flock.fromMap({
+      'name': 'Batch One',
+      'birdType': 'Broiler',
+      'breed': 'Cobb 500',
+      'placementDate': Timestamp.fromDate(placementDate),
+      'openingCount': 1200,
+      'targetFcr': 1.75,
+      'expectedHarvestDay': 42,
+      'createdAt': Timestamp.fromDate(createdAt),
+    }, 'batch-1');
 
     expect(copy.id, 'batch-1');
     expect(copy.name, flock.name);

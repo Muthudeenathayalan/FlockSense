@@ -22,13 +22,13 @@ class FarmService {
   }
 
   /// Creates a farm in the user's subcollection: users/{uid}/farms/{farmId}
-  /// 
+  ///
   /// This method:
   /// 1. Validates and sanitizes all inputs
   /// 2. Uses a Firestore transaction to atomically create farm and update user doc
   /// 3. Logs the operation for audit trail
   /// 4. Updates local cache
-  /// 
+  ///
   /// Firestore Path: users/{uid}/farms/{farmId}
   /// Required: User must be authenticated
   static Future<FarmModel> createFarm({
@@ -36,44 +36,35 @@ class FarmService {
     required String farmType,
     required String flockType,
     required String address,
-    required int birdCapacity,
+    String? areaName,
     String? district,
     String? state,
-    double? lengthFt,
-    double? widthFt,
+    String? farmerName,
+    String? phoneNumber,
     String? notes,
+    required double lengthFt,
+    required double widthFt,
+    double? totalSqFt,
+    int? capacity,
   }) async {
     debugPrint('[FarmService.createFarm] Starting farm creation');
-    
+
     final user = _auth.currentUser;
     if (user == null) {
       throw AuthException('You must be signed in before creating a farm.');
     }
 
     try {
-      // Sanitize all inputs
-      final sanitized = InputSanitizer.sanitizeFarmData(
-        farmName: farmName,
-        farmType: farmType,
-        flockType: flockType,
-        address: address,
-        birdCapacity: birdCapacity.toString(),
-        district: district,
-        state: state,
-        lengthFt: lengthFt?.toString(),
-        widthFt: widthFt?.toString(),
-        notes: notes,
-      );
-
-      // Validate sanitized data
-      if (!InputSanitizer.isValidFarmName(sanitized['farmName'])) {
-        throw ValidationException('Farm name must be between 2 and 100 characters');
+      // Validate inputs
+      if (!InputSanitizer.isValidFarmName(farmName)) {
+        throw ValidationException(
+          'Farm name must be between 2 and 100 characters',
+        );
       }
-      if (!InputSanitizer.isValidAddress(sanitized['address'])) {
-        throw ValidationException('Address must be between 5 and 200 characters');
-      }
-      if (!InputSanitizer.isValidBirdCapacity(sanitized['birdCapacity'].toString())) {
-        throw ValidationException('Bird capacity must be a positive number');
+      if (!InputSanitizer.isValidAddress(address)) {
+        throw ValidationException(
+          'Address must be between 5 and 200 characters',
+        );
       }
 
       final farmId = _generateFarmId();
@@ -81,43 +72,52 @@ class FarmService {
 
       // Use a transaction to atomically create farm AND update user doc
       await _firestore.runTransaction((transaction) async {
-        final farmRef = _firestore.collection('users').doc(user.uid).collection('farms').doc(farmId);
+        final farmRef = _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('farms')
+            .doc(farmId);
         final userRef = _firestore.collection('users').doc(user.uid);
 
         // Get the current user document to check if this is the first farm
         final userSnapshot = await transaction.get(userRef);
-        final isFirstFarm = !userSnapshot.exists || 
+        final isFirstFarm =
+            !userSnapshot.exists ||
             (userSnapshot.data()?['hasFarm'] as bool? ?? false) == false;
 
-        // Set farm document
+        final resolvedTotalSqFt = (totalSqFt != null && totalSqFt > 0)
+            ? totalSqFt
+            : lengthFt * widthFt;
+
         transaction.set(farmRef, {
           'id': farmId,
           'userId': user.uid,
-          'farmName': sanitized['farmName'],
-          'farmType': sanitized['farmType'],
-          'flockType': sanitized['flockType'],
-          'address': sanitized['address'],
-          'district': sanitized['district'],
-          'state': sanitized['state'],
-          'birdCapacity': sanitized['birdCapacity'],
-          'lengthFt': sanitized['lengthFt'],
-          'widthFt': sanitized['widthFt'],
-          'notes': sanitized['notes'],
+          'ownerId': user.uid,
+          'farmName': farmName,
+          'farmerName': farmerName,
+          'farmType': farmType,
+          'flockType': flockType,
+          'address': address,
+          'areaName': areaName,
+          'lengthFt': lengthFt,
+          'widthFt': widthFt,
+          'totalSqFt': resolvedTotalSqFt,
+          'capacity': capacity,
+          'district': district,
+          'state': state,
+          'phoneNumber': phoneNumber,
+          'notes': notes,
           'status': 'active',
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
         });
 
         // Update user document with farm flags
-        transaction.set(
-          userRef,
-          {
-            'hasFarm': true,
-            if (isFirstFarm) 'activeFarmId': farmId,
-            'updatedAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true),
-        );
+        transaction.set(userRef, {
+          'hasFarm': true,
+          if (isFirstFarm) 'activeFarmId': farmId,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
       });
 
       debugPrint('[FarmService.createFarm] Farm created successfully');
@@ -125,28 +125,36 @@ class FarmService {
       // Log the operation
       await _auditService.logFarmCreate(
         farmId: farmId,
-        farmName: sanitized['farmName'],
-        farmType: sanitized['farmType'],
+        farmName: farmName,
+        farmType: farmType,
         additionalData: {
-          'flockType': sanitized['flockType'],
-          'birdCapacity': sanitized['birdCapacity'],
+          'flockType': flockType,
         },
       );
 
       // Cache the farm
+      final resolvedTotalSqFt = (totalSqFt != null && totalSqFt > 0)
+          ? totalSqFt
+          : lengthFt * widthFt;
+
       final farm = FarmModel(
         id: farmId,
         userId: user.uid,
-        farmName: sanitized['farmName'],
-        farmType: sanitized['farmType'],
-        flockType: sanitized['flockType'],
-        address: sanitized['address'],
-        birdCapacity: sanitized['birdCapacity'],
-        district: sanitized['district'] as String?,
-        state: sanitized['state'] as String?,
-        lengthFt: sanitized['lengthFt'] as double?,
-        widthFt: sanitized['widthFt'] as double?,
-        notes: sanitized['notes'] as String?,
+        ownerId: user.uid,
+        farmName: farmName,
+        farmerName: farmerName,
+        farmType: farmType,
+        flockType: flockType,
+        address: address,
+        lengthFt: lengthFt,
+        widthFt: widthFt,
+        totalSqFt: resolvedTotalSqFt,
+        areaName: areaName,
+        capacity: capacity,
+        district: district,
+        state: state,
+        phoneNumber: phoneNumber,
+        notes: notes,
         status: 'active',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
@@ -177,7 +185,9 @@ class FarmService {
 
   /// Retrieves all farms for the current user
   /// Tries cache first, then Firestore, with automatic cache update
-  static Future<List<FarmModel>> getUserFarms({bool forceRefresh = false}) async {
+  static Future<List<FarmModel>> getUserFarms({
+    bool forceRefresh = false,
+  }) async {
     final user = _auth.currentUser;
     if (user == null) {
       throw AuthException('You must be signed in to retrieve farms.');
@@ -189,11 +199,15 @@ class FarmService {
         try {
           final cached = await _cacheService.getCachedFarms(user.uid);
           if (cached.isNotEmpty) {
-            debugPrint('[FarmService.getUserFarms] Returning ${cached.length} farms from cache');
+            debugPrint(
+              '[FarmService.getUserFarms] Returning ${cached.length} farms from cache',
+            );
             return cached;
           }
         } catch (e) {
-          debugPrint('[FarmService.getUserFarms] Cache error, falling back to Firestore: $e');
+          debugPrint(
+            '[FarmService.getUserFarms] Cache error, falling back to Firestore: $e',
+          );
         }
       }
 
@@ -207,15 +221,14 @@ class FarmService {
 
       final farms = snapshot.docs.map((doc) {
         final data = doc.data();
-        return FarmModel.fromJson({
-          ...data,
-          'userId': user.uid,
-        });
+        return FarmModel.fromJson({...data, 'userId': user.uid});
       }).toList();
 
       // Update cache
       await _cacheService.cacheFarms(user.uid, farms);
-      debugPrint('[FarmService.getUserFarms] Fetched ${farms.length} farms from Firestore');
+      debugPrint(
+        '[FarmService.getUserFarms] Fetched ${farms.length} farms from Firestore',
+      );
 
       return farms;
     } on AppException {
@@ -223,6 +236,47 @@ class FarmService {
     } catch (e) {
       throw ExceptionMapper.mapException(e);
     }
+  }
+
+  /// Returns the total area across all farms owned by the user.
+  static Future<double> getUserFarmArea(String uid) async {
+    final farmSnapshot = await _firestore.collection('users').doc(uid).collection('farms').get();
+    if (farmSnapshot.docs.isEmpty) return 0.0;
+    return farmSnapshot.docs.fold<double>(0.0, (acc, farmDoc) {
+      final data = farmDoc.data();
+      final length = _parseDouble(data['lengthFt'] ?? data['length'] ?? 0.0);
+      final width = _parseDouble(data['widthFt'] ?? data['width'] ?? 0.0);
+      final total = _parseDouble(data['totalSqFt'] ?? (length * width));
+      return acc + total;
+    });
+  }
+
+  static double _parseDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
+
+  /// Real-time farm stream for the signed-in user.
+  /// Uses Firestore snapshots so the UI updates immediately.
+  static Stream<List<FarmModel>> watchFarms(String uid) {
+    return _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('farms')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => FarmModel.fromJson({...doc.data(), 'userId': uid}))
+            .toList());
+  }
+
+  /// Real-time farm stream for the currently signed-in user.
+  static Stream<List<FarmModel>> watchUserFarms() {
+    final user = _auth.currentUser;
+    if (user == null) return const Stream.empty();
+    return watchFarms(user.uid);
   }
 
   /// Retrieves a specific farm by ID
@@ -237,11 +291,15 @@ class FarmService {
       try {
         final cached = await _cacheService.getCachedFarm(user.uid, farmId);
         if (cached != null) {
-          debugPrint('[FarmService.getFarmById] Returning farm from cache: $farmId');
+          debugPrint(
+            '[FarmService.getFarmById] Returning farm from cache: $farmId',
+          );
           return cached;
         }
       } catch (e) {
-        debugPrint('[FarmService.getFarmById] Cache error, falling back to Firestore: $e');
+        debugPrint(
+          '[FarmService.getFarmById] Cache error, falling back to Firestore: $e',
+        );
       }
 
       // Fetch from Firestore
@@ -257,10 +315,7 @@ class FarmService {
       }
 
       final data = snapshot.data()!;
-      final farm = FarmModel.fromJson({
-        ...data,
-        'userId': user.uid,
-      });
+      final farm = FarmModel.fromJson({...data, 'userId': user.uid});
 
       // Cache it
       await _cacheService.cacheFarm(user.uid, farm);
@@ -319,7 +374,11 @@ class FarmService {
 
       // Use a transaction to atomically delete farm and update user doc if needed
       await _firestore.runTransaction((transaction) async {
-        final farmRef = _firestore.collection('users').doc(user.uid).collection('farms').doc(farmId);
+        final farmRef = _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('farms')
+            .doc(farmId);
         final userRef = _firestore.collection('users').doc(user.uid);
 
         // Get farm to log the deletion
@@ -339,7 +398,9 @@ class FarmService {
             'activeFarmId': null,
             'updatedAt': FieldValue.serverTimestamp(),
           });
-          debugPrint('[FarmService.deleteFarm] Cleared activeFarmId since deleted farm was active');
+          debugPrint(
+            '[FarmService.deleteFarm] Cleared activeFarmId since deleted farm was active',
+          );
         }
       });
 

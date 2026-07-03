@@ -10,7 +10,8 @@ import 'package:flock_sense/core/exceptions/app_exceptions.dart';
 const String _farmsBoxKey = 'farms_cache';
 const String _syncStatusBoxKey = 'sync_status';
 const String _lastSyncKey = 'last_sync_timestamp';
-const String _pendingOperationsKey = 'pending_operations';
+// Reserved for future pending operations queue
+// const String _pendingOperationsKey = 'pending_operations';
 
 /// Local cache service for offline-first architecture
 class CacheService {
@@ -364,6 +365,29 @@ class CacheService {
       debugPrint('[CacheService] Disposed');
     } catch (e) {
       debugPrint('[CacheService] Failed to dispose: $e');
+    }
+  }
+
+  // ========== RAW KEY-VALUE STORAGE (used by SyncService) ==========
+
+  /// Store any list under a plain key in the sync box.
+  Future<void> setRawList(String key, List<dynamic> value) async {
+    try {
+      await _syncBox.put(key, value);
+    } catch (e) {
+      debugPrint('[CacheService] setRawList error for key $key: $e');
+    }
+  }
+
+  /// Retrieve a list stored with [setRawList]. Returns [] if not found.
+  Future<List<dynamic>> getRawList(String key) async {
+    try {
+      final val = _syncBox.get(key);
+      if (val == null) return [];
+      return (val as List).toList();
+    } catch (e) {
+      debugPrint('[CacheService] getRawList error for key $key: $e');
+      return [];
     }
   }
 }

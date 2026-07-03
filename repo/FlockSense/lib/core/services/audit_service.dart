@@ -251,8 +251,7 @@ class AuditService {
           .limit(limit);
 
       if (startDate != null) {
-        query = query.where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
-            as Query<Map<String, dynamic>>;
+        query = query.where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate));
       }
 
       final snapshot = await query.get();

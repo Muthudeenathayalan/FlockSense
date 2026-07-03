@@ -19,24 +19,47 @@ service cloud.firestore {
         
         // Validate farm data on create
         allow create: if request.resource.data.keys().hasAll([
-          'farmName', 'farmType', 'flockType', 'address', 'birdCapacity'
+          'farmName', 'farmType', 'flockType', 'address'
         ]) &&
         request.resource.data.farmName is string &&
         request.resource.data.farmName.size() >= 2 &&
         request.resource.data.farmName.size() <= 100 &&
         request.resource.data.address is string &&
-        request.resource.data.address.size() >= 5 &&
-        request.resource.data.birdCapacity is number &&
-        request.resource.data.birdCapacity > 0 &&
-        request.resource.data.birdCapacity <= 1000000;
+        request.resource.data.address.size() >= 5;
         
         // Validate farm data on update
         allow update: if request.resource.data.farmName.size() >= 2 &&
-        request.resource.data.farmName.size() <= 100 &&
-        request.resource.data.birdCapacity > 0 &&
-        request.resource.data.birdCapacity <= 1000000;
+        request.resource.data.farmName.size() <= 100;
         
-        // Flock subcollection - scoped to specific farm
+        // Shed subcollection - physical structure under farm
+        match /sheds/{shedId} {
+          allow read, write: if request.auth.uid == uid;
+          
+          // Validate shed data on create
+          allow create: if request.resource.data.keys().hasAll([
+            'shedName', 'physicalCapacity'
+          ]) &&
+          request.resource.data.shedName is string &&
+          request.resource.data.physicalCapacity is number &&
+          request.resource.data.physicalCapacity > 0 &&
+          request.resource.data.physicalCapacity <= 1000000;
+        }
+        
+        // Batch subcollection - bird batch lifecycle
+        match /batches/{batchId} {
+          allow read, write: if request.auth.uid == uid;
+          
+          // Validate batch data on create
+          allow create: if request.resource.data.keys().hasAll([
+            'initialBirds', 'currentBirds', 'flockType', 'placementDate'
+          ]) &&
+          request.resource.data.initialBirds is number &&
+          request.resource.data.initialBirds > 0 &&
+          request.resource.data.currentBirds is number &&
+          request.resource.data.currentBirds > 0;
+        }
+        
+        // Flock subcollection - scoped to specific farm (legacy)
         match /flocks/{flockId} {
           allow read, write: if request.auth.uid == uid;
           

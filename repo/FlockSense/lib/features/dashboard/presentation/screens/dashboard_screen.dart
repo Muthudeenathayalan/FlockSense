@@ -148,9 +148,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Total Capacity:', style: TextStyle(color: Colors.white70)),
+                            const Text('Status:', style: TextStyle(color: Colors.white70)),
                             Text(
-                              '${farm.birdCapacity} birds',
+                              farm.status,
                               style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
                             ),
                           ],
@@ -162,8 +162,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   FutureBuilder<List<FarmModel>>(
                     future: FarmService.getUserFarms(),
                     builder: (context, farmsSnap) {
-                      final farms = farmsSnap.data ?? [];
-                      final totalBirds = farms.fold<int>(0, (sum, f) => sum + f.birdCapacity);
                       return GridView.count(
                         crossAxisCount: 2,
                         mainAxisSpacing: 16,
@@ -171,7 +169,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         children: [
-                          _buildSummaryCard(context, 'Total Birds', '$totalBirds', Icons.pets),
+                          _buildSummaryCard(context, 'Total Birds', '0', Icons.pets),
                           _buildSummaryCard(context, 'Active Batches', '0', Icons.group),
                           _buildSummaryCard(context, 'Feed Stock', '0 kg', Icons.inventory_2),
                           _buildSummaryCard(context, 'Alerts', '0', Icons.warning_amber),

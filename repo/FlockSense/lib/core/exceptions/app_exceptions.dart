@@ -1,5 +1,5 @@
 /// Custom exception hierarchy for FlockSense
-///
+/// 
 /// Provides categorized exceptions for better error handling and user feedback
 import 'package:flutter/foundation.dart';
 
@@ -9,7 +9,11 @@ abstract class AppException implements Exception {
   final String? code;
   final Exception? originalException;
 
-  AppException(this.message, {this.code, this.originalException});
+  AppException(
+    this.message, {
+    this.code,
+    this.originalException,
+  });
 
   @override
   String toString() => message;
@@ -17,8 +21,11 @@ abstract class AppException implements Exception {
 
 /// Authentication-related exceptions
 class AuthException extends AppException {
-  AuthException(String message, {String? code, Exception? originalException})
-    : super(message, code: code, originalException: originalException);
+  AuthException(
+    String message, {
+    String? code,
+    Exception? originalException,
+  }) : super(message, code: code, originalException: originalException);
 }
 
 /// Firestore/Database exceptions
@@ -32,8 +39,11 @@ class FirestoreException extends AppException {
 
 /// Network-related exceptions
 class NetworkException extends AppException {
-  NetworkException(String message, {String? code, Exception? originalException})
-    : super(message, code: code, originalException: originalException);
+  NetworkException(
+    String message, {
+    String? code,
+    Exception? originalException,
+  }) : super(message, code: code, originalException: originalException);
 }
 
 /// Validation exceptions (input validation, business logic validation)
@@ -68,8 +78,11 @@ class NotFoundException extends AppException {
 
 /// Cache/Local storage exceptions
 class CacheException extends AppException {
-  CacheException(String message, {String? code, Exception? originalException})
-    : super(message, code: code, originalException: originalException);
+  CacheException(
+    String message, {
+    String? code,
+    Exception? originalException,
+  }) : super(message, code: code, originalException: originalException);
 }
 
 /// Sync/Offline exceptions
@@ -88,8 +101,11 @@ class SyncException extends AppException {
 
 /// Unexpected/Unknown exceptions
 class UnknownException extends AppException {
-  UnknownException(String message, {String? code, Exception? originalException})
-    : super(message, code: code, originalException: originalException);
+  UnknownException(
+    String message, {
+    String? code,
+    Exception? originalException,
+  }) : super(message, code: code, originalException: originalException);
 }
 
 /// Exception mapper - converts Firebase exceptions to custom exceptions
@@ -110,8 +126,7 @@ class ExceptionMapper {
 
     final errorString = exception.toString().toLowerCase();
 
-    if (errorString.contains('authentication') ||
-        errorString.contains('auth/')) {
+    if (errorString.contains('authentication') || errorString.contains('auth/')) {
       return AuthException(
         _extractFirebaseMessage(exception) ?? 'Authentication failed',
         code: _extractFirebaseCode(exception),
@@ -119,8 +134,7 @@ class ExceptionMapper {
       );
     }
 
-    if (errorString.contains('firestore') ||
-        errorString.contains('permission-denied')) {
+    if (errorString.contains('firestore') || errorString.contains('permission-denied')) {
       final code = _extractFirebaseCode(exception);
       final message = _extractFirebaseMessage(exception);
 
@@ -149,8 +163,7 @@ class ExceptionMapper {
 
     if (errorString.contains('network') || errorString.contains('connection')) {
       return NetworkException(
-        _extractFirebaseMessage(exception) ??
-            'Network error. Check your connection.',
+        _extractFirebaseMessage(exception) ?? 'Network error. Check your connection.',
         code: _extractFirebaseCode(exception),
         originalException: asException(exception),
       );
@@ -188,12 +201,12 @@ class ErrorMessages {
       return exception.code == 'user-not-found'
           ? 'No account found with this email'
           : exception.code == 'wrong-password'
-          ? 'Incorrect password'
-          : exception.code == 'weak-password'
-          ? 'Password must be at least 6 characters'
-          : exception.code == 'email-already-in-use'
-          ? 'This email is already registered'
-          : exception.message;
+              ? 'Incorrect password'
+              : exception.code == 'weak-password'
+                  ? 'Password must be at least 6 characters'
+                  : exception.code == 'email-already-in-use'
+                      ? 'This email is already registered'
+                      : exception.message;
     }
 
     if (exception is NetworkException) {
@@ -216,8 +229,8 @@ class ErrorMessages {
       return exception.code == 'unavailable'
           ? 'Service temporarily unavailable. Please try again.'
           : exception.code == 'deadline-exceeded'
-          ? 'Request timeout. Please check your connection.'
-          : exception.message;
+              ? 'Request timeout. Please check your connection.'
+              : exception.message;
     }
 
     return 'An unexpected error occurred. Please try again.';
