@@ -9,31 +9,36 @@ const _quotes = [
   (
     icon: Icons.agriculture,
     headline: 'Welcome to FlockSense',
-    body: 'The smart way to manage your poultry farms — from a single shed to an entire flock operation.',
+    body:
+        'The smart way to manage your poultry farms — from a single shed to an entire flock operation.',
     accent: Color(0xFF0A5C38),
   ),
   (
     icon: Icons.insights,
     headline: 'Data-driven farming',
-    body: '"Good farmers know their land. Great farmers know their numbers." Track feed, mortality, growth and more — every day.',
+    body:
+        '"Good farmers know their land. Great farmers know their numbers." Track feed, mortality, growth and more — every day.',
     accent: Color(0xFF1B6B8A),
   ),
   (
     icon: Icons.cloud_sync,
     headline: 'Works offline too',
-    body: 'No internet? No problem. Your records are saved locally and sync automatically when you come back online.',
+    body:
+        'No internet? No problem. Your records are saved locally and sync automatically when you come back online.',
     accent: Color(0xFF5C3D0A),
   ),
   (
     icon: Icons.health_and_safety,
     headline: 'Keep your flock healthy',
-    body: '"A healthy bird is a profitable bird." Set vaccination reminders, track medicine usage and monitor daily health scores.',
+    body:
+        '"A healthy bird is a profitable bird." Set vaccination reminders, track medicine usage and monitor daily health scores.',
     accent: Color(0xFF1A5C1A),
   ),
   (
     icon: Icons.emoji_events,
     headline: "You're all set!",
-    body: 'Create your first farm and start your journey towards smarter, more profitable poultry farming.',
+    body:
+        'Create your first farm and start your journey towards smarter, more profitable poultry farming.',
     accent: Color(0xFF6B3D0A),
   ),
 ];
@@ -49,23 +54,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _page = 0;
 
   @override
-  void dispose() { _controller.dispose(); super.dispose(); }
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   Future<void> _finish() async {
     // Mark onboarding complete in Firestore so this screen never shows again.
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
       try {
-        await FirebaseFirestore.instance.collection('users').doc(uid).set(
-          {'hasCompletedOnboarding': true, 'updatedAt': FieldValue.serverTimestamp()},
-          SetOptions(merge: true),
-        );
+        await FirebaseFirestore.instance.collection('users').doc(uid).set({
+          'hasCompletedOnboarding': true,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
       } catch (_) {}
     }
     if (mounted) {
       // Go to AuthWrapper — it will re-evaluate state and send user to
       // farmSetup / main shell as appropriate.
-      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.initial, (_) => false);
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.initial,
+        (_) => false,
+      );
     }
   }
 
@@ -85,7 +97,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 padding: const EdgeInsets.all(16),
                 child: TextButton(
                   onPressed: _finish,
-                  child: const Text('Skip', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                  child: const Text(
+                    'Skip',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -108,22 +126,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   // Dot indicators
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_quotes.length, (i) => AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      width: i == _page ? 24 : 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: i == _page ? AppColors.primary : AppColors.border,
-                        borderRadius: BorderRadius.circular(4),
+                    children: List.generate(
+                      _quotes.length,
+                      (i) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: i == _page ? 24 : 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: i == _page
+                              ? AppColors.primary
+                              : AppColors.border,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
-                    )),
+                    ),
                   ),
                   const SizedBox(height: 28),
                   FilledButton(
                     onPressed: isLast
                         ? _finish
-                        : () => _controller.nextPage(duration: const Duration(milliseconds: 350), curve: Curves.easeInOut),
+                        : () => _controller.nextPage(
+                            duration: const Duration(milliseconds: 350),
+                            curve: Curves.easeInOut,
+                          ),
                     child: Text(isLast ? "Let's go!" : 'Next'),
                   ),
                 ],
@@ -149,7 +175,8 @@ class _QuotePage extends StatelessWidget {
         children: [
           // Icon circle with gradient
           Container(
-            width: 110, height: 110,
+            width: 110,
+            height: 110,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -157,7 +184,13 @@ class _QuotePage extends StatelessWidget {
                 colors: [data.accent, data.accent.withValues(alpha: 0.7)],
               ),
               borderRadius: BorderRadius.circular(32),
-              boxShadow: [BoxShadow(color: data.accent.withValues(alpha: 0.25), blurRadius: 24, offset: const Offset(0, 8))],
+              boxShadow: [
+                BoxShadow(
+                  color: data.accent.withValues(alpha: 0.25),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
             child: Icon(data.icon, size: 54, color: Colors.white),
           ),
@@ -165,13 +198,23 @@ class _QuotePage extends StatelessWidget {
           Text(
             data.headline,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: AppColors.textPrimary, letterSpacing: -0.5, height: 1.2),
+            style: const TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.5,
+              height: 1.2,
+            ),
           ),
           const SizedBox(height: 18),
           Text(
             data.body,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 15.5, color: AppColors.textSecondary, height: 1.65),
+            style: const TextStyle(
+              fontSize: 15.5,
+              color: AppColors.textSecondary,
+              height: 1.65,
+            ),
           ),
         ],
       ),

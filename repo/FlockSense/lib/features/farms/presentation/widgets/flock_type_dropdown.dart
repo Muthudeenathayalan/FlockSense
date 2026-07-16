@@ -27,7 +27,9 @@ class FlockTypeDropdown extends StatelessWidget {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
       ),
       dropdownColor: Colors.white,
-      items: _options.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
+      items: _options
+          .map((o) => DropdownMenuItem(value: o, child: Text(o)))
+          .toList(),
       validator: validator,
       onChanged: enabled ? onChanged : null,
     );

@@ -1,5 +1,5 @@
 /// Audit logging service for FlockSense
-/// 
+///
 /// Tracks all important operations for compliance and debugging
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -132,11 +132,7 @@ class AuditService {
       operation: AuditOperation.farmCreate,
       resourceType: 'Farm',
       resourceId: farmId,
-      changes: {
-        'farmName': farmName,
-        'farmType': farmType,
-        ...?additionalData,
-      },
+      changes: {'farmName': farmName, 'farmType': farmType, ...?additionalData},
     );
   }
 
@@ -177,11 +173,7 @@ class AuditService {
       operation: AuditOperation.flockCreate,
       resourceType: 'Flock',
       resourceId: flockId,
-      changes: {
-        'farmId': farmId,
-        'flockName': flockName,
-        'birdType': birdType,
-      },
+      changes: {'farmId': farmId, 'flockName': flockName, 'birdType': birdType},
     );
   }
 
@@ -251,7 +243,10 @@ class AuditService {
           .limit(limit);
 
       if (startDate != null) {
-        query = query.where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate));
+        query = query.where(
+          'timestamp',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
+        );
       }
 
       final snapshot = await query.get();

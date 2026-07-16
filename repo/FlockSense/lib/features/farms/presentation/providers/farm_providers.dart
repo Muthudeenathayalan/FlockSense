@@ -4,9 +4,7 @@ import 'package:flock_sense/features/farms/data/farm_service.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
 
 /// Real-time list of the signed-in user's farms from Firestore.
-final farmListProvider = StreamProvider.autoDispose<List<FarmModel>>((
-  ref,
-) {
+final farmListProvider = StreamProvider.autoDispose<List<FarmModel>>((ref) {
   final authState = ref.watch(authStateProvider);
   return authState.when(
     data: (user) {
@@ -38,8 +36,9 @@ class FarmDashboardStats {
   );
 }
 
-final farmDashboardStatsProvider = Provider.autoDispose<FarmDashboardStats>(
-  (ref) {
+final farmDashboardStatsProvider = Provider.autoDispose<FarmDashboardStats>((
+  ref,
+) {
   final farmsAsync = ref.watch(farmListProvider);
   return farmsAsync.when(
     data: (farms) => FarmDashboardStats(

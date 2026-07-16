@@ -37,7 +37,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return FarmService.getFarmById(activeFarmId);
   }
 
-  Widget _buildSummaryCard(BuildContext context, String label, String value, IconData icon) {
+  Widget _buildSummaryCard(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey.shade900,
@@ -54,9 +59,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(value, style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white)),
+              Text(
+                value,
+                style: Theme.of(
+                  context,
+                ).textTheme.headlineSmall?.copyWith(color: Colors.white),
+              ),
               const SizedBox(height: 4),
-              Text(label, style: TextStyle(color: Colors.white70, fontSize: 12)),
+              Text(
+                label,
+                style: TextStyle(color: Colors.white70, fontSize: 12),
+              ),
             ],
           ),
         ],
@@ -104,10 +117,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Text(
                   'Welcome back, $displayName',
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineLarge
-                      ?.copyWith(color: Colors.white),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.headlineLarge?.copyWith(color: Colors.white),
                 ),
                 const SizedBox(height: 8),
                 if (farm != null) ...[
@@ -134,24 +146,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       children: [
                         const Text(
                           'Farm Details',
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text('Location:', style: TextStyle(color: Colors.white70)),
-                              Text(farm.address, style: const TextStyle(color: Colors.white)),
-                            ],
+                          children: [
+                            const Text(
+                              'Location:',
+                              style: TextStyle(color: Colors.white70),
+                            ),
+                            Text(
+                              farm.address,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 8),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Status:', style: TextStyle(color: Colors.white70)),
+                            const Text(
+                              'Status:',
+                              style: TextStyle(color: Colors.white70),
+                            ),
                             Text(
                               farm.status,
-                              style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                color: Colors.teal,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
@@ -169,10 +197,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         children: [
-                          _buildSummaryCard(context, 'Total Birds', '0', Icons.pets),
-                          _buildSummaryCard(context, 'Active Batches', '0', Icons.group),
-                          _buildSummaryCard(context, 'Feed Stock', '0 kg', Icons.inventory_2),
-                          _buildSummaryCard(context, 'Alerts', '0', Icons.warning_amber),
+                          _buildSummaryCard(
+                            context,
+                            'Total Birds',
+                            '0',
+                            Icons.pets,
+                          ),
+                          _buildSummaryCard(
+                            context,
+                            'Active Batches',
+                            '0',
+                            Icons.group,
+                          ),
+                          _buildSummaryCard(
+                            context,
+                            'Feed Stock',
+                            '0 kg',
+                            Icons.inventory_2,
+                          ),
+                          _buildSummaryCard(
+                            context,
+                            'Alerts',
+                            '0',
+                            Icons.warning_amber,
+                          ),
                         ],
                       );
                     },
@@ -184,7 +232,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     label: 'Add Batch',
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Batch management coming soon!')),
+                        const SnackBar(
+                          content: Text('Batch management coming soon!'),
+                        ),
                       );
                     },
                   ),
@@ -192,7 +242,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
                 CustomButton(
                   label: 'Manage Farms',
-                  onPressed: () => Navigator.pushNamed(context, AppRoutes.farms),
+                  onPressed: () =>
+                      Navigator.pushNamed(context, AppRoutes.farms),
                 ),
                 const SizedBox(height: 12),
                 CustomButton(

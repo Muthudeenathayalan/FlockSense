@@ -40,8 +40,13 @@ class DailyRecord {
     );
   }
 
-  factory DailyRecord.fromDocument(DocumentSnapshot<Map<String, dynamic>> snapshot) {
-    return DailyRecord.fromMap(snapshot.data() ?? <String, dynamic>{}, snapshot.id);
+  factory DailyRecord.fromDocument(
+    DocumentSnapshot<Map<String, dynamic>> snapshot,
+  ) {
+    return DailyRecord.fromMap(
+      snapshot.data() ?? <String, dynamic>{},
+      snapshot.id,
+    );
   }
 
   Map<String, dynamic> toJson() {

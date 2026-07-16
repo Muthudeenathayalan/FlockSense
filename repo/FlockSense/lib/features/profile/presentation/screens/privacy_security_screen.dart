@@ -7,12 +7,24 @@ class PrivacySecurityScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Privacy & Security'), backgroundColor: AppColors.primary),
-      body: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
-        Text('Privacy & Security', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
-        SizedBox(height: 12),
-        Text('Information about data use and account security.'),
-      ])),
+      appBar: AppBar(
+        title: const Text('Privacy & Security'),
+        backgroundColor: AppColors.primary,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text(
+              'Privacy & Security',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+            ),
+            SizedBox(height: 12),
+            Text('Information about data use and account security.'),
+          ],
+        ),
+      ),
     );
   }
 }

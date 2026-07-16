@@ -37,7 +37,8 @@ class Flock {
       name: data['name']?.toString() ?? '',
       birdType: data['birdType']?.toString() ?? '',
       breed: data['breed']?.toString() ?? '',
-      placementDate: (data['placementDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      placementDate:
+          (data['placementDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
       openingCount: (data['openingCount'] as int?) ?? 0,
       targetFcr: (data['targetFcr'] as num?)?.toDouble(),
       expectedHarvestDay: (data['expectedHarvestDay'] as int?),

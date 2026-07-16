@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flock_sense/config/routes/app_routes.dart';
+import 'package:flock_sense/core/services/notification_service.dart';
 import 'package:flock_sense/core/theme/app_theme.dart';
 
 class App extends StatelessWidget {
@@ -12,6 +13,7 @@ class App extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
+      navigatorKey: NotificationService.navigatorKey,
       initialRoute: AppRoutes.initial,
       routes: AppRoutes.routes,
     );

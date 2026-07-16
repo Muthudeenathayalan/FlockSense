@@ -33,9 +33,8 @@ class AuthWrapper extends ConsumerWidget {
 
     return userStateAsync.when(
       // Loading state
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
 
       // Data loaded successfully
       data: (userState) => _buildScreen(userState),
@@ -64,4 +63,3 @@ class AuthWrapper extends ConsumerWidget {
     );
   }
 }
-

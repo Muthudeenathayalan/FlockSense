@@ -5,13 +5,20 @@ import 'package:flutter/foundation.dart';
 import 'package:flock_sense/core/services/cache_service.dart';
 
 /// Operation types the queue can store
-enum PendingOpType { farmCreate, farmUpdate, farmDelete, shedCreate, shedUpdate, shedDelete }
+enum PendingOpType {
+  farmCreate,
+  farmUpdate,
+  farmDelete,
+  shedCreate,
+  shedUpdate,
+  shedDelete,
+}
 
 /// A single queued write that needs to be sent to Firestore when online.
 class PendingOperation {
   final String id;
   final PendingOpType type;
-  final String path;          // Firestore document path
+  final String path; // Firestore document path
   final Map<String, dynamic> data;
   final DateTime queuedAt;
   final int retryCount;
@@ -46,7 +53,12 @@ class PendingOperation {
   }
 
   PendingOperation withRetry() => PendingOperation(
-    id: id, type: type, path: path, data: data, queuedAt: queuedAt, retryCount: retryCount + 1,
+    id: id,
+    type: type,
+    path: path,
+    data: data,
+    queuedAt: queuedAt,
+    retryCount: retryCount + 1,
   );
 }
 
@@ -95,6 +107,7 @@ class SyncService {
   static const _maxRetries = 3;
 
   final _pendingCountController = StreamController<int>.broadcast();
+
   /// Emits the current number of queued-but-unsynced operations.
   Stream<int> get pendingCountStream => _pendingCountController.stream;
 
@@ -110,7 +123,10 @@ class SyncService {
     try {
       final raw = await _cache.getRawList(_queueKey);
       _queue = raw
-          .map((e) => PendingOperation.fromJson(Map<String, dynamic>.from(e as Map)))
+          .map(
+            (e) =>
+                PendingOperation.fromJson(Map<String, dynamic>.from(e as Map)),
+          )
           .toList();
       _pendingCountController.add(_queue.length);
     } catch (e) {
@@ -121,7 +137,10 @@ class SyncService {
 
   Future<void> _saveQueue() async {
     try {
-      await _cache.setRawList(_queueKey, _queue.map((o) => o.toJson()).toList());
+      await _cache.setRawList(
+        _queueKey,
+        _queue.map((o) => o.toJson()).toList(),
+      );
       _pendingCountController.add(_queue.length);
     } catch (e) {
       debugPrint('[SyncService] Queue save error: $e');
@@ -133,7 +152,9 @@ class SyncService {
   Future<void> enqueue(PendingOperation op) async {
     _queue.add(op);
     await _saveQueue();
-    debugPrint('[SyncService] Enqueued ${op.type.name}: ${op.path}. Queue size: ${_queue.length}');
+    debugPrint(
+      '[SyncService] Enqueued ${op.type.name}: ${op.path}. Queue size: ${_queue.length}',
+    );
   }
 
   /// Called by connectivityProvider listener in main_shell_screen when
@@ -143,7 +164,9 @@ class SyncService {
     final user = _auth.currentUser;
     if (user == null) return;
 
-    debugPrint('[SyncService] Starting sync of ${_queue.length} pending operations');
+    debugPrint(
+      '[SyncService] Starting sync of ${_queue.length} pending operations',
+    );
 
     final failed = <PendingOperation>[];
 
@@ -156,14 +179,18 @@ class SyncService {
         if (op.retryCount < _maxRetries) {
           failed.add(op.withRetry());
         } else {
-          debugPrint('[SyncService] Dropping op after $_maxRetries retries: ${op.path}');
+          debugPrint(
+            '[SyncService] Dropping op after $_maxRetries retries: ${op.path}',
+          );
         }
       }
     }
 
     _queue = failed;
     await _saveQueue();
-    debugPrint('[SyncService] Sync complete. ${failed.length} ops still pending.');
+    debugPrint(
+      '[SyncService] Sync complete. ${failed.length} ops still pending.',
+    );
   }
 
   Future<void> _executeOperation(PendingOperation op) async {

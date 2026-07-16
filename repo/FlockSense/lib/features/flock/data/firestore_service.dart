@@ -8,13 +8,15 @@ class FirestoreService {
   final String uid;
 
   FirestoreService({required this.uid})
-      : assert(uid.isNotEmpty, 'uid cannot be empty'),
-        _firestore = FirebaseFirestore.instance;
+    : assert(uid.isNotEmpty, 'uid cannot be empty'),
+      _firestore = FirebaseFirestore.instance;
 
   factory FirestoreService.forCurrentUser() {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null || uid.isEmpty) {
-      throw StateError('No authenticated user available for Firestore service.');
+      throw StateError(
+        'No authenticated user available for Firestore service.',
+      );
     }
     return FirestoreService(uid: uid);
   }
@@ -24,9 +26,10 @@ class FirestoreService {
   }
 
   Stream<List<Flock>> watchFlocks() {
-    return _flocksRef.orderBy('createdAt', descending: true).snapshots().map(
-          (snapshot) => snapshot.docs.map(Flock.fromDocument).toList(),
-        );
+    return _flocksRef
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map(Flock.fromDocument).toList());
   }
 
   Future<void> createFlock(Flock flock) async {
@@ -39,10 +42,15 @@ class FirestoreService {
         .collection('dailyRecords')
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map(DailyRecord.fromDocument).toList());
+        .map(
+          (snapshot) => snapshot.docs.map(DailyRecord.fromDocument).toList(),
+        );
   }
 
   Future<void> addDailyRecord(String flockId, DailyRecord record) async {
-    await _flocksRef.doc(flockId).collection('dailyRecords').add(record.toJson());
+    await _flocksRef
+        .doc(flockId)
+        .collection('dailyRecords')
+        .add(record.toJson());
   }
 }

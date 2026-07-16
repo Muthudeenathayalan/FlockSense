@@ -37,11 +37,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         await u.updateDisplayName(_nameCtrl.text.trim());
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Profile updated')));
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Save failed: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Save failed: $e')));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -50,23 +54,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Profile'), backgroundColor: AppColors.primary),
+      appBar: AppBar(
+        title: const Text('Edit Profile'),
+        backgroundColor: AppColors.primary,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(children: [
-          TextField(controller: _nameCtrl, decoration: const InputDecoration(labelText: 'Full name')),
-          const SizedBox(height: 12),
-          TextField(controller: _phoneCtrl, decoration: const InputDecoration(labelText: 'Phone')),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: _saving ? null : _save,
-              style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
-              child: _saving ? const CircularProgressIndicator() : const Text('Save changes'),
+        child: Column(
+          children: [
+            TextField(
+              controller: _nameCtrl,
+              decoration: const InputDecoration(labelText: 'Full name'),
             ),
-          ),
-        ]),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _phoneCtrl,
+              decoration: const InputDecoration(labelText: 'Phone'),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: _saving ? null : _save,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                ),
+                child: _saving
+                    ? const CircularProgressIndicator()
+                    : const Text('Save changes'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

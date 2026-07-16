@@ -13,8 +13,15 @@ class ShedService {
   static final _db = FirebaseFirestore.instance;
   static final _auth = FirebaseAuth.instance;
 
-  static CollectionReference<Map<String, dynamic>> _shedsRef(String uid, String farmId) =>
-      _db.collection('users').doc(uid).collection('farms').doc(farmId).collection('sheds');
+  static CollectionReference<Map<String, dynamic>> _shedsRef(
+    String uid,
+    String farmId,
+  ) => _db
+      .collection('users')
+      .doc(uid)
+      .collection('farms')
+      .doc(farmId)
+      .collection('sheds');
 
   // ── STREAMS ───────────────────────────────────────────────────────────────
 
@@ -26,7 +33,9 @@ class ShedService {
     return _shedsRef(user.uid, farmId)
         .orderBy('createdAt', descending: false)
         .snapshots()
-        .map((snap) => snap.docs.map((d) => ShedModel.fromJson(d.data())).toList());
+        .map(
+          (snap) => snap.docs.map((d) => ShedModel.fromJson(d.data())).toList(),
+        );
   }
 
   /// Sync-status stream — hasPendingWrites signals a local write not yet
@@ -37,10 +46,12 @@ class ShedService {
 
     return _shedsRef(user.uid, farmId)
         .snapshots(includeMetadataChanges: true)
-        .map((snap) => SyncStatus(
-              hasPendingWrites: snap.metadata.hasPendingWrites,
-              isFromCache: snap.metadata.isFromCache,
-            ));
+        .map(
+          (snap) => SyncStatus(
+            hasPendingWrites: snap.metadata.hasPendingWrites,
+            isFromCache: snap.metadata.isFromCache,
+          ),
+        );
   }
 
   // ── CREATE ────────────────────────────────────────────────────────────────
@@ -56,9 +67,12 @@ class ShedService {
     final user = _auth.currentUser;
     if (user == null) throw AuthException('Sign in before creating a shed.');
 
-    if (name.trim().length < 2) throw ValidationException('Shed name must be at least 2 characters.');
-    if (lengthFt <= 0) throw ValidationException('Length must be greater than zero.');
-    if (widthFt <= 0) throw ValidationException('Width must be greater than zero.');
+    if (name.trim().length < 2)
+      throw ValidationException('Shed name must be at least 2 characters.');
+    if (lengthFt <= 0)
+      throw ValidationException('Length must be greater than zero.');
+    if (widthFt <= 0)
+      throw ValidationException('Width must be greater than zero.');
 
     final shedId = _db.collection('_tmp').doc().id;
     final totalSqFt = lengthFt * widthFt;
@@ -100,22 +114,29 @@ class ShedService {
 
   /// Returns the total bird capacity from all sheds across the current user.
   static Future<int> getUserShedCapacity(String uid) async {
-    final querySnapshot = await _db.collectionGroup('sheds')
-      .where('userId', isEqualTo: uid)
-      .get();
+    final querySnapshot = await _db
+        .collectionGroup('sheds')
+        .where('userId', isEqualTo: uid)
+        .get();
 
     return querySnapshot.docs.fold<int>(0, (total, doc) {
       final data = doc.data();
-      final capacityValue = data['capacity'] ?? data['physicalCapacity'] ?? data['birdCapacity'];
+      final capacityValue =
+          data['capacity'] ?? data['physicalCapacity'] ?? data['birdCapacity'];
       if (capacityValue is num) return total + capacityValue.toInt();
-      if (capacityValue is String) return total + (int.tryParse(capacityValue) ?? 0);
+      if (capacityValue is String)
+        return total + (int.tryParse(capacityValue) ?? 0);
       return total;
     });
   }
 
   /// Returns the total number of sheds for the current user.
   static Future<int> getUserShedCount(String uid) async {
-    final farmSnapshot = await _db.collection('users').doc(uid).collection('farms').get();
+    final farmSnapshot = await _db
+        .collection('users')
+        .doc(uid)
+        .collection('farms')
+        .get();
     if (farmSnapshot.docs.isEmpty) return 0;
 
     var shedCount = 0;
@@ -128,7 +149,11 @@ class ShedService {
 
   // ── UPDATE ────────────────────────────────────────────────────────────────────────────────
 
-  static Future<void> updateShed(String farmId, String shedId, Map<String, dynamic> updates) async {
+  static Future<void> updateShed(
+    String farmId,
+    String shedId,
+    Map<String, dynamic> updates,
+  ) async {
     final user = _auth.currentUser;
     if (user == null) throw AuthException('Sign in before updating a shed.');
 
@@ -139,6 +164,14 @@ class ShedService {
   }
 
   // ── DELETE ────────────────────────────────────────────────────────────────
+
+  static Future<List<ShedModel>> getShedsByFarmId(String farmId) async {
+    final user = _auth.currentUser;
+    if (user == null) return [];
+
+    final snapshot = await _shedsRef(user.uid, farmId).get();
+    return snapshot.docs.map((doc) => ShedModel.fromJson(doc.data())).toList();
+  }
 
   static Future<void> deleteShed(String farmId, String shedId) async {
     final user = _auth.currentUser;

@@ -39,15 +39,31 @@ class DashboardCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(title, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54)),
+                  child: Text(
+                    title,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 18),
-            Text(value, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.black)),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
-              Text(subtitle!, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.black54)),
+              Text(
+                subtitle!,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.black54),
+              ),
             ],
           ],
         ),

@@ -31,7 +31,8 @@ class UserStateService {
 
       final hasFarm = data['hasFarm'] as bool? ?? false;
       final activeFarmId = data['activeFarmId'] as String?;
-      if (!hasFarm || (activeFarmId?.isEmpty ?? true)) return UserState.farmSetup;
+      if (!hasFarm || (activeFarmId?.isEmpty ?? true))
+        return UserState.farmSetup;
 
       return UserState.authenticated;
     } catch (_) {
@@ -48,7 +49,8 @@ class UserStateService {
         yield UserState.unauthenticated;
       } else {
         yield* _firestore
-            .collection('users').doc(user.uid)
+            .collection('users')
+            .doc(user.uid)
             .snapshots()
             .asyncMap((_) => getUserState());
       }

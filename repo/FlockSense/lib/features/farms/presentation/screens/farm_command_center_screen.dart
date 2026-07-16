@@ -1,117 +1,311 @@
 import 'package:flutter/material.dart';
-import 'package:flock_sense/features/batches/presentation/screens/batch_list_screen.dart';
+import 'package:flock_sense/core/theme/app_colors.dart';
+import 'package:flock_sense/features/batches/data/batch_service.dart';
+import 'package:flock_sense/features/batches/domain/batch_model.dart';
+import 'package:flock_sense/features/batches/presentation/screens/batch_command_center_screen.dart';
+import 'package:flock_sense/features/batches/presentation/screens/batch_form_screen.dart';
+import 'package:flock_sense/features/farms/data/farm_service.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
 import 'package:flock_sense/features/farms/presentation/screens/farm_setup_screen.dart';
 
-/// Detail view for a single farm. Exposes Sheds and (future) Batches as tabs.
-class FarmCommandCenterScreen extends StatelessWidget {
+class FarmCommandCenterScreen extends StatefulWidget {
   const FarmCommandCenterScreen({super.key, required this.farm});
+
   final FarmModel farm;
 
   @override
+  State<FarmCommandCenterScreen> createState() =>
+      _FarmCommandCenterScreenState();
+}
+
+class _FarmCommandCenterScreenState extends State<FarmCommandCenterScreen> {
+  late FarmModel _farm;
+  bool _updatingStatus = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _farm = widget.farm;
+  }
+
+  Future<void> _openEdit() async {
+    final result = await Navigator.of(context).push<FarmModel?>(
+      MaterialPageRoute(builder: (_) => FarmSetupScreen(initialFarm: _farm)),
+    );
+    if (!mounted) return;
+    if (result != null) {
+      setState(() => _farm = result);
+      return;
+    }
+    final latest = await FarmService.getFarmById(_farm.id);
+    if (!mounted || latest == null) return;
+    setState(() => _farm = latest);
+  }
+
+  Future<void> _deleteFarm() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Delete farm?'),
+        content: const Text(
+          'This permanently removes the farm and all linked data.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    try {
+      await FarmService.deleteFarm(_farm.id);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Unable to delete farm: $e')));
+    }
+  }
+
+  Future<void> _toggleStatus(bool value) async {
+    setState(() => _updatingStatus = true);
+    try {
+      await FarmService.setFarmStatus(farmId: _farm.id, isActive: value);
+      if (!mounted) return;
+      setState(
+        () => _farm = _farm.copyWith(status: value ? 'active' : 'inactive'),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Status update failed: $e')));
+    } finally {
+      if (mounted) setState(() => _updatingStatus = false);
+    }
+  }
+
+  Future<void> _openBatchCreate() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => BatchFormScreen(farmId: _farm.id)),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(farm.farmName),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              tooltip: 'Edit farm',
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const FarmSetupScreen()),
+    final farmType = FarmService.getFormattedFarmType(_farm.farmType);
+    final location = [
+      _farm.areaName,
+      _farm.district,
+      _farm.state,
+      _farm.country,
+    ].whereType<String>().where((value) => value.trim().isNotEmpty).join(', ');
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: Text(_farm.farmName),
+        actions: [
+          IconButton(
+            onPressed: _openEdit,
+            icon: const Icon(Icons.edit_outlined),
+            tooltip: 'Edit farm',
+          ),
+          IconButton(
+            onPressed: _deleteFarm,
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Delete farm',
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _openBatchCreate,
+        icon: const Icon(Icons.add),
+        label: const Text('Add Batch'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _farm.farmName,
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(999),
+                          color: _farm.isActive
+                              ? AppColors.primaryLight
+                              : Theme.of(
+                                  context,
+                                ).colorScheme.surfaceContainerHighest,
+                        ),
+                        child: Text(
+                          _farm.isActive ? 'Active' : 'Inactive',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: _farm.isActive
+                                ? AppColors.primary
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  _DetailRow(label: 'Farm type', value: farmType),
+                  _DetailRow(
+                    label: 'Size',
+                    value:
+                        '${_farm.lengthFt.toStringAsFixed(1)} ft x ${_farm.widthFt.toStringAsFixed(1)} ft',
+                  ),
+                  _DetailRow(
+                    label: 'Area',
+                    value: '${_farm.totalSqFt.toStringAsFixed(1)} ft\u00b2',
+                  ),
+                  if (location.isNotEmpty)
+                    _DetailRow(label: 'Location', value: location),
+                  const SizedBox(height: 8),
+                  SwitchListTile.adaptive(
+                    contentPadding: EdgeInsets.zero,
+                    value: _farm.isActive,
+                    onChanged: _updatingStatus ? null : _toggleStatus,
+                    title: const Text('Farm active'),
+                    subtitle: const Text(
+                      'Inactive farms are hidden from quick actions.',
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(icon: Icon(Icons.inventory_2_outlined), text: 'Batches'),
-              Tab(icon: Icon(Icons.info_outline), text: 'Details'),
-              Tab(icon: Icon(Icons.bar_chart_outlined), text: 'Reports'),
-            ],
           ),
-        ),
-        body: TabBarView(
-          children: [
-            BatchListScreen(farmId: farm.id, farmName: farm.farmName),
-            _FarmDetailsTab(farm: farm),
-            const Center(child: Text('Reports coming soon')),
-          ],
-        ),
+          const SizedBox(height: 14),
+          Text('Batches', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 10),
+          StreamBuilder<List<BatchModel>>(
+            stream: BatchService.watchBatches(_farm.id),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(18),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                );
+              }
+
+              final batches = snapshot.data ?? const <BatchModel>[];
+              if (batches.isEmpty) {
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'No batches yet',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Create a batch to start daily records and tracking.',
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton.icon(
+                          onPressed: _openBatchCreate,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Create Batch'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              return Column(
+                children: batches.map((batch) {
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    child: ListTile(
+                      title: Text(batch.batchName),
+                      subtitle: Text(
+                        '${batch.totalBirds} birds • ${batch.breedOrFlockType} • ${batch.status}',
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => BatchCommandCenterScreen(
+                              farmId: _farm.id,
+                              batchId: batch.id,
+                              batchName: batch.batchName,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 }
 
-class _FarmDetailsTab extends StatelessWidget {
-  const _FarmDetailsTab({required this.farm});
-  final FarmModel farm;
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
-    final rows = [
-      ('Farm type', farm.farmType),
-      ('Flock type', farm.flockType),
-      ('Address', farm.address),
-      if (farm.location?.isNotEmpty ?? false) ('Location', farm.location!),
-      if (farm.ownerName?.isNotEmpty ?? false) ('Owner', farm.ownerName!),
-      if (farm.phone?.isNotEmpty ?? false) ('Phone', farm.phone!),
-      if (farm.notes?.isNotEmpty ?? false) ('Notes', farm.notes!),
-      ('Status', farm.status),
-      ('Created', _fmt(farm.createdAt)),
-    ];
-
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-            title: const Text('Batch Placement', style: TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: const Text('Create and manage chick batches'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => BatchListScreen(
-                    farmId: farm.id,
-                    farmName: farm.farmName,
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 16),
-        ...List.generate(rows.length, (i) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: 130,
-                  child: Text(
-                    rows[i].$1,
-                    style: const TextStyle(color: Colors.black45, fontSize: 13),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    rows[i].$2,
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                ),
-              ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 90,
+            child: Text(
+              label,
+              style: const TextStyle(color: AppColors.textSecondary),
             ),
-          );
-        }),
-      ],
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
     );
   }
-
-  String _fmt(DateTime d) => '${d.day}/${d.month}/${d.year}';
 }

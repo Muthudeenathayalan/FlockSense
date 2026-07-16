@@ -45,5 +45,7 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>FlockSense uses your location to prefill farm area, district, state, and country.</string>
 </dict>
 </plist>

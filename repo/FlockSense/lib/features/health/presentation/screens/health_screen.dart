@@ -13,11 +13,18 @@ class HealthScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
-              Text('Health Records', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              Text(
+                'Health Records',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
               SizedBox(height: 16),
-              Text('Log symptoms, treatments, and health observations for your flocks.'),
+              Text(
+                'Log symptoms, treatments, and health observations for your flocks.',
+              ),
               SizedBox(height: 24),
-              Text('Coming soon: disease tracking, recovery progress, and treatment history.'),
+              Text(
+                'Coming soon: disease tracking, recovery progress, and treatment history.',
+              ),
             ],
           ),
         ),

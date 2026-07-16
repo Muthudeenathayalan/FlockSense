@@ -17,7 +17,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final connectivityProvider = StreamProvider<bool>((ref) async* {
   Future<bool> checkOnce() async {
     try {
-      final result = await InternetAddress.lookup('google.com').timeout(const Duration(seconds: 4));
+      final result = await InternetAddress.lookup(
+        'google.com',
+      ).timeout(const Duration(seconds: 4));
       return result.isNotEmpty && result.first.rawAddress.isNotEmpty;
     } catch (_) {
       return false;
@@ -28,5 +30,7 @@ final connectivityProvider = StreamProvider<bool>((ref) async* {
   // this subscription (stopping the periodic checks) once nothing is
   // watching the provider anymore.
   yield await checkOnce();
-  yield* Stream.periodic(const Duration(seconds: 6)).asyncMap((_) => checkOnce());
+  yield* Stream.periodic(
+    const Duration(seconds: 6),
+  ).asyncMap((_) => checkOnce());
 });

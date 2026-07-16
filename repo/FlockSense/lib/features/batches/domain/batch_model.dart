@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Represents a batch of birds in a farm
-/// 
+///
 /// Path: users/{uid}/farms/{farmId}/batches/{batchId}
 class BatchModel {
   final String id;
@@ -9,6 +9,10 @@ class BatchModel {
   final String? shedId;
   final String ownerId;
   final String batchName;
+  final double lengthFt;
+  final double widthFt;
+  final double areaSqFt;
+  final String sizeUnit;
   final DateTime hatchDate;
   final DateTime placementDate;
   final int maleCount;
@@ -17,6 +21,8 @@ class BatchModel {
   final int currentBirds;
   final String breedOrFlockType;
   final double? chickAvgWeight;
+  final String? hatchName;
+  final String? integratorName;
   final String? hatcheryName;
   final String? supervisorName;
   final String? vehicleNumber;
@@ -31,6 +37,10 @@ class BatchModel {
     this.shedId,
     required this.ownerId,
     required this.batchName,
+    this.lengthFt = 0,
+    this.widthFt = 0,
+    this.areaSqFt = 0,
+    this.sizeUnit = 'ft',
     required this.hatchDate,
     required this.placementDate,
     required this.maleCount,
@@ -40,6 +50,8 @@ class BatchModel {
     required this.breedOrFlockType,
     required this.createdAt,
     required this.updatedAt,
+    this.hatchName,
+    this.integratorName,
     this.chickAvgWeight,
     this.hatcheryName,
     this.supervisorName,
@@ -69,10 +81,19 @@ class BatchModel {
       return 0.0;
     }
 
-    final maleCount = parseInt(json['maleCount'] ?? json['roosterCount'] ?? json['males']);
-    final femaleCount = parseInt(json['femaleCount'] ?? json['henCount'] ?? json['females']);
+    final maleCount = parseInt(
+      json['maleCount'] ?? json['roosterCount'] ?? json['males'],
+    );
+    final femaleCount = parseInt(
+      json['femaleCount'] ?? json['henCount'] ?? json['females'],
+    );
     final totalBirds = parseInt(json['totalBirds'] ?? maleCount + femaleCount);
     final currentBirds = parseInt(json['currentBirds'] ?? totalBirds);
+    final lengthFt = parseDouble(json['lengthFt'] ?? json['length'] ?? 0);
+    final widthFt = parseDouble(json['widthFt'] ?? json['width'] ?? 0);
+    final areaSqFt = parseDouble(
+      json['areaSqFt'] ?? json['totalSqFt'] ?? (lengthFt * widthFt),
+    );
 
     return BatchModel(
       id: json['id'] as String? ?? '',
@@ -80,14 +101,28 @@ class BatchModel {
       shedId: json['shedId'] as String?,
       ownerId: json['ownerId'] as String? ?? json['userId'] as String? ?? '',
       batchName: json['batchName'] as String? ?? json['name'] as String? ?? '',
+      lengthFt: lengthFt,
+      widthFt: widthFt,
+      areaSqFt: areaSqFt,
+      sizeUnit: json['sizeUnit'] as String? ?? 'ft',
       hatchDate: parseDate(json['hatchDate']),
       placementDate: parseDate(json['placementDate']),
       maleCount: maleCount,
       femaleCount: femaleCount,
       totalBirds: totalBirds,
       currentBirds: currentBirds,
-      breedOrFlockType: json['breedOrFlockType'] as String? ?? json['flockType'] as String? ?? '',
-      chickAvgWeight: json['chickAvgWeight'] != null ? parseDouble(json['chickAvgWeight']) : null,
+      breedOrFlockType:
+          json['breedOrFlockType'] as String? ??
+          json['flockType'] as String? ??
+          '',
+      hatchName:
+          json['hatchName'] as String? ?? json['hatcheryName'] as String?,
+      integratorName:
+          json['integratorName'] as String? ??
+          json['supervisorName'] as String?,
+      chickAvgWeight: json['chickAvgWeight'] != null
+          ? parseDouble(json['chickAvgWeight'])
+          : null,
       hatcheryName: json['hatcheryName'] as String?,
       supervisorName: json['supervisorName'] as String?,
       vehicleNumber: json['vehicleNumber'] as String?,
@@ -99,27 +134,33 @@ class BatchModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'farmId': farmId,
-        'shedId': shedId,
-        'ownerId': ownerId,
-        'batchName': batchName,
-        'hatchDate': hatchDate.toIso8601String(),
-        'placementDate': placementDate.toIso8601String(),
-        'maleCount': maleCount,
-        'femaleCount': femaleCount,
-        'totalBirds': totalBirds,
-        'currentBirds': currentBirds,
-        'breedOrFlockType': breedOrFlockType,
-        'chickAvgWeight': chickAvgWeight,
-        'hatcheryName': hatcheryName,
-        'supervisorName': supervisorName,
-        'vehicleNumber': vehicleNumber,
-        'status': status,
-        'notes': notes,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'farmId': farmId,
+    'shedId': shedId,
+    'ownerId': ownerId,
+    'batchName': batchName,
+    'lengthFt': lengthFt,
+    'widthFt': widthFt,
+    'areaSqFt': areaSqFt,
+    'sizeUnit': sizeUnit,
+    'hatchDate': hatchDate.toIso8601String(),
+    'placementDate': placementDate.toIso8601String(),
+    'maleCount': maleCount,
+    'femaleCount': femaleCount,
+    'totalBirds': totalBirds,
+    'currentBirds': currentBirds,
+    'breedOrFlockType': breedOrFlockType,
+    'hatchName': hatchName,
+    'integratorName': integratorName,
+    'chickAvgWeight': chickAvgWeight,
+    'hatcheryName': hatcheryName,
+    'supervisorName': supervisorName,
+    'vehicleNumber': vehicleNumber,
+    'status': status,
+    'notes': notes,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 
   BatchModel copyWith({
     String? id,
@@ -127,6 +168,10 @@ class BatchModel {
     String? shedId,
     String? ownerId,
     String? batchName,
+    double? lengthFt,
+    double? widthFt,
+    double? areaSqFt,
+    String? sizeUnit,
     DateTime? hatchDate,
     DateTime? placementDate,
     int? maleCount,
@@ -135,6 +180,8 @@ class BatchModel {
     int? currentBirds,
     String? breedOrFlockType,
     double? chickAvgWeight,
+    String? hatchName,
+    String? integratorName,
     String? hatcheryName,
     String? supervisorName,
     String? vehicleNumber,
@@ -153,6 +200,10 @@ class BatchModel {
       shedId: shedId ?? this.shedId,
       ownerId: ownerId ?? this.ownerId,
       batchName: batchName ?? this.batchName,
+      lengthFt: lengthFt ?? this.lengthFt,
+      widthFt: widthFt ?? this.widthFt,
+      areaSqFt: areaSqFt ?? this.areaSqFt,
+      sizeUnit: sizeUnit ?? this.sizeUnit,
       hatchDate: hatchDate ?? this.hatchDate,
       placementDate: placementDate ?? this.placementDate,
       maleCount: newMale,
@@ -160,6 +211,8 @@ class BatchModel {
       totalBirds: newTotal,
       currentBirds: newCurrent,
       breedOrFlockType: breedOrFlockType ?? this.breedOrFlockType,
+      hatchName: hatchName ?? this.hatchName,
+      integratorName: integratorName ?? this.integratorName,
       chickAvgWeight: chickAvgWeight ?? this.chickAvgWeight,
       hatcheryName: hatcheryName ?? this.hatcheryName,
       supervisorName: supervisorName ?? this.supervisorName,
@@ -204,28 +257,26 @@ class ShedAllocation {
       shedId: json['shedId'] as String? ?? '',
       birdCount: parseIntValue(json['birdCount']),
       startDate: parseDateValue(json['startDate']),
-      endDate:
-          json['endDate'] != null ? parseDateValue(json['endDate']) : null,
+      endDate: json['endDate'] != null ? parseDateValue(json['endDate']) : null,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'shedId': shedId,
-        'birdCount': birdCount,
-        'startDate': startDate.toIso8601String(),
-        'endDate': endDate?.toIso8601String(),
-      };
+    'shedId': shedId,
+    'birdCount': birdCount,
+    'startDate': startDate.toIso8601String(),
+    'endDate': endDate?.toIso8601String(),
+  };
 
   ShedAllocation copyWith({
     String? shedId,
     int? birdCount,
     DateTime? startDate,
     DateTime? endDate,
-  }) =>
-      ShedAllocation(
-        shedId: shedId ?? this.shedId,
-        birdCount: birdCount ?? this.birdCount,
-        startDate: startDate ?? this.startDate,
-        endDate: endDate ?? this.endDate,
-      );
+  }) => ShedAllocation(
+    shedId: shedId ?? this.shedId,
+    birdCount: birdCount ?? this.birdCount,
+    startDate: startDate ?? this.startDate,
+    endDate: endDate ?? this.endDate,
+  );
 }

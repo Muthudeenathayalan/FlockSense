@@ -26,7 +26,11 @@ class ActionTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.grey.shade200),
           boxShadow: [
-            BoxShadow(color: Colors.black.withAlpha((0.03 * 255).toInt()), blurRadius: 12, offset: const Offset(0, 4)),
+            BoxShadow(
+              color: Colors.black.withAlpha((0.03 * 255).toInt()),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
           ],
         ),
         child: Row(
@@ -43,7 +47,10 @@ class ActionTile extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
             Icon(Icons.chevron_right, color: Colors.grey.shade400),

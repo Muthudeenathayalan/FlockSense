@@ -75,9 +75,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Reset Password', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(
+                      'Reset Password',
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
                     const SizedBox(height: 8),
-                    Text('Enter your email address and we\'ll send you a link to reset your password.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54)),
+                    Text(
+                      'Enter your email address and we\'ll send you a link to reset your password.',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+                    ),
                   ],
                 ),
               ),
@@ -88,11 +97,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   enabled: !_isLoading,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.done,
-                  decoration: const InputDecoration(labelText: 'Email address', hintText: 'Enter your email'),
+                  decoration: const InputDecoration(
+                    labelText: 'Email address',
+                    hintText: 'Enter your email',
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
-              if (_message != null) ...[AppErrorWidget(message: _message!), const SizedBox(height: 16)],
+              if (_message != null) ...[
+                AppErrorWidget(message: _message!),
+                const SizedBox(height: 16),
+              ],
               PrimaryButton(
                 label: _isLoading ? 'Sending...' : 'Send reset link',
                 onPressed: () {
@@ -104,7 +119,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               Center(
                 child: TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('Back to login', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+                  child: Text(
+                    'Back to login',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
                 ),
               ),
             ],

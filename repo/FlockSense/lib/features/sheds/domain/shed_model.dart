@@ -57,9 +57,15 @@ class ShedModel {
       return null;
     }
 
-    final lengthFt = parseDouble(json['lengthFt'] ?? json['length'] ?? json['length_ft']);
-    final widthFt = parseDouble(json['widthFt'] ?? json['width'] ?? json['width_ft']);
-    final totalSqFt = parseDouble(json['totalSqFt'] ?? json['areaSqFt'] ?? json['areaFt']);
+    final lengthFt = parseDouble(
+      json['lengthFt'] ?? json['length'] ?? json['length_ft'],
+    );
+    final widthFt = parseDouble(
+      json['widthFt'] ?? json['width'] ?? json['width_ft'],
+    );
+    final totalSqFt = parseDouble(
+      json['totalSqFt'] ?? json['areaSqFt'] ?? json['areaFt'],
+    );
 
     return ShedModel(
       id: json['id'] as String? ?? '',
@@ -69,7 +75,9 @@ class ShedModel {
       lengthFt: lengthFt,
       widthFt: widthFt,
       totalSqFt: totalSqFt > 0 ? totalSqFt : lengthFt * widthFt,
-      capacity: parseCapacity(json['capacity'] ?? json['physicalCapacity'] ?? json['birdCapacity']),
+      capacity: parseCapacity(
+        json['capacity'] ?? json['physicalCapacity'] ?? json['birdCapacity'],
+      ),
       notes: json['notes'] as String?,
       status: json['status'] as String? ?? 'active',
       createdAt: parseDate(json['createdAt']),
@@ -78,20 +86,20 @@ class ShedModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'farmId': farmId,
-        'ownerId': ownerId,
-        'name': name,
-        'shedName': name,
-        'lengthFt': lengthFt,
-        'widthFt': widthFt,
-        'totalSqFt': totalSqFt,
-        'capacity': capacity,
-        'notes': notes,
-        'status': status,
-        'createdAt': createdAt.toIso8601String(),
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'farmId': farmId,
+    'ownerId': ownerId,
+    'name': name,
+    'shedName': name,
+    'lengthFt': lengthFt,
+    'widthFt': widthFt,
+    'totalSqFt': totalSqFt,
+    'capacity': capacity,
+    'notes': notes,
+    'status': status,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 
   ShedModel copyWith({
     String? name,

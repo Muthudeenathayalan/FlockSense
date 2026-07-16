@@ -15,10 +15,9 @@ class ShedListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final shedsAsync = ref.watch(shedListProvider(farm.id));
-    final syncStatus = ref.watch(shedSyncStatusProvider(farm.id)).maybeWhen(
-      data: (s) => s,
-      orElse: () => SyncStatus.synced,
-    );
+    final syncStatus = ref
+        .watch(shedSyncStatusProvider(farm.id))
+        .maybeWhen(data: (s) => s, orElse: () => SyncStatus.synced);
 
     return Scaffold(
       appBar: AppBar(
@@ -40,7 +39,9 @@ class ShedListScreen extends ConsumerWidget {
               error: (e, _) => Center(child: Text('Error: $e')),
               data: (sheds) {
                 if (sheds.isEmpty) {
-                  return _EmptyShedsState(onAdd: () => _openForm(context, farm.id));
+                  return _EmptyShedsState(
+                    onAdd: () => _openForm(context, farm.id),
+                  );
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
@@ -67,9 +68,11 @@ class ShedListScreen extends ConsumerWidget {
   }
 
   void _openForm(BuildContext ctx, String farmId, {ShedModel? shed}) {
-    Navigator.of(ctx).push(MaterialPageRoute(
-      builder: (_) => ShedFormScreen(farmId: farmId, existing: shed),
-    ));
+    Navigator.of(ctx).push(
+      MaterialPageRoute(
+        builder: (_) => ShedFormScreen(farmId: farmId, existing: shed),
+      ),
+    );
   }
 
   Future<void> _delete(BuildContext ctx, String farmId, ShedModel shed) async {
@@ -79,7 +82,10 @@ class ShedListScreen extends ConsumerWidget {
         title: const Text('Delete Shed'),
         content: Text('Delete "${shed.shedName}"? This cannot be undone.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
@@ -91,14 +97,22 @@ class ShedListScreen extends ConsumerWidget {
       try {
         await ShedService.deleteShed(farmId, shed.id);
       } catch (e) {
-        if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
+        if (ctx.mounted)
+          ScaffoldMessenger.of(
+            ctx,
+          ).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
       }
     }
   }
 }
 
 class _ShedCard extends StatelessWidget {
-  const _ShedCard({required this.shed, required this.farmId, required this.onEdit, required this.onDelete});
+  const _ShedCard({
+    required this.shed,
+    required this.farmId,
+    required this.onEdit,
+    required this.onDelete,
+  });
   final ShedModel shed;
   final String farmId;
   final VoidCallback onEdit;
@@ -110,12 +124,18 @@ class _ShedCard extends StatelessWidget {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 14,
+        ),
         leading: CircleAvatar(
           backgroundColor: statusColor.withValues(alpha: 0.15),
           child: Icon(Icons.home_work_outlined, color: statusColor),
         ),
-        title: Text(shed.shedName, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          shed.shedName,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         subtitle: Text(
           'Capacity: ${shed.physicalCapacity}  •  Area: ${shed.areaSqFt.toStringAsFixed(0)} ft²',
         ),
@@ -123,7 +143,10 @@ class _ShedCard extends StatelessWidget {
           onSelected: (v) => v == 'edit' ? onEdit() : onDelete(),
           itemBuilder: (_) => [
             const PopupMenuItem(value: 'edit', child: Text('Edit')),
-            const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
+            const PopupMenuItem(
+              value: 'delete',
+              child: Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
           ],
         ),
       ),
@@ -145,9 +168,16 @@ class _EmptyShedsState extends StatelessWidget {
           const SizedBox(height: 16),
           Text('No sheds yet', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
-          const Text('Add a shed to start tracking batches inside this farm.', textAlign: TextAlign.center),
+          const Text(
+            'Add a shed to start tracking batches inside this farm.',
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 24),
-          FilledButton.icon(onPressed: onAdd, icon: const Icon(Icons.add), label: const Text('Add Shed')),
+          FilledButton.icon(
+            onPressed: onAdd,
+            icon: const Icon(Icons.add),
+            label: const Text('Add Shed'),
+          ),
         ],
       ),
     );

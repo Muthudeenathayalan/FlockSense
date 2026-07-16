@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 
 class EmptyFarmWidget extends StatelessWidget {
-  const EmptyFarmWidget({
-    super.key,
-    required this.onCreate,
-  });
+  const EmptyFarmWidget({super.key, required this.onCreate});
 
   final VoidCallback onCreate;
 
@@ -46,8 +43,13 @@ class EmptyFarmWidget extends StatelessWidget {
               onPressed: onCreate,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green.shade700,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
               ),
               child: const Text('Create Your First Farm'),
             ),

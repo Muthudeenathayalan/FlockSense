@@ -1,15 +1,13 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
-import 'dart:math';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   AuthService._();
 
   static final _auth = FirebaseAuth.instance;
   static final _db = FirebaseFirestore.instance;
-  static final _rng = Random.secure();
 
   // ── Standard sign-in ────────────────────────────────────────────────────
 
@@ -24,29 +22,50 @@ class AuthService {
     return r.user!;
   }
 
+  static Future<UserCredential> signInWithGoogle() async {
+    await GoogleSignIn.instance.initialize();
+    final account = await GoogleSignIn.instance.authenticate();
+    final auth = account.authentication;
+    final credential = GoogleAuthProvider.credential(idToken: auth.idToken);
+
+    final userCredential = await _auth.signInWithCredential(credential);
+    final user = userCredential.user;
+    if (user != null) {
+      final userDocRef = _db.collection('users').doc(user.uid);
+      final existingSnapshot = await userDocRef.get();
+      final existingData = existingSnapshot.data() ?? <String, dynamic>{};
+
+      final profileData = <String, dynamic>{
+        'uid': user.uid,
+        'name': user.displayName ?? existingData['name'] ?? '',
+        'email': user.email ?? existingData['email'] ?? '',
+        'phone': user.phoneNumber ?? existingData['phone'] ?? '',
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      if (!existingSnapshot.exists) {
+        profileData.addAll({
+          'role': 'owner',
+          'hasCompletedOnboarding': false,
+          'hasFarm': false,
+          'activeFarmId': null,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      await userDocRef.set(profileData, SetOptions(merge: true));
+    }
+    return userCredential;
+  }
+
   // ── Email OTP ────────────────────────────────────────────────────────────
-  // Generates a 4-digit code, stores it in Firestore with a 10-minute expiry.
-  // In production a Cloud Function would email the code; in dev mode the code
-  // is returned so the UI can display it for testing.
+  // TODO: Implement via Cloud Function for secure OTP generation and delivery.
+  // Currently disabled: client-side OTP generation is not secure.
 
   static Future<String> sendEmailOtp(String email) async {
-    final code = (_rng.nextInt(9000) + 1000).toString();
-    final key = _otpKey(email);
-
-    await _db.collection('otp_requests').doc(key).set({
-      'email': email.trim().toLowerCase(),
-      'code': code,
-      'expiresAt': DateTime.now()
-          .add(const Duration(minutes: 10))
-          .toIso8601String(),
-      'attempts': 0,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-
-    debugPrint(
-      '[AuthService] Email OTP for ${email.trim()} → $code  (dev only)',
+    throw UnsupportedError(
+      'Email OTP is not yet implemented. Use phone OTP or Google Sign-In instead.',
     );
-    return code;
   }
 
   static Future<bool> verifyEmailOtp(String email, String entered) async {
@@ -87,8 +106,16 @@ class AuthService {
       phoneNumber: phoneNumber,
       timeout: const Duration(seconds: 60),
       verificationCompleted: (cred) {
-        // Android auto-retrieval: resolve immediately.
-        if (!comp.isCompleted) comp.complete(cred.smsCode ?? '');
+        // Android auto-retrieval: credential is already verified.
+        // Sign in directly instead of treating credential as SMS code.
+        _auth
+            .signInWithCredential(cred)
+            .then((_) {
+              if (!comp.isCompleted) comp.complete('auto-verified');
+            })
+            .catchError((e) {
+              if (!comp.isCompleted) comp.completeError(e);
+            });
       },
       verificationFailed: (e) {
         onError(mapAuthException(e));
@@ -164,7 +191,12 @@ class AuthService {
   static Future<void> sendPasswordReset({required String email}) =>
       _auth.sendPasswordResetEmail(email: email.trim());
 
-  static Future<void> logout() => _auth.signOut();
+  static Future<void> logout() async {
+    await _auth.signOut();
+    try {
+      await GoogleSignIn.instance.signOut();
+    } catch (_) {}
+  }
 
   static String mapAuthException(FirebaseAuthException e) {
     switch (e.code) {

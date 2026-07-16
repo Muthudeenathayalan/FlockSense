@@ -10,23 +10,24 @@ import 'package:flock_sense/features/main_shell/presentation/screens/main_shell_
 
 class AppRoutes {
   AppRoutes._();
-  static const String initial        = '/';
-  static const String login          = '/login';
-  static const String register       = '/register';     // → RegistrationMethodScreen
+  static const String initial = '/';
+  static const String login = '/login';
+  static const String register = '/register'; // → RegistrationMethodScreen
   static const String forgotPassword = '/forgot-password';
-  static const String onboarding     = '/onboarding';
-  static const String farmSetup      = '/farm-setup';
-  static const String farms          = '/farms';
-  static const String main           = '/main';
+  static const String onboarding = '/onboarding';
+  static const String farmSetup = '/farm-setup';
+  static const String farms = '/farms';
+  static const String main = '/main';
 
   static final Map<String, WidgetBuilder> routes = {
-    initial:        (_) => const AuthWrapper(),
-    login:          (_) => const LoginScreen(),
-    register:       (_) => const RegistrationMethodScreen(), // changed from RegisterScreen
+    initial: (_) => const AuthWrapper(),
+    login: (_) => const LoginScreen(),
+    register: (_) =>
+        const RegistrationMethodScreen(), // changed from RegisterScreen
     forgotPassword: (_) => const ForgotPasswordScreen(),
-    onboarding:     (_) => const OnboardingScreen(),
-    farmSetup:      (_) => const FarmSetupScreen(),
-    farms:          (_) => const FarmListScreen(),
-    main:           (_) => const MainShellScreen(),
+    onboarding: (_) => const OnboardingScreen(),
+    farmSetup: (_) => const FarmSetupScreen(),
+    farms: (_) => const FarmListScreen(),
+    main: (_) => const MainShellScreen(),
   };
 }

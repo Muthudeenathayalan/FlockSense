@@ -12,10 +12,7 @@ class SyncStatus {
   final bool hasPendingWrites;
   final bool isFromCache;
 
-  const SyncStatus({
-    required this.hasPendingWrites,
-    required this.isFromCache,
-  });
+  const SyncStatus({required this.hasPendingWrites, required this.isFromCache});
 
   /// Nothing pending, data confirmed by the server.
   static const synced = SyncStatus(hasPendingWrites: false, isFromCache: false);

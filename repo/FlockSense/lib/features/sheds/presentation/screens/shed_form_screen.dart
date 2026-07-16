@@ -27,7 +27,9 @@ class _ShedFormScreenState extends State<ShedFormScreen> {
     super.initState();
     final s = widget.existing;
     _name = TextEditingController(text: s?.name ?? '');
-    _length = TextEditingController(text: s != null ? s.lengthFt.toString() : '');
+    _length = TextEditingController(
+      text: s != null ? s.lengthFt.toString() : '',
+    );
     _width = TextEditingController(text: s != null ? s.widthFt.toString() : '');
     _capacity = TextEditingController(text: s?.capacity?.toString() ?? '');
     _notes = TextEditingController(text: s?.notes ?? '');
@@ -45,7 +47,8 @@ class _ShedFormScreenState extends State<ShedFormScreen> {
 
   double _parseDouble(String value) => double.tryParse(value.trim()) ?? 0.0;
 
-  int? _parseInt(String value) => value.trim().isEmpty ? null : int.tryParse(value.trim());
+  int? _parseInt(String value) =>
+      value.trim().isEmpty ? null : int.tryParse(value.trim());
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -80,7 +83,10 @@ class _ShedFormScreenState extends State<ShedFormScreen> {
 
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -94,53 +100,67 @@ class _ShedFormScreenState extends State<ShedFormScreen> {
         padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
-          child: Column(children: [
-            _field(_name, 'Shed name', required: true),
-            const SizedBox(height: 16),
-            _field(
-              _length,
-              'Length (ft)',
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              required: true,
-              validator: (v) {
-                final value = double.tryParse(v ?? '');
-                if (value == null || value <= 0) return 'Enter a valid length';
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            _field(
-              _width,
-              'Width (ft)',
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              required: true,
-              validator: (v) {
-                final value = double.tryParse(v ?? '');
-                if (value == null || value <= 0) return 'Enter a valid width';
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            _field(
-              _capacity,
-              'Capacity (birds)',
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 16),
-            _field(_notes, 'Notes', maxLines: 3),
-            const SizedBox(height: 16),
-            _buildSizeInfo(),
-            const SizedBox(height: 28),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: _saving ? null : _submit,
-                child: _saving
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : Text(_isEdit ? 'Update Shed' : 'Save Shed'),
+          child: Column(
+            children: [
+              _field(_name, 'Shed name', required: true),
+              const SizedBox(height: 16),
+              _field(
+                _length,
+                'Length (ft)',
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                required: true,
+                validator: (v) {
+                  final value = double.tryParse(v ?? '');
+                  if (value == null || value <= 0)
+                    return 'Enter a valid length';
+                  return null;
+                },
               ),
-            ),
-          ]),
+              const SizedBox(height: 16),
+              _field(
+                _width,
+                'Width (ft)',
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                required: true,
+                validator: (v) {
+                  final value = double.tryParse(v ?? '');
+                  if (value == null || value <= 0) return 'Enter a valid width';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              _field(
+                _capacity,
+                'Capacity (birds)',
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 16),
+              _field(_notes, 'Notes', maxLines: 3),
+              const SizedBox(height: 16),
+              _buildSizeInfo(),
+              const SizedBox(height: 28),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _saving ? null : _submit,
+                  child: _saving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(_isEdit ? 'Update Shed' : 'Save Shed'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -155,7 +175,9 @@ class _ShedFormScreenState extends State<ShedFormScreen> {
       children: [
         Text(
           'Farm Size / Shed Size: ${lengthFt.toStringAsFixed(1)} × ${widthFt.toStringAsFixed(1)} = ${totalSqFt.toStringAsFixed(1)} sq.ft',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black87),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Colors.black87),
         ),
       ],
     );
@@ -179,7 +201,11 @@ class _ShedFormScreenState extends State<ShedFormScreen> {
         fillColor: Colors.white,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
       ),
-      validator: validator ?? (required ? (v) => (v?.trim().isEmpty ?? true) ? 'Required' : null : null),
+      validator:
+          validator ??
+          (required
+              ? (v) => (v?.trim().isEmpty ?? true) ? 'Required' : null
+              : null),
     );
   }
 }

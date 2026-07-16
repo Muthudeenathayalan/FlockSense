@@ -36,12 +36,7 @@ class FarmTypeDropdown extends StatelessWidget {
       ),
       dropdownColor: Colors.white,
       items: _farmTypeOptions
-          .map(
-            (type) => DropdownMenuItem(
-              value: type,
-              child: Text(type),
-            ),
-          )
+          .map((type) => DropdownMenuItem(value: type, child: Text(type)))
           .toList(),
       validator: validator,
       onChanged: enabled ? onChanged : null,

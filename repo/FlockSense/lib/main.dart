@@ -1,10 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flock_sense/app/app.dart';
 import 'package:flock_sense/config/firebase_options.dart';
 import 'package:flock_sense/core/services/cache_service.dart';
+import 'package:flock_sense/core/services/fcm_token_service.dart';
+import 'package:flock_sense/core/services/notification_service.dart';
 import 'package:flock_sense/core/services/sync_service.dart';
 
 Future<void> main() async {
@@ -30,6 +32,9 @@ Future<void> main() async {
 
   // 4. SyncService — drains app-level pending queue when back online.
   await SyncService().initialize();
+
+  await NotificationService.initialize();
+  await FcmTokenService.saveTokenToFirestore();
 
   runApp(const ProviderScope(child: App()));
 }

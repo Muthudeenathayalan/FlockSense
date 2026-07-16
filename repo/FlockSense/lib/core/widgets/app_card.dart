@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flock_sense/core/theme/app_colors.dart';
 
 class AppCard extends StatelessWidget {
   const AppCard({
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(20),
-    this.elevation = 1,
+    this.elevation = 0,
   });
 
   final Widget child;
@@ -14,14 +15,20 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: elevation,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      color: Theme.of(context).colorScheme.surface,
-      child: Padding(
-        padding: padding,
-        child: child,
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border, width: 0.8),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
+      child: Padding(padding: padding, child: child),
     );
   }
 }

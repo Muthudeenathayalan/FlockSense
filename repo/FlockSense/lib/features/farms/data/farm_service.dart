@@ -34,17 +34,20 @@ class FarmService {
   static Future<FarmModel> createFarm({
     required String farmName,
     required String farmType,
-    required String flockType,
-    required String address,
+    String flockType = 'Broiler',
+    String address = '',
     String? areaName,
     String? district,
     String? state,
+    String? country,
     String? farmerName,
     String? phoneNumber,
     String? notes,
-    required double lengthFt,
-    required double widthFt,
+    double lengthFt = 0,
+    double widthFt = 0,
     double? totalSqFt,
+    String sizeUnit = 'ft',
+    bool isLocationAuto = true,
     int? capacity,
   }) async {
     debugPrint('[FarmService.createFarm] Starting farm creation');
@@ -61,64 +64,61 @@ class FarmService {
           'Farm name must be between 2 and 100 characters',
         );
       }
-      if (!InputSanitizer.isValidAddress(address)) {
-        throw ValidationException(
-          'Address must be between 5 and 200 characters',
-        );
+      if (farmType.trim().isEmpty) {
+        throw ValidationException('Farm type is required.');
       }
 
       final farmId = _generateFarmId();
       debugPrint('[FarmService.createFarm] Generated farmId: $farmId');
 
-      // Use a transaction to atomically create farm AND update user doc
-      await _firestore.runTransaction((transaction) async {
-        final farmRef = _firestore
-            .collection('users')
-            .doc(user.uid)
-            .collection('farms')
-            .doc(farmId);
-        final userRef = _firestore.collection('users').doc(user.uid);
+      final farmRef = _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('farms')
+          .doc(farmId);
+      final userRef = _firestore.collection('users').doc(user.uid);
+      final userSnapshot = await userRef.get();
+      final isFirstFarm =
+          !userSnapshot.exists ||
+          (userSnapshot.data()?['hasFarm'] as bool? ?? false) == false;
+      final resolvedTotalSqFt = (totalSqFt != null && totalSqFt > 0)
+          ? totalSqFt
+          : lengthFt * widthFt;
 
-        // Get the current user document to check if this is the first farm
-        final userSnapshot = await transaction.get(userRef);
-        final isFirstFarm =
-            !userSnapshot.exists ||
-            (userSnapshot.data()?['hasFarm'] as bool? ?? false) == false;
-
-        final resolvedTotalSqFt = (totalSqFt != null && totalSqFt > 0)
-            ? totalSqFt
-            : lengthFt * widthFt;
-
-        transaction.set(farmRef, {
-          'id': farmId,
-          'userId': user.uid,
-          'ownerId': user.uid,
-          'farmName': farmName,
-          'farmerName': farmerName,
-          'farmType': farmType,
-          'flockType': flockType,
-          'address': address,
-          'areaName': areaName,
-          'lengthFt': lengthFt,
-          'widthFt': widthFt,
-          'totalSqFt': resolvedTotalSqFt,
-          'capacity': capacity,
-          'district': district,
-          'state': state,
-          'phoneNumber': phoneNumber,
-          'notes': notes,
-          'status': 'active',
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-
-        // Update user document with farm flags
-        transaction.set(userRef, {
-          'hasFarm': true,
-          if (isFirstFarm) 'activeFarmId': farmId,
-          'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+      final batch = _firestore.batch();
+      batch.set(farmRef, {
+        'id': farmId,
+        'userId': user.uid,
+        'ownerId': user.uid,
+        'farmName': farmName,
+        'farmerName': farmerName,
+        'farmType': farmType,
+        'flockType': flockType,
+        'address': address,
+        'areaName': areaName,
+        'lengthFt': lengthFt,
+        'widthFt': widthFt,
+        'totalSqFt': resolvedTotalSqFt,
+        'sizeUnit': sizeUnit,
+        'capacity': capacity,
+        'district': district,
+        'state': state,
+        'country': country,
+        'phoneNumber': phoneNumber,
+        'notes': notes,
+        'isLocationAuto': isLocationAuto,
+        'status': 'active',
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
       });
+
+      batch.set(userRef, {
+        'hasFarm': true,
+        if (isFirstFarm) 'activeFarmId': farmId,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      await batch.commit();
 
       debugPrint('[FarmService.createFarm] Farm created successfully');
 
@@ -127,16 +127,10 @@ class FarmService {
         farmId: farmId,
         farmName: farmName,
         farmType: farmType,
-        additionalData: {
-          'flockType': flockType,
-        },
+        additionalData: {'flockType': flockType},
       );
 
       // Cache the farm
-      final resolvedTotalSqFt = (totalSqFt != null && totalSqFt > 0)
-          ? totalSqFt
-          : lengthFt * widthFt;
-
       final farm = FarmModel(
         id: farmId,
         userId: user.uid,
@@ -153,8 +147,11 @@ class FarmService {
         capacity: capacity,
         district: district,
         state: state,
+        country: country,
+        sizeUnit: sizeUnit,
         phoneNumber: phoneNumber,
         notes: notes,
+        isLocationAuto: isLocationAuto,
         status: 'active',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
@@ -180,6 +177,95 @@ class FarmService {
         errorMessage: mappedException.message,
       );
       throw mappedException;
+    }
+  }
+
+  /// Updates an existing farm with minimal wizard details.
+  static Future<FarmModel> updateFarm({
+    required String farmId,
+    required String farmName,
+    required String farmType,
+    String? areaName,
+    String? district,
+    String? state,
+    String? country,
+    String address = '',
+    required double lengthFt,
+    required double widthFt,
+    String sizeUnit = 'ft',
+    bool isLocationAuto = true,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw AuthException('You must be signed in before updating a farm.');
+    }
+    if (!InputSanitizer.isValidFarmName(farmName)) {
+      throw ValidationException(
+        'Farm name must be between 2 and 100 characters',
+      );
+    }
+    if (farmType.trim().isEmpty) {
+      throw ValidationException('Farm type is required.');
+    }
+
+    final farmRef = _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('farms')
+        .doc(farmId);
+
+    final totalSqFt = lengthFt * widthFt;
+
+    await farmRef.set({
+      'farmName': farmName,
+      'farmType': farmType,
+      'address': address,
+      'areaName': areaName,
+      'district': district,
+      'state': state,
+      'country': country,
+      'lengthFt': lengthFt,
+      'widthFt': widthFt,
+      'totalSqFt': totalSqFt,
+      'sizeUnit': sizeUnit,
+      'isLocationAuto': isLocationAuto,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    final updated = await getFarmById(farmId);
+    if (updated == null) {
+      throw NotFoundException('Farm not found with ID: $farmId');
+    }
+    await _cacheService.cacheFarm(user.uid, updated);
+    return updated;
+  }
+
+  /// Updates farm status (active/inactive).
+  static Future<void> setFarmStatus({
+    required String farmId,
+    required bool isActive,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw AuthException('You must be signed in before updating farm status.');
+    }
+
+    await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('farms')
+        .doc(farmId)
+        .set({
+          'status': isActive ? 'active' : 'inactive',
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+
+    final userRef = _firestore.collection('users').doc(user.uid);
+    if (!isActive) {
+      final userSnap = await userRef.get();
+      if (userSnap.data()?['activeFarmId'] == farmId) {
+        await userRef.set({'activeFarmId': null}, SetOptions(merge: true));
+      }
     }
   }
 
@@ -240,7 +326,11 @@ class FarmService {
 
   /// Returns the total area across all farms owned by the user.
   static Future<double> getUserFarmArea(String uid) async {
-    final farmSnapshot = await _firestore.collection('users').doc(uid).collection('farms').get();
+    final farmSnapshot = await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('farms')
+        .get();
     if (farmSnapshot.docs.isEmpty) return 0.0;
     return farmSnapshot.docs.fold<double>(0.0, (acc, farmDoc) {
       final data = farmDoc.data();
@@ -267,9 +357,11 @@ class FarmService {
         .collection('farms')
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => FarmModel.fromJson({...doc.data(), 'userId': uid}))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => FarmModel.fromJson({...doc.data(), 'userId': uid}))
+              .toList(),
+        );
   }
 
   /// Real-time farm stream for the currently signed-in user.
@@ -372,37 +464,31 @@ class FarmService {
 
       String? farmName;
 
-      // Use a transaction to atomically delete farm and update user doc if needed
-      await _firestore.runTransaction((transaction) async {
-        final farmRef = _firestore
-            .collection('users')
-            .doc(user.uid)
-            .collection('farms')
-            .doc(farmId);
-        final userRef = _firestore.collection('users').doc(user.uid);
+      final farmRef = _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('farms')
+          .doc(farmId);
+      final userRef = _firestore.collection('users').doc(user.uid);
 
-        // Get farm to log the deletion
-        final farmSnapshot = await transaction.get(farmRef);
-        farmName = farmSnapshot.get('farmName') as String?;
+      final farmSnapshot = await farmRef.get();
+      farmName = farmSnapshot.get('farmName') as String?;
 
-        // Get user to check if deleted farm is the active one
-        final userSnapshot = await transaction.get(userRef);
-        final activeFarmId = userSnapshot.get('activeFarmId') as String?;
+      final batch = _firestore.batch();
+      final userSnapshot = await userRef.get();
+      final activeFarmId = userSnapshot.get('activeFarmId') as String?;
 
-        // Delete the farm
-        transaction.delete(farmRef);
-
-        // If this was the active farm, clear the reference
-        if (activeFarmId == farmId) {
-          transaction.update(userRef, {
-            'activeFarmId': null,
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
-          debugPrint(
-            '[FarmService.deleteFarm] Cleared activeFarmId since deleted farm was active',
-          );
-        }
-      });
+      batch.delete(farmRef);
+      if (activeFarmId == farmId) {
+        batch.update(userRef, {
+          'activeFarmId': null,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        debugPrint(
+          '[FarmService.deleteFarm] Cleared activeFarmId since deleted farm was active',
+        );
+      }
+      await batch.commit();
 
       // Log the deletion
       await _auditService.logFarmDelete(
@@ -423,13 +509,18 @@ class FarmService {
 
   /// Formats farm type for display
   static String getFormattedFarmType(String farmType) {
-    const Map<String, String> farmTypes = {
-      'broiler': 'Broiler',
-      'layer': 'Layer',
-      'breeder': 'Breeder',
-      'mixed': 'Mixed',
-    };
+    const Map<String, String> farmTypes = {'ec': 'EC', 'open': 'Open'};
     return farmTypes[farmType.toLowerCase()] ?? farmType;
+  }
+
+  /// Get raw user document for reading activeFarmId etc.
+  static Future<Map<String, dynamic>?> getUserDoc(String uid) async {
+    try {
+      final snap = await _firestore.collection('users').doc(uid).get();
+      return snap.data();
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Clears all local cache
