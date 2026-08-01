@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flutter: FlockSense (Gemini)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": [
+        "--dart-define=GEMINI_API_KEY=REPLACE_WITH_YOUR_GEMINI_API_KEY"
+      ]
+    }
+  ]
+}
