@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'REPLACE_WITH_FIREBASE_ANDROID_API_KEY',
+    apiKey: 'AIzaSyBkllx22TkV5JVuDeZVCwEK4CG0WBUguMI',
     appId: '1:522217107399:android:fbcb7e50007d28a094b3e2',
     messagingSenderId: '522217107399',
     projectId: 'flocksense-app',

@@ -6,6 +6,7 @@ import 'package:flock_sense/features/batches/domain/batch_model.dart';
 import 'package:flock_sense/core/providers/connectivity_provider.dart';
 import 'package:flock_sense/core/services/sync_service.dart';
 import 'package:flock_sense/features/daily_records/presentation/screens/daily_record_form_screen.dart';
+import 'package:flock_sense/features/daily_records/presentation/screens/daily_records_dashboard_screen.dart';
 import 'package:flock_sense/features/farms/data/farm_service.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
 import 'package:flock_sense/features/home/presentation/screens/home_screen.dart';
@@ -54,8 +55,11 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openingRecordFlow ? null : _openQuickRecordFlow,
+        backgroundColor: const Color(0xFF1B5E20),
+        foregroundColor: Colors.white,
+        elevation: 4,
         icon: const Icon(Icons.post_add),
-        label: const Text('Add Records'),
+        label: const Text('Add Records', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: NavigationBar(
@@ -99,67 +103,14 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
     setState(() => _openingRecordFlow = true);
 
     try {
-      final farms = await FarmService.getUserFarms();
-      final activeFarms = farms
-          .where((farm) => farm.status != 'inactive')
-          .toList();
-
       if (!mounted) return;
-      if (activeFarms.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Create a farm before adding records.')),
-        );
-        return;
-      }
-
-      final batchesByFarm = <String, List<BatchModel>>{};
-      for (final farm in activeFarms) {
-        batchesByFarm[farm.id] = await BatchService.getBatchesForFarm(farm.id);
-      }
-
-      final totalBatches = batchesByFarm.values.fold<int>(
-        0,
-        (count, batches) => count + batches.length,
-      );
-
-      if (totalBatches == 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Create a batch before adding daily records.'),
-          ),
-        );
-        return;
-      }
-
-      final hasMultipleFarms = activeFarms.length > 1;
-      final hasMultipleBatches = totalBatches > 1;
-
-      if (!hasMultipleFarms && !hasMultipleBatches) {
-        final farm = activeFarms.first;
-        final batch = batchesByFarm[farm.id]!.first;
-        if (!mounted) return;
-        _openDailyRecordWizard(farm, batch);
-        return;
-      }
-
-      final selection = await showModalBottomSheet<_RecordSelectionResult>(
-        context: context,
-        isScrollControlled: true,
-        builder: (_) => _RecordSelectionSheet(
-          farms: activeFarms,
-          batchesByFarm: batchesByFarm,
-          showFarmSelector: hasMultipleFarms,
-          showBatchSelector: true,
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => DailyRecordsDashboardScreen(),
         ),
       );
-
-      if (!mounted || selection == null) return;
-      _openDailyRecordWizard(selection.farm, selection.batch);
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to open quick record flow: $e')),
-      );
+      debugPrint('[MainShell] Error launching records wizard: $e');
     } finally {
       if (mounted) setState(() => _openingRecordFlow = false);
     }

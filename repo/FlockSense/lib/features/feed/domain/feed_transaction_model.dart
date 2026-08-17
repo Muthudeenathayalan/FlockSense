@@ -34,9 +34,11 @@ class FeedTransactionModel {
        bags = bags,
        weightKg =
            weightKg ??
-           (bags > 0 && (weightPerBagKg ?? 0) > 0
-               ? bags * (weightPerBagKg ?? 0)
-               : (totalKg ?? 0)),
+           ((totalKg ?? 0) > 0
+               ? totalKg!
+               : (bags > 0 && (weightPerBagKg ?? 0) > 0
+                     ? bags * (weightPerBagKg ?? 0)
+                     : (totalKg ?? 0))),
        cumulativeBags = cumulativeBags ?? bags,
        cumulativeKg = cumulativeKg ?? (totalKg ?? (weightKg ?? 0)),
        supplierName = supplierName ?? supplierOrSource,

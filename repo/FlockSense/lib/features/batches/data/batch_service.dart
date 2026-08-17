@@ -29,7 +29,7 @@ class BatchService {
         .snapshots()
         .map(
           (snap) =>
-              snap.docs.map((d) => BatchModel.fromJson(d.data())).toList(),
+              snap.docs.map((d) => BatchModel.fromJson({'id': d.id, 'farmId': farmId, ...d.data()})).toList(),
         );
   }
 
@@ -39,7 +39,16 @@ class BatchService {
 
     final snapshot = await _batchesRef(user.uid, farmId).doc(batchId).get();
     if (!snapshot.exists) return null;
-    return BatchModel.fromJson(snapshot.data()!);
+    return BatchModel.fromJson({'id': snapshot.id, 'farmId': farmId, ...snapshot.data()!});
+  }
+
+  /// Get all batches for a specific farm
+  static Future<List<BatchModel>> getBatchesByFarmId(String farmId) async {
+    final user = _auth.currentUser;
+    if (user == null) return [];
+
+    final snap = await _batchesRef(user.uid, farmId).get();
+    return snap.docs.map((d) => BatchModel.fromJson({'id': d.id, 'farmId': farmId, ...d.data()})).toList();
   }
 
   /// Returns the total number of active batches for the current user.

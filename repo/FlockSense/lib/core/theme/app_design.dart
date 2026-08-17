@@ -88,6 +88,10 @@ class AppDesign {
     colors: [Color(0xFF7B0000), Color(0xFFB71C1C)],
   );
 
+  static const List<BoxShadow> subtleShadow = [
+    BoxShadow(color: Color(0x0A000000), blurRadius: 6, offset: Offset(0, 2)),
+  ];
+
   static BoxDecoration get cardDecoration => BoxDecoration(
     color: Colors.white,
     borderRadius: BorderRadius.circular(16),

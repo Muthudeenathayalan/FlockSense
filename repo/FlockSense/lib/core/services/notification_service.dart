@@ -13,7 +13,11 @@ import 'package:timezone/timezone.dart' as tz;
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp();
+    }
+  } catch (_) {}
   if (message.notification == null) return;
 
   final plugin = FlutterLocalNotificationsPlugin();
@@ -54,74 +58,78 @@ class NotificationService {
   static String? _pendingPayload;
 
   static Future<void> initialize() async {
-    final prefs = await SharedPreferences.getInstance();
-    final didRequest = prefs.getBool('fcm_permission_requested') ?? false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final didRequest = prefs.getBool('fcm_permission_requested') ?? false;
 
-    final androidSettings = const AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
-    );
-    final iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: !didRequest,
-      requestBadgePermission: !didRequest,
-      requestSoundPermission: !didRequest,
-    );
-
-    await _local.initialize(
-      InitializationSettings(
-        android: androidSettings,
-        iOS: iosSettings,
-        macOS: iosSettings,
-      ),
-      onDidReceiveNotificationResponse: (details) async {
-        await _handleNotificationTap(details.payload);
-      },
-    );
-
-    await _createNotificationChannel();
-    tz.initializeTimeZones();
-
-    if (!didRequest) {
-      await _requestPermissions();
-      await prefs.setBool('fcm_permission_requested', true);
-    }
-
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-    FirebaseMessaging.onMessage.listen((message) async {
-      if (message.notification == null) return;
-      await _showLocalNotification(
-        id: 1000,
-        title: message.notification?.title ?? 'Farm Alert',
-        body: message.notification?.body ?? '',
-        payload: message.data['route'],
+      final androidSettings = const AndroidInitializationSettings(
+        '@mipmap/ic_launcher',
       );
-    });
+      final iosSettings = DarwinInitializationSettings(
+        requestAlertPermission: !didRequest,
+        requestBadgePermission: !didRequest,
+        requestSoundPermission: !didRequest,
+      );
 
-    FirebaseMessaging.onMessageOpenedApp.listen((message) async {
-      await _handleNotificationTap(message.data['route']);
-    });
+      await _local.initialize(
+        InitializationSettings(
+          android: androidSettings,
+          iOS: iosSettings,
+          macOS: iosSettings,
+        ),
+        onDidReceiveNotificationResponse: (details) async {
+          await _handleNotificationTap(details.payload);
+        },
+      );
 
-    final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
-    if (initialMessage != null) {
-      await _handleNotificationTap(initialMessage.data['route']);
-    }
+      await _createNotificationChannel();
+      tz.initializeTimeZones();
 
-    _fcm.onTokenRefresh.listen((_) async {
+      if (!didRequest) {
+        await _requestPermissions();
+        await prefs.setBool('fcm_permission_requested', true);
+      }
+
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+      FirebaseMessaging.onMessage.listen((message) async {
+        if (message.notification == null) return;
+        await _showLocalNotification(
+          id: 1000,
+          title: message.notification?.title ?? 'Farm Alert',
+          body: message.notification?.body ?? '',
+          payload: message.data['route'],
+        );
+      });
+
+      FirebaseMessaging.onMessageOpenedApp.listen((message) async {
+        await _handleNotificationTap(message.data['route']);
+      });
+
+      final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+      if (initialMessage != null) {
+        await _handleNotificationTap(initialMessage.data['route']);
+      }
+
+      _fcm.onTokenRefresh.listen((_) async {
+        await _saveFcmTokenToFirestore();
+      });
+
       await _saveFcmTokenToFirestore();
-    });
 
-    await _saveFcmTokenToFirestore();
+      final prefsMap = await getPreferences();
+      if (prefsMap['daily'] == true) {
+        await scheduleDailyRecordReminder();
+      } else {
+        await cancelDailyReminder();
+      }
 
-    final prefsMap = await getPreferences();
-    if (prefsMap['daily'] == true) {
-      await scheduleDailyRecordReminder();
-    } else {
-      await cancelDailyReminder();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _flushPendingPayload();
+      });
+    } catch (e, stack) {
+      debugPrint('NotificationService init error: $e\n$stack');
     }
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _flushPendingPayload();
-    });
   }
 
   static Future<Map<String, bool>> getPreferences() async {
@@ -208,16 +216,20 @@ if (Platform.isIOS) {
   }
 
   static Future<void> _saveFcmTokenToFirestore() async {
-    final token = await _fcm.getToken();
-    if (token == null) return;
+    try {
+      final token = await _fcm.getToken();
+      if (token == null) return;
 
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) return;
 
-    await FirebaseFirestore.instance.collection('users').doc(uid).update({
-      'fcmToken': token,
-      'tokenUpdatedAt': FieldValue.serverTimestamp(),
-    });
+      await FirebaseFirestore.instance.collection('users').doc(uid).update({
+        'fcmToken': token,
+        'tokenUpdatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('[NotificationService] Save FCM token error: $e');
+    }
   }
 
   static Future<void> _showLocalNotification({
@@ -289,7 +301,7 @@ if (Platform.isIOS) {
           ),
           iOS: const DarwinNotificationDetails(),
         ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         payload: '/main',
@@ -312,7 +324,7 @@ if (Platform.isIOS) {
           ),
           iOS: const DarwinNotificationDetails(),
         ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         payload: '/main',
@@ -345,7 +357,7 @@ if (Platform.isIOS) {
         ),
         iOS: const DarwinNotificationDetails(),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
@@ -380,6 +392,24 @@ if (Platform.isIOS) {
       title: '⚠ High Mortality Alert — $batchName',
       body:
           '$mortalityCount birds died today (Day $batchAgeDay). Check your flock immediately.',
+      payload: '/main',
+    );
+  }
+
+  static Future<void> checkLowDgFuelAlert({
+    required double currentLevel,
+    String? generatorName,
+  }) async {
+    if (currentLevel >= 80.0) return;
+
+    final genName = generatorName != null && generatorName.isNotEmpty
+        ? ' ($generatorName)'
+        : '';
+    await _showLocalNotification(
+      id: 9500 + currentLevel.toInt(),
+      title: '⚠️ Low DG Fuel Level$genName',
+      body:
+          'Diesel Generator fuel level is below 80L. Current level: ${currentLevel.toStringAsFixed(0)} L. Please refill soon.',
       payload: '/main',
     );
   }

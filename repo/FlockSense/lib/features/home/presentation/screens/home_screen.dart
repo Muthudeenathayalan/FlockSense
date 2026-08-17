@@ -1,9 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flock_sense/config/routes/app_routes.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/core/theme/app_design.dart';
 import 'package:flock_sense/features/auth/presentation/providers/auth_provider.dart';
+import 'package:flock_sense/features/daily_records/presentation/screens/daily_records_dashboard_screen.dart';
+import 'package:flock_sense/features/reports/presentation/screens/reports_dashboard_screen.dart';
 import 'package:flock_sense/features/home/presentation/providers/home_dashboard_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -147,6 +149,8 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    const DgStatusCard(),
                     const SizedBox(height: 20),
                     AppDesign.sectionTitle('Quick Actions'),
                     GridView.count(
@@ -175,15 +179,23 @@ class HomeScreen extends ConsumerWidget {
                           icon: Icons.calendar_today_rounded,
                           label: 'Records',
                           gradient: AppDesign.actionGold,
-                          onTap: () =>
-                              Navigator.pushNamed(context, AppRoutes.main),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const DailyRecordsDashboardScreen(),
+                            ),
+                          ),
                         ),
                         AppDesign.actionButton(
                           icon: Icons.picture_as_pdf_rounded,
                           label: 'Reports',
                           gradient: AppDesign.actionBlue,
-                          onTap: () =>
-                              Navigator.pushNamed(context, AppRoutes.main),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const ReportsDashboardScreen(),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -472,6 +484,111 @@ class _GradientStatTile extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(fontSize: 13, color: Color(0xCCFFFFFF)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class DgStatusCard extends ConsumerWidget {
+  const DgStatusCard({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dgRecord = ref.watch(latestDgRecordProvider).value;
+
+    final fuelLevel = dgRecord?.dgLevelLiters ?? 120.0;
+    final genName = dgRecord?.dgName ?? 'Main Generator';
+
+    String statusText;
+    Color statusColor;
+    String statusEmoji;
+
+    if (fuelLevel < 50.0) {
+      statusText = 'Critical';
+      statusColor = const Color(0xFFC62828); // Red
+      statusEmoji = '🔴';
+    } else if (fuelLevel < 80.0) {
+      statusText = 'Low';
+      statusColor = const Color(0xFFEF6C00); // Orange
+      statusEmoji = '🟠';
+    } else {
+      statusText = 'Normal';
+      statusColor = const Color(0xFF2E7D32); // Green
+      statusEmoji = '🟢';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: statusColor.withValues(alpha: 0.3), width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.electric_bolt_rounded, color: statusColor, size: 24),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'DG Fuel Status',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '$statusEmoji $statusText',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: statusColor),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      '${fuelLevel.toStringAsFixed(0)}L',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: statusColor),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        genName,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),

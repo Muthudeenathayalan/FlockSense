@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
-import 'package:flock_sense/features/daily_records/presentation/screens/daily_records_placeholder_screen.dart';
+import 'package:flock_sense/features/daily_records/presentation/screens/daily_records_dashboard_screen.dart';
 import 'package:flock_sense/features/farms/presentation/screens/farm_list_screen.dart';
-import 'package:flock_sense/features/feed/presentation/screens/feed_records_screen.dart';
-import 'package:flock_sense/features/sales/presentation/screens/bird_sales_screen.dart';
-import 'package:flock_sense/features/performance/presentation/screens/farm_performance_screen.dart';
-import 'package:flock_sense/features/vaccine/presentation/screens/vaccine_records_screen.dart';
-import 'package:flock_sense/features/support/presentation/screens/help_support_screen.dart';
+import 'package:flock_sense/features/performance/presentation/screens/growth_analytics_screen.dart';
+
+import 'package:flock_sense/features/inventory/presentation/screens/inventory_dashboard_screen.dart';
+import 'package:flock_sense/features/calendar/presentation/screens/calendar_dashboard_screen.dart';
+
+import 'package:flock_sense/features/ai/presentation/screens/ai_screen.dart';
+import 'package:flock_sense/features/finance/presentation/screens/finance_dashboard_screen.dart';
+import 'package:flock_sense/features/notifications/presentation/screens/notification_center_screen.dart';
+import 'package:flock_sense/features/reports/presentation/screens/reports_dashboard_screen.dart';
+import 'package:flock_sense/features/settings/presentation/screens/settings_dashboard_screen.dart';
 
 // Uses the icon categories from the uploaded reference image:
 // FlockSense, Dashboard, Farms & Sheds, Flocks/Batches,
@@ -133,32 +138,36 @@ class _MoreCard extends StatelessWidget {
       onTap: () {
         switch (item.label) {
           case 'Log Data':
+          case 'Daily Records':
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const DailyRecordsPlaceholderScreen(),
+                builder: (_) => const DailyRecordsDashboardScreen(),
               ),
             );
             return;
           case 'Inventory':
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const FeedRecordsScreen()),
+              MaterialPageRoute(builder: (_) => const InventoryDashboardScreen()),
             );
             return;
           case 'Finance':
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const BirdSalesScreen()),
+              MaterialPageRoute(builder: (_) => const FinanceDashboardScreen()),
             );
             return;
           case 'Reports':
-            _showExportSheet(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ReportsDashboardScreen()),
+            );
             return;
           case 'Growth Analytics':
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const FarmPerformanceScreen()),
+              MaterialPageRoute(builder: (_) => const GrowthAnalyticsScreen()),
             );
             return;
           case 'Flocks & Batches':
@@ -173,10 +182,22 @@ class _MoreCard extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const FarmListScreen()),
             );
             return;
+          case 'AI Advisor':
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AiScreen()),
+            );
+            return;
           case 'Calendar':
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const VaccineRecordsScreen()),
+              MaterialPageRoute(builder: (_) => const CalendarDashboardScreen()),
+            );
+            return;
+          case 'Notifications':
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const NotificationCenterScreen()),
             );
             return;
           case 'Dashboard':
@@ -185,7 +206,7 @@ class _MoreCard extends StatelessWidget {
           case 'Settings':
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const HelpSupportScreen()),
+              MaterialPageRoute(builder: (_) => const SettingsDashboardScreen()),
             );
             return;
           default:
@@ -251,39 +272,3 @@ class _MoreCard extends StatelessWidget {
     );
   }
 }
-
-void _showExportSheet(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    builder: (_) => Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.picture_as_pdf),
-            title: const Text('Export PDF'),
-            subtitle: const Text('Coming soon'),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.share),
-            title: const Text('Share Report'),
-            subtitle: const Text('Coming soon'),
-            onTap: () {},
-          ),
-          ListTile(
-            leading: const Icon(Icons.file_download),
-            title: const Text('Download CSV'),
-            subtitle: const Text('Coming soon'),
-            onTap: () {},
-          ),
-          const SizedBox(height: 8),
-        ],
-      ),
-    ),
-  );
-}
-
-// (imports moved to top)

@@ -6,9 +6,11 @@ import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/core/theme/app_design.dart';
 import 'package:flock_sense/features/batches/data/batch_service.dart';
 import 'package:flock_sense/features/daily_records/data/daily_record_service.dart';
+import 'package:flock_sense/features/daily_records/presentation/screens/daily_records_dashboard_screen.dart';
 import 'package:flock_sense/features/farms/data/farm_service.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
 import 'package:flock_sense/features/farms/presentation/screens/farm_command_center_screen.dart';
+import 'package:flock_sense/features/reports/presentation/screens/reports_dashboard_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -289,15 +291,23 @@ class _HomeScreenState extends State<HomeScreen> {
                               icon: Icons.calendar_today_rounded,
                               label: 'Records',
                               gradient: AppDesign.actionGold,
-                              onTap: () =>
-                                  Navigator.pushNamed(context, AppRoutes.main),
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const DailyRecordsDashboardScreen(),
+                                ),
+                              ),
                             ),
                             AppDesign.actionButton(
                               icon: Icons.picture_as_pdf_rounded,
                               label: 'Reports',
                               gradient: AppDesign.actionBlue,
-                              onTap: () =>
-                                  Navigator.pushNamed(context, AppRoutes.main),
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const ReportsDashboardScreen(),
+                                ),
+                              ),
                             ),
                           ],
                         ),

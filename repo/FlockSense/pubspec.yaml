@@ -1,4 +1,4 @@
-﻿name: flock_sense
+name: flock_sense
 description: "FlockSense poultry farm management application."
 publish_to: 'none'
 
@@ -17,6 +17,7 @@ dependencies:
   cloud_firestore: ^6.6.0
   cloud_functions: ^6.3.3
   firebase_messaging: ^16.4.1
+  firebase_storage: ^13.0.0
   flutter_local_notifications: ^17.0.0
   timezone: ^0.9.4
 
@@ -33,17 +34,24 @@ dependencies:
 
   # Charts
   fl_chart: ^1.2.0
+  table_calendar: ^3.1.2
 
   # Utilities
   intl: ^0.20.3
   geolocator: ^14.0.2
   geocoding: ^4.0.0
+  http: ^1.2.0
+  image_picker: ^1.0.7
+  file_picker: ^8.0.0
 
   # Icons
   cupertino_icons: ^1.0.8
   pdf: ^3.11.0
   printing: ^5.11.0
   share_plus: ^12.0.0
+  excel: ^4.0.6
+  csv: ^8.0.0
+  path_provider: ^2.1.6
 
 dev_dependencies:
   flutter_test:

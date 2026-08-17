@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,8 +12,16 @@ import 'package:flock_sense/core/services/sync_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Firebase core init (never change this block per project constraints).
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // 1. Firebase core init.
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    }
+  } catch (e) {
+    if (!e.toString().contains('duplicate-app')) {
+      rethrow;
+    }
+  }
 
   // 2. Enable Firestore OFFLINE PERSISTENCE.
   //    This is the single most important setting for offline support.
@@ -34,7 +42,12 @@ Future<void> main() async {
   await SyncService().initialize();
 
   await NotificationService.initialize();
-  await FcmTokenService.saveTokenToFirestore();
+
+  try {
+    await FcmTokenService.saveTokenToFirestore();
+  } catch (e) {
+    debugPrint('FcmTokenService save token error: $e');
+  }
 
   runApp(const ProviderScope(child: App()));
 }

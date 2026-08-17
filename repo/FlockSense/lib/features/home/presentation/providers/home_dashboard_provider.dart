@@ -5,12 +5,38 @@ import 'package:flock_sense/features/batches/domain/batch_model.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
 import 'package:flock_sense/features/farms/presentation/providers/farm_providers.dart';
 
+import 'package:flock_sense/features/daily_records/domain/daily_record_model.dart';
+
 String _formatTodayRecordDate() {
   final now = DateTime.now();
   return '${now.year.toString().padLeft(4, '0')}-'
       '${now.month.toString().padLeft(2, '0')}-'
       '${now.day.toString().padLeft(2, '0')}';
 }
+
+final latestDgRecordProvider = StreamProvider.autoDispose<DailyRecordModel?>((ref) {
+  final authState = ref.watch(authStateProvider);
+  return authState.when(
+    data: (user) {
+      if (user == null) return Stream<DailyRecordModel?>.value(null);
+      return FirebaseFirestore.instance
+          .collectionGroup('dailyRecords')
+          .where('ownerId', isEqualTo: user.uid)
+          .snapshots()
+          .map((snap) {
+            for (final doc in snap.docs) {
+              final data = doc.data();
+              if (data['dgLevelLiters'] != null) {
+                return DailyRecordModel.fromJson(data);
+              }
+            }
+            return null;
+          }).handleError((_) => null);
+    },
+    loading: () => Stream<DailyRecordModel?>.value(null),
+    error: (_, __) => Stream<DailyRecordModel?>.value(null),
+  );
+});
 
 final activeFarmIdProvider = StreamProvider.autoDispose<String?>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -112,40 +138,21 @@ final homeDashboardDataProvider =
       final batchesValue = ref.watch(allUserBatchesProvider);
       final mortalityValue = ref.watch(todayMortalityProvider);
 
-      if (farmsValue.isLoading ||
-          activeFarmIdValue.isLoading ||
-          batchesValue.isLoading ||
-          mortalityValue.isLoading) {
-        return AsyncValue<HomeDashboardData>.loading();
-      }
-
-      if (farmsValue.hasError) {
-        return AsyncValue<HomeDashboardData>.error(
-          farmsValue.error!,
-          farmsValue.stackTrace ?? StackTrace.current,
-        );
-      }
-      if (activeFarmIdValue.hasError) {
-        return AsyncValue<HomeDashboardData>.error(
-          activeFarmIdValue.error!,
-          activeFarmIdValue.stackTrace ?? StackTrace.current,
-        );
-      }
-      if (batchesValue.hasError) {
-        return AsyncValue<HomeDashboardData>.error(
-          batchesValue.error!,
-          batchesValue.stackTrace ?? StackTrace.current,
-        );
-      }
-      if (mortalityValue.hasError) {
-        return AsyncValue<HomeDashboardData>.error(
-          mortalityValue.error!,
-          mortalityValue.stackTrace ?? StackTrace.current,
-        );
-      }
-
       final farms = farmsValue.value ?? <FarmModel>[];
       final activeFarmId = activeFarmIdValue.value;
+      final batches = batchesValue.value ?? <BatchModel>[];
+      final todayMortality = mortalityValue.value ?? 0;
+
+      if (!farmsValue.hasValue &&
+          !activeFarmIdValue.hasValue &&
+          !batchesValue.hasValue &&
+          !mortalityValue.hasValue &&
+          farmsValue.isLoading) {
+        return const AsyncValue<HomeDashboardData>.loading();
+      }
+
+
+
       FarmModel? activeFarm;
       if (activeFarmId != null) {
         for (final farm in farms) {
@@ -155,14 +162,12 @@ final homeDashboardDataProvider =
           }
         }
       }
-      final batches = batchesValue.value ?? <BatchModel>[];
       final activeBatchCount = batches
           .where((batch) => batch.status == 'active')
           .length;
       final liveBirds = batches
           .where((batch) => batch.status == 'active')
           .fold<int>(0, (sum, batch) => sum + batch.currentBirds);
-      final todayMortality = mortalityValue.value ?? 0;
 
       return AsyncValue.data(
         HomeDashboardData(

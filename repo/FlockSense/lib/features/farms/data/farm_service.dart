@@ -307,7 +307,7 @@ class FarmService {
 
       final farms = snapshot.docs.map((doc) {
         final data = doc.data();
-        return FarmModel.fromJson({...data, 'userId': user.uid});
+        return FarmModel.fromJson({'id': doc.id, ...data, 'userId': user.uid});
       }).toList();
 
       // Update cache
@@ -359,7 +359,7 @@ class FarmService {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => FarmModel.fromJson({...doc.data(), 'userId': uid}))
+              .map((doc) => FarmModel.fromJson({'id': doc.id, ...doc.data(), 'userId': uid}))
               .toList(),
         );
   }
@@ -407,7 +407,7 @@ class FarmService {
       }
 
       final data = snapshot.data()!;
-      final farm = FarmModel.fromJson({...data, 'userId': user.uid});
+      final farm = FarmModel.fromJson({'id': snapshot.id, ...data, 'userId': user.uid});
 
       // Cache it
       await _cacheService.cacheFarm(user.uid, farm);
