@@ -34,7 +34,7 @@ final latestDgRecordProvider = StreamProvider.autoDispose<DailyRecordModel?>((re
           }).handleError((_) => null);
     },
     loading: () => Stream<DailyRecordModel?>.value(null),
-    error: (_, __) => Stream<DailyRecordModel?>.value(null),
+    error: (err, stack) => Stream<DailyRecordModel?>.value(null),
   );
 });
 
@@ -50,7 +50,7 @@ final activeFarmIdProvider = StreamProvider.autoDispose<String?>((ref) {
           .map((snapshot) => snapshot.data()?['activeFarmId'] as String?);
     },
     loading: () => Stream<String?>.value(null),
-    error: (_, __) => Stream<String?>.value(null),
+    error: (err, stack) => Stream<String?>.value(null),
   );
 });
 
@@ -60,7 +60,7 @@ final allUserBatchesProvider = StreamProvider.autoDispose<List<BatchModel>>((
   final authState = ref.watch(authStateProvider);
   return authState.when(
     data: (user) {
-      if (user == null) return Stream<List<BatchModel>>.empty();
+      if (user == null) return Stream.value(<BatchModel>[]);
       return FirebaseFirestore.instance
           .collectionGroup('batches')
           .where('ownerId', isEqualTo: user.uid)
@@ -69,10 +69,11 @@ final allUserBatchesProvider = StreamProvider.autoDispose<List<BatchModel>>((
             (snapshot) => snapshot.docs
                 .map((doc) => BatchModel.fromJson(doc.data()))
                 .toList(),
-          );
+          )
+          .handleError((_) => <BatchModel>[]);
     },
-    loading: () => Stream<List<BatchModel>>.empty(),
-    error: (_, __) => Stream<List<BatchModel>>.empty(),
+    loading: () => Stream.value(<BatchModel>[]),
+    error: (err, stack) => Stream.value(<BatchModel>[]),
   );
 });
 
@@ -100,10 +101,11 @@ final todayMortalityProvider = StreamProvider.autoDispose<int>((ref) {
               }
             }
             return total;
-          });
+          })
+          .handleError((_) => 0);
     },
     loading: () => Stream<int>.value(0),
-    error: (_, __) => Stream<int>.value(0),
+    error: (err, stack) => Stream<int>.value(0),
   );
 });
 
@@ -143,16 +145,6 @@ final homeDashboardDataProvider =
       final batches = batchesValue.value ?? <BatchModel>[];
       final todayMortality = mortalityValue.value ?? 0;
 
-      if (!farmsValue.hasValue &&
-          !activeFarmIdValue.hasValue &&
-          !batchesValue.hasValue &&
-          !mortalityValue.hasValue &&
-          farmsValue.isLoading) {
-        return const AsyncValue<HomeDashboardData>.loading();
-      }
-
-
-
       FarmModel? activeFarm;
       if (activeFarmId != null) {
         for (final farm in farms) {
@@ -162,12 +154,16 @@ final homeDashboardDataProvider =
           }
         }
       }
+      if (activeFarm == null && farms.isNotEmpty) {
+        activeFarm = farms.first;
+      }
+
       final activeBatchCount = batches
           .where((batch) => batch.status == 'active')
           .length;
       final liveBirds = batches
           .where((batch) => batch.status == 'active')
-          .fold<int>(0, (sum, batch) => sum + batch.currentBirds);
+          .fold<int>(0, (total, batch) => total + batch.currentBirds);
 
       return AsyncValue.data(
         HomeDashboardData(

@@ -373,6 +373,61 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
     }
   }
 
+  Widget _buildDialogPresetChips(
+    List<String> labels,
+    List<double> values,
+    TextEditingController controller,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: List.generate(labels.length, (i) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: InkWell(
+                onTap: () {
+                  final current = double.tryParse(controller.text.trim()) ?? 0.0;
+                  final updated = current + values[i];
+                  setState(() {
+                    controller.text = updated % 1 == 0
+                        ? updated.toInt().toString()
+                        : updated.toStringAsFixed(1);
+                  });
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAF5EA),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.add_rounded, size: 13, color: AppColors.primary),
+                      const SizedBox(width: 4),
+                      Text(
+                        labels[i],
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -392,7 +447,14 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
               ),
               child: Row(
                 children: [
-                  Icon(_selectedType.icon, color: Colors.white, size: 26),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(_selectedType.icon, color: Colors.white, size: 22),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -423,7 +485,7 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Record Type Selector
+                      // Record Type Selector Chips
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
@@ -432,12 +494,13 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                             return Padding(
                               padding: const EdgeInsets.only(right: 8),
                               child: ChoiceChip(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 label: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
                                       type.icon,
-                                      size: 16,
+                                      size: 15,
                                       color: isSelected ? Colors.white : AppColors.textSecondary,
                                     ),
                                     const SizedBox(width: 6),
@@ -446,9 +509,17 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                                 ),
                                 selected: isSelected,
                                 selectedColor: AppColors.primary,
+                                backgroundColor: const Color(0xFFF3F4F6),
                                 labelStyle: TextStyle(
+                                  fontSize: 12,
                                   color: isSelected ? Colors.white : AppColors.textPrimary,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  side: BorderSide(
+                                    color: isSelected ? AppColors.primary : const Color(0xFFE5E7EB),
+                                  ),
                                 ),
                                 onSelected: (sel) {
                                   if (sel) setState(() => _selectedType = type);
@@ -463,16 +534,18 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                       // Date Field
                       InkWell(
                         onTap: () => _selectDate(context, false),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(16),
                         child: InputDecorator(
                           decoration: InputDecoration(
                             labelText: 'Record Date',
-                            prefixIcon: const Icon(Icons.calendar_today_rounded),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            prefixIcon: const Icon(Icons.calendar_today_rounded, color: AppColors.primary),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                            filled: true,
+                            fillColor: const Color(0xFFFAFAFA),
                           ),
                           child: Text(
                             '${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                           ),
                         ),
                       ),
@@ -488,8 +561,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                         maxLines: 2,
                         decoration: InputDecoration(
                           labelText: 'Notes & Observations',
-                          prefixIcon: const Icon(Icons.notes_rounded),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          prefixIcon: const Icon(Icons.notes_rounded, color: AppColors.primary),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                          filled: true,
+                          fillColor: const Color(0xFFFAFAFA),
                         ),
                       ),
                     ],
@@ -499,18 +574,28 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
             ),
 
             // Action Buttons Footer
-            Padding(
-              padding: const EdgeInsets.all(20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
+              ),
               child: Row(
                 children: [
                   if (widget.existingRecord != null)
                     IconButton.outlined(
-                      style: IconButton.styleFrom(foregroundColor: AppColors.danger),
+                      style: IconButton.styleFrom(
+                        foregroundColor: AppColors.danger,
+                        side: const BorderSide(color: AppColors.danger),
+                      ),
                       onPressed: _isSaving ? null : _delete,
                       icon: const Icon(Icons.delete_outline_rounded),
                     ),
                   const Spacer(),
                   OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                    ),
                     onPressed: () => Navigator.pop(context),
                     child: const Text('Cancel'),
                   ),
@@ -518,7 +603,8 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                   FilledButton.icon(
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     ),
                     onPressed: _isSaving ? null : _save,
                     icon: _isSaving
@@ -527,7 +613,7 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                             height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                           )
-                        : const Icon(Icons.check_rounded),
+                        : const Icon(Icons.check_circle_rounded),
                     label: Text(widget.existingRecord != null ? 'Update Record' : 'Save Record'),
                   ),
                 ],
@@ -547,8 +633,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
             controller: _feedTypeController,
             decoration: InputDecoration(
               labelText: 'Feed Type (e.g., Starter, Finisher, Layer Mash)',
-              prefixIcon: const Icon(Icons.inventory_2_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              prefixIcon: const Icon(Icons.inventory_2_outlined, color: AppColors.primary),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              filled: true,
+              fillColor: const Color(0xFFFAFAFA),
             ),
             validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter feed type' : null,
           ),
@@ -561,8 +649,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
                     labelText: 'Quantity (kg)',
-                    prefixIcon: const Icon(Icons.scale_rounded),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    prefixIcon: const Icon(Icons.scale_rounded, color: AppColors.primary),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: const Color(0xFFFAFAFA),
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'Required';
@@ -578,9 +668,11 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                   controller: _feedCostController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
-                    labelText: 'Cost',
-                    prefixIcon: const Icon(Icons.attach_money_rounded),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    labelText: 'Cost (₹)',
+                    prefixIcon: const Icon(Icons.payments_outlined, color: AppColors.primary),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: const Color(0xFFFAFAFA),
                   ),
                   validator: (v) {
                     if (v != null && v.isNotEmpty) {
@@ -593,13 +685,20 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          _buildDialogPresetChips(
+            ['+10 kg', '+25 kg', '+50 kg', '+1 Bag (50kg)'],
+            [10.0, 25.0, 50.0, 50.0],
+            _feedQtyController,
+          ),
+          const SizedBox(height: 10),
           TextFormField(
             controller: _feedSupplierController,
             decoration: InputDecoration(
               labelText: 'Feed Supplier / Brand',
-              prefixIcon: const Icon(Icons.local_shipping_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              prefixIcon: const Icon(Icons.local_shipping_outlined, color: AppColors.primary),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              filled: true,
+              fillColor: const Color(0xFFFAFAFA),
             ),
           ),
         ];
@@ -611,8 +710,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
               labelText: 'Water Quantity (Liters)',
-              prefixIcon: const Icon(Icons.water_drop_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              prefixIcon: const Icon(Icons.water_drop_outlined, color: AppColors.primary),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              filled: true,
+              fillColor: const Color(0xFFFAFAFA),
             ),
             validator: (v) {
               if (v == null || v.trim().isEmpty) return 'Required';
@@ -621,16 +722,23 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
               return null;
             },
           ),
-          const SizedBox(height: 14),
+          _buildDialogPresetChips(
+            ['+50 L', '+100 L', '+250 L', '+500 L'],
+            [50.0, 100.0, 250.0, 500.0],
+            _waterQtyController,
+          ),
+          const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
                 child: TextFormField(
                   controller: _waterSourceController,
                   decoration: InputDecoration(
-                    labelText: 'Water Source (e.g., Borewell, Tank)',
-                    prefixIcon: const Icon(Icons.source_outlined),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    labelText: 'Water Source',
+                    prefixIcon: const Icon(Icons.source_outlined, color: AppColors.primary),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: const Color(0xFFFAFAFA),
                   ),
                 ),
               ),
@@ -639,9 +747,11 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                 child: TextFormField(
                   controller: _waterQualityController,
                   decoration: InputDecoration(
-                    labelText: 'Quality (e.g., Chlorinated, Good)',
-                    prefixIcon: const Icon(Icons.verified_outlined),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    labelText: 'Quality',
+                    prefixIcon: const Icon(Icons.verified_outlined, color: AppColors.primary),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: const Color(0xFFFAFAFA),
                   ),
                 ),
               ),
@@ -656,8 +766,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
               labelText: 'Dead Birds Count',
-              prefixIcon: const Icon(Icons.sick_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              prefixIcon: const Icon(Icons.sick_outlined, color: AppColors.danger),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              filled: true,
+              fillColor: const Color(0xFFFAFAFA),
             ),
             validator: (v) {
               if (v == null || v.trim().isEmpty) return 'Required';
@@ -666,7 +778,12 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
               return null;
             },
           ),
-          const SizedBox(height: 14),
+          _buildDialogPresetChips(
+            ['+1 Bird', '+2 Birds', '+5 Birds', '+10 Birds'],
+            [1.0, 2.0, 5.0, 10.0],
+            _deadBirdsController,
+          ),
+          const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
@@ -674,8 +791,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                   controller: _mortalityCauseController,
                   decoration: InputDecoration(
                     labelText: 'Suspected Cause',
-                    prefixIcon: const Icon(Icons.help_outline_rounded),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    prefixIcon: const Icon(Icons.help_outline_rounded, color: AppColors.primary),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: const Color(0xFFFAFAFA),
                   ),
                 ),
               ),
@@ -685,8 +804,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                   controller: _mortalityDiseaseController,
                   decoration: InputDecoration(
                     labelText: 'Disease (if any)',
-                    prefixIcon: const Icon(Icons.coronavirus_outlined),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    prefixIcon: const Icon(Icons.coronavirus_outlined, color: AppColors.primary),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: const Color(0xFFFAFAFA),
                   ),
                 ),
               ),
@@ -697,8 +818,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
             controller: _mortalityRemarksController,
             decoration: InputDecoration(
               labelText: 'Remarks & Autopsy Observations',
-              prefixIcon: const Icon(Icons.description_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              prefixIcon: const Icon(Icons.description_outlined, color: AppColors.primary),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              filled: true,
+              fillColor: const Color(0xFFFAFAFA),
             ),
           ),
         ];
@@ -713,8 +836,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
                     labelText: 'Average Weight (grams)',
-                    prefixIcon: const Icon(Icons.monitor_weight_outlined),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    prefixIcon: const Icon(Icons.monitor_weight_outlined, color: AppColors.primary),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: const Color(0xFFFAFAFA),
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'Required';
@@ -730,13 +855,20 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                   controller: _sampleBirdsController,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
-                    labelText: 'Sample Birds Weighed',
-                    prefixIcon: const Icon(Icons.groups_outlined),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    labelText: 'Sample Birds Count',
+                    prefixIcon: const Icon(Icons.groups_outlined, color: AppColors.primary),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: const Color(0xFFFAFAFA),
                   ),
                 ),
               ),
             ],
+          ),
+          _buildDialogPresetChips(
+            ['+50 g', '1,250 g', '1,450 g', '1,650 g'],
+            [50.0, 1250.0, 1450.0, 1650.0],
+            _avgWeightController,
           ),
         ];
 
@@ -746,8 +878,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
             controller: _medicineNameController,
             decoration: InputDecoration(
               labelText: 'Medicine Name',
-              prefixIcon: const Icon(Icons.medication_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              prefixIcon: const Icon(Icons.medication_outlined, color: AppColors.primary),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              filled: true,
+              fillColor: const Color(0xFFFAFAFA),
             ),
             validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter medicine name' : null,
           ),
@@ -759,8 +893,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                   controller: _medicineDoseController,
                   decoration: InputDecoration(
                     labelText: 'Dose (e.g., 2 ml/L)',
-                    prefixIcon: const Icon(Icons.science_outlined),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    prefixIcon: const Icon(Icons.science_outlined, color: AppColors.primary),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: const Color(0xFFFAFAFA),
                   ),
                 ),
               ),
@@ -771,8 +907,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
                     labelText: 'Quantity Used',
-                    prefixIcon: const Icon(Icons.numbers_outlined),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    prefixIcon: const Icon(Icons.numbers_outlined, color: AppColors.primary),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: const Color(0xFFFAFAFA),
                   ),
                 ),
               ),
@@ -786,9 +924,11 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                   controller: _medicineCostController,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
-                    labelText: 'Cost',
-                    prefixIcon: const Icon(Icons.payments_outlined),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    labelText: 'Cost (₹)',
+                    prefixIcon: const Icon(Icons.payments_outlined, color: AppColors.primary),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: const Color(0xFFFAFAFA),
                   ),
                 ),
               ),
@@ -798,8 +938,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                   controller: _medicineReasonController,
                   decoration: InputDecoration(
                     labelText: 'Reason for Meds',
-                    prefixIcon: const Icon(Icons.medical_services_outlined),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    prefixIcon: const Icon(Icons.medical_services_outlined, color: AppColors.primary),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: const Color(0xFFFAFAFA),
                   ),
                 ),
               ),
@@ -813,8 +955,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
             controller: _vaccineNameController,
             decoration: InputDecoration(
               labelText: 'Vaccine Name',
-              prefixIcon: const Icon(Icons.vaccines_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              prefixIcon: const Icon(Icons.vaccines_outlined, color: AppColors.primary),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              filled: true,
+              fillColor: const Color(0xFFFAFAFA),
             ),
             validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter vaccine name' : null,
           ),
@@ -826,8 +970,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                   controller: _vaccineDoseController,
                   decoration: InputDecoration(
                     labelText: 'Dose (e.g., 1 drop/bird)',
-                    prefixIcon: const Icon(Icons.opacity_outlined),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    prefixIcon: const Icon(Icons.opacity_outlined, color: AppColors.primary),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: const Color(0xFFFAFAFA),
                   ),
                 ),
               ),
@@ -837,8 +983,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                   controller: _vaccineCompletedByController,
                   decoration: InputDecoration(
                     labelText: 'Administered By',
-                    prefixIcon: const Icon(Icons.person_outline),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    prefixIcon: const Icon(Icons.person_outline, color: AppColors.primary),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: const Color(0xFFFAFAFA),
                   ),
                 ),
               ),
@@ -847,12 +995,14 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
           const SizedBox(height: 14),
           InkWell(
             onTap: () => _selectDate(context, true),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             child: InputDecorator(
               decoration: InputDecoration(
                 labelText: 'Next Vaccination Due Date',
-                prefixIcon: const Icon(Icons.event_available_outlined),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                prefixIcon: const Icon(Icons.event_available_outlined, color: AppColors.primary),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                filled: true,
+                fillColor: const Color(0xFFFAFAFA),
               ),
               child: Text(
                 _vaccineNextDueDate != null
@@ -880,8 +1030,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
                     labelText: 'Temperature (°C)',
-                    prefixIcon: const Icon(Icons.thermostat_outlined),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    prefixIcon: const Icon(Icons.thermostat_outlined, color: AppColors.primary),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: const Color(0xFFFAFAFA),
                   ),
                   validator: (v) {
                     if (v != null && v.isNotEmpty) {
@@ -899,8 +1051,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: InputDecoration(
                     labelText: 'Humidity (%)',
-                    prefixIcon: const Icon(Icons.water_outlined),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    prefixIcon: const Icon(Icons.water_outlined, color: AppColors.primary),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    filled: true,
+                    fillColor: const Color(0xFFFAFAFA),
                   ),
                   validator: (v) {
                     if (v != null && v.isNotEmpty) {
@@ -918,8 +1072,10 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
             controller: _weatherController,
             decoration: InputDecoration(
               labelText: 'Weather (e.g., Sunny, Rainy, Humid)',
-              prefixIcon: const Icon(Icons.wb_sunny_outlined),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              prefixIcon: const Icon(Icons.wb_sunny_outlined, color: AppColors.primary),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              filled: true,
+              fillColor: const Color(0xFFFAFAFA),
             ),
           ),
         ];

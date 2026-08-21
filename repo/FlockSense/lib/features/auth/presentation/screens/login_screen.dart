@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flock_sense/config/routes/app_routes.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
+import 'package:flock_sense/core/widgets/app_button.dart';
+import 'package:flock_sense/core/widgets/app_text_field.dart';
 import 'package:flock_sense/features/auth/data/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -76,36 +78,38 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
               // ── Top gradient hero ─────────────────────────────────────────
               Container(
-                height: 240,
+                height: 230,
                 width: double.infinity,
                 decoration: const BoxDecoration(
-                  gradient: AppColors.primaryGradient,
+                  gradient: AppColors.farmGradient,
                   borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(40),
-                    bottomRight: Radius.circular(40),
+                    bottomLeft: Radius.circular(36),
+                    bottomRight: Radius.circular(36),
                   ),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      width: 74,
-                      height: 74,
+                      width: 72,
+                      height: 72,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.18),
+                        color: Colors.white.withOpacity(0.18),
                         borderRadius: BorderRadius.circular(22),
                       ),
                       child: const Icon(
                         Icons.agriculture,
-                        size: 40,
+                        size: 38,
                         color: Colors.white,
                       ),
                     ),
@@ -123,15 +127,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text(
                       'Smart poultry farm management',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: Colors.white.withOpacity(0.85),
                         fontSize: 13,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
               ),
 
-              // ── Card ──────────────────────────────────────────────────────
+              // ── Form Card ──────────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
                 child: Form(
@@ -139,32 +144,26 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Text(
+                      Text(
                         'Sign in to your account',
-                        style: TextStyle(
-                          fontSize: 20,
+                        style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.3,
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         'Welcome back, farmer!',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 14,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 24),
 
-                      TextFormField(
+                      AppTextField(
                         controller: _email,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
-                          labelText: 'Email address',
-                          prefixIcon: Icon(Icons.email_outlined),
-                        ),
+                        labelText: 'Email address',
+                        prefixIcon: const Icon(Icons.email_outlined),
                         validator: (v) => (v?.trim().isEmpty ?? true)
                             ? 'Enter your email'
                             : (!v!.contains('@')
@@ -172,22 +171,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                   : null),
                       ),
                       const SizedBox(height: 14),
-                      TextFormField(
+
+                      AppTextField(
                         controller: _pass,
                         obscureText: !_showPass,
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _showPass
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined,
-                            ),
-                            onPressed: () =>
-                                setState(() => _showPass = !_showPass),
-                          ),
-                        ),
+                        labelText: 'Password',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        showObscureToggle: true,
                         validator: (v) =>
                             (v?.length ?? 0) < 6 ? 'Min 6 characters' : null,
                       ),
@@ -206,24 +196,25 @@ class _LoginScreenState extends State<LoginScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.red.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.red.shade200),
+                            color: AppColors.dangerLight,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppColors.danger.withOpacity(0.4)),
                           ),
                           child: Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.error_outline,
-                                color: Colors.red.shade700,
-                                size: 18,
+                                color: AppColors.danger,
+                                size: 20,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
                                   _error!,
-                                  style: TextStyle(
-                                    color: Colors.red.shade700,
+                                  style: const TextStyle(
+                                    color: AppColors.danger,
                                     fontSize: 13,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ),
@@ -233,18 +224,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 14),
                       ],
 
-                      FilledButton(
-                        onPressed: _loading ? null : _login,
-                        child: _loading
-                            ? const SizedBox(
-                                height: 22,
-                                width: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text('Sign In'),
+                      AppButton(
+                        label: 'Sign In',
+                        onPressed: _login,
+                        isLoading: _loading,
+                        variant: AppButtonVariant.primary,
+                        size: AppButtonSize.large,
                       ),
                       const SizedBox(height: 20),
 
@@ -256,9 +241,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             child: Text(
                               'OR',
-                              style: TextStyle(
-                                color: Colors.grey.shade400,
-                                fontSize: 12,
+                              style: theme.textTheme.labelMedium?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -268,40 +251,34 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Create account button — now navigates to OTP registration
-                      OutlinedButton.icon(
-                        onPressed: _googleLoading || _loading
-                            ? null
-                            : _googleLogin,
-                        icon: _googleLoading
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.g_mobiledata, size: 22),
-                        label: const Text('Continue with Google'),
+                      AppButton(
+                        label: 'Continue with Google',
+                        onPressed: _googleLogin,
+                        isLoading: _googleLoading,
+                        isDisabled: _loading,
+                        variant: AppButtonVariant.outlined,
+                        icon: Icons.g_mobiledata,
+                        size: AppButtonSize.medium,
                       ),
                       const SizedBox(height: 10),
 
-                      OutlinedButton.icon(
+                      AppButton(
+                        label: 'Create New Account',
                         onPressed: () =>
                             Navigator.pushNamed(context, AppRoutes.register),
-                        icon: const Icon(Icons.person_add_outlined, size: 18),
-                        label: const Text('Create New Account'),
+                        variant: AppButtonVariant.outlined,
+                        icon: Icons.person_add_outlined,
+                        size: AppButtonSize.medium,
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 28),
 
                       Center(
                         child: Text(
                           'By signing in, you agree to our Terms of Service\nand Privacy Policy.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: theme.textTheme.bodySmall?.copyWith(
                             fontSize: 11,
-                            color: Colors.grey.shade400,
-                            height: 1.6,
+                            color: isDark ? AppColors.darkTextSecondary : AppColors.textDisabled,
                           ),
                         ),
                       ),
@@ -316,3 +293,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+

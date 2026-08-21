@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flock_sense/core/theme/app_colors.dart';
+import 'package:flock_sense/core/widgets/app_button.dart';
 import 'package:flock_sense/core/widgets/app_card.dart';
-import 'package:flock_sense/core/widgets/primary_button.dart';
+import 'package:flock_sense/core/widgets/app_text_field.dart';
 import 'package:flock_sense/features/auth/data/auth_service.dart';
 import 'package:flock_sense/shared/widgets/error_widget.dart';
 
@@ -62,8 +64,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(title: const Text('Forgot Password')),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -72,59 +76,53 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               AppCard(
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Reset Password',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Enter your email address and we\'ll send you a link to reset your password.',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
-              AppCard(
-                child: TextFormField(
-                  controller: _emailController,
-                  enabled: !_isLoading,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.done,
-                  decoration: const InputDecoration(
-                    labelText: 'Email address',
-                    hintText: 'Enter your email',
-                  ),
-                ),
+              const SizedBox(height: 20),
+              AppTextField(
+                controller: _emailController,
+                enabled: !_isLoading,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.done,
+                labelText: 'Email address',
+                hintText: 'Enter your email',
+                prefixIcon: const Icon(Icons.email_outlined),
               ),
               const SizedBox(height: 24),
               if (_message != null) ...[
                 AppErrorWidget(message: _message!),
                 const SizedBox(height: 16),
               ],
-              PrimaryButton(
-                label: _isLoading ? 'Sending...' : 'Send reset link',
-                onPressed: () {
-                  if (!_isLoading) _sendResetEmail();
-                },
+              AppButton(
+                label: 'Send reset link',
+                onPressed: _isLoading ? null : _sendResetEmail,
                 isLoading: _isLoading,
+                variant: AppButtonVariant.primary,
+                size: AppButtonSize.large,
               ),
               const SizedBox(height: 16),
               Center(
                 child: TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    'Back to login',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
+                  child: const Text('Back to login'),
                 ),
               ),
             ],
@@ -134,3 +132,4 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 }
+

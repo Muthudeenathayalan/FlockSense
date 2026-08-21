@@ -87,8 +87,10 @@ class CacheService {
         return [];
       }
 
-      final farmsList = (cached['farms'] as List? ?? [])
-          .cast<Map<String, dynamic>>();
+      final rawList = cached['farms'] as List? ?? [];
+      final farmsList = rawList
+          .map((f) => Map<String, dynamic>.from(f as Map))
+          .toList();
       final farms = farmsList.map((f) => FarmModel.fromJson(f)).toList();
       debugPrint(
         '[CacheService] Retrieved ${farms.length} cached farms for user $userId',
@@ -129,7 +131,7 @@ class CacheService {
         return null;
       }
 
-      final farm = FarmModel.fromJson(cached.cast<String, dynamic>());
+      final farm = FarmModel.fromJson(Map<String, dynamic>.from(cached));
       debugPrint('[CacheService] Retrieved cached farm: $farmId');
       return farm;
     } catch (e) {

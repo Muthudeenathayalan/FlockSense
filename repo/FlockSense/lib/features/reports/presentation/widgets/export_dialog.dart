@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
+import 'package:flock_sense/core/widgets/app_button.dart';
+import 'package:flock_sense/core/widgets/app_card.dart';
+import 'package:flock_sense/core/widgets/app_dialog.dart';
 import 'package:flock_sense/features/reports/data/report_export_handler.dart';
 import 'package:flock_sense/features/reports/domain/report_data.dart';
 import 'package:flock_sense/features/reports/domain/report_types.dart';
@@ -19,9 +22,9 @@ class ExportDialog extends StatefulWidget {
     required ReportType reportType,
     required ReportData data,
   }) {
-    return showDialog(
+    return AppDialog.show(
       context: context,
-      builder: (_) => ExportDialog(reportType: reportType, data: data),
+      child: ExportDialog(reportType: reportType, data: data),
     );
   }
 
@@ -77,51 +80,34 @@ class _ExportDialogState extends State<ExportDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      title: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: widget.reportType.color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(widget.reportType.icon, color: widget.reportType.color, size: 22),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Export ${widget.reportType.title}',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-            ),
-          ),
-        ],
-      ),
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return AppDialog(
+      title: 'Export ${widget.reportType.title}',
+      icon: widget.reportType.icon,
+      iconColor: widget.reportType.color,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Select desired export file format:',
-            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 14),
           ...ExportFormat.values.map((format) {
             final isSelected = _selectedFormat == format;
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary.withValues(alpha: 0.08) : Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: isSelected ? AppColors.primary : AppColors.border,
-                  width: isSelected ? 1.5 : 1.0,
-                ),
-              ),
+            return AppCard(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: EdgeInsets.zero,
+              borderColor: isSelected ? AppColors.primary : null,
               child: RadioListTile<ExportFormat>(
                 value: format,
                 groupValue: _selectedFormat,
+                activeColor: AppColors.primary,
                 onChanged: _isGenerating
                     ? null
                     : (val) {
@@ -129,45 +115,47 @@ class _ExportDialogState extends State<ExportDialog> {
                       },
                 title: Text(
                   format.label,
-                  style: TextStyle(
-                    fontSize: 13,
+                  style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                    color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                    color: isSelected ? AppColors.primary : (isDark ? AppColors.darkTextPrimary : AppColors.textPrimary),
                   ),
                 ),
-                secondary: Icon(format.icon, color: isSelected ? AppColors.primary : AppColors.textHint, size: 20),
+                secondary: Icon(
+                  format.icon,
+                  color: isSelected ? AppColors.primary : (isDark ? AppColors.darkTextSecondary : AppColors.textSecondary),
+                  size: 20,
+                ),
               ),
             );
           }),
         ],
       ),
       actions: [
-        TextButton(
+        AppButton(
+          label: 'Cancel',
           onPressed: _isGenerating ? null : () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+          variant: AppButtonVariant.text,
+          size: AppButtonSize.small,
         ),
-        OutlinedButton.icon(
+        const SizedBox(width: 8),
+        AppButton(
+          label: 'Share',
+          icon: Icons.share_outlined,
           onPressed: _isGenerating ? null : () => _handleAction(true),
-          icon: const Icon(Icons.share_outlined, size: 16),
-          label: const Text('Share'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
+          variant: AppButtonVariant.outlined,
+          size: AppButtonSize.small,
         ),
-        ElevatedButton.icon(
+        const SizedBox(width: 8),
+        AppButton(
+          label: _isGenerating ? 'Saving...' : 'Save File',
+          icon: Icons.download_rounded,
           onPressed: _isGenerating ? null : () => _handleAction(false),
-          icon: _isGenerating
-              ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : const Icon(Icons.download_rounded, size: 16),
-          label: Text(_isGenerating ? 'Generating...' : 'Save File'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: widget.reportType.color,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
+          isLoading: _isGenerating,
+          variant: AppButtonVariant.primary,
+          size: AppButtonSize.small,
         ),
       ],
     );
   }
 }
+

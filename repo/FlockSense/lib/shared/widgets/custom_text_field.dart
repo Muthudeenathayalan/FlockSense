@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flock_sense/core/widgets/app_text_field.dart';
 
 class CustomTextField extends StatelessWidget {
   const CustomTextField({
@@ -11,6 +12,9 @@ class CustomTextField extends StatelessWidget {
     this.enabled = true,
     this.keyboardType = TextInputType.text,
     this.suffixIcon,
+    this.prefixIcon,
+    this.onChanged,
+    this.validator,
   });
 
   final TextEditingController? controller;
@@ -21,41 +25,26 @@ class CustomTextField extends StatelessWidget {
   final bool enabled;
   final TextInputType keyboardType;
   final Widget? suffixIcon;
+  final Widget? prefixIcon;
+  final ValueChanged<String>? onChanged;
+  final FormFieldValidator<String>? validator;
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return AppTextField(
       controller: controller,
+      labelText: labelText,
+      hintText: hintText,
+      helperText: helperText,
       obscureText: obscureText,
       enabled: enabled,
       keyboardType: keyboardType,
-      decoration: InputDecoration(
-        labelText: labelText,
-        hintText: hintText,
-        helperText: helperText,
-        suffixIcon: suffixIcon,
-        filled: true,
-        fillColor: Theme.of(context).colorScheme.surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.primary,
-            width: 1.6,
-          ),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 18,
-        ),
-      ),
+      suffixIcon: suffixIcon,
+      prefixIcon: prefixIcon,
+      onChanged: onChanged,
+      validator: validator,
+      showObscureToggle: obscureText,
     );
   }
 }
+

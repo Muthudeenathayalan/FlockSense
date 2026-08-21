@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flock_sense/core/models/sync_status.dart';
+import 'package:flock_sense/core/theme/app_colors.dart';
+import 'package:flock_sense/core/widgets/app_card.dart';
+import 'package:flock_sense/core/widgets/app_dialog.dart';
+import 'package:flock_sense/core/widgets/app_empty_state.dart';
+import 'package:flock_sense/core/widgets/app_loading_indicator.dart';
 import 'package:flock_sense/core/widgets/sync_status_banner.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
 import 'package:flock_sense/features/sheds/data/shed_service.dart';
 import 'package:flock_sense/features/sheds/domain/shed_model.dart';
 import 'package:flock_sense/features/sheds/presentation/providers/shed_providers.dart';
 import 'package:flock_sense/features/sheds/presentation/screens/shed_form_screen.dart';
-import 'package:flock_sense/core/models/sync_status.dart';
 
 class ShedListScreen extends ConsumerWidget {
   const ShedListScreen({super.key, required this.farm});
@@ -35,18 +40,28 @@ class ShedListScreen extends ConsumerWidget {
           SyncStatusBanner(syncStatus: syncStatus),
           Expanded(
             child: shedsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
+              loading: () => const AppLoadingIndicator(),
+              error: (e, _) => AppEmptyState(
+                icon: Icons.error_outline_rounded,
+                title: 'Unable to load sheds',
+                message: '$e',
+                buttonLabel: 'Retry',
+                onButtonPressed: () => ref.invalidate(shedListProvider(farm.id)),
+              ),
               data: (sheds) {
                 if (sheds.isEmpty) {
-                  return _EmptyShedsState(
-                    onAdd: () => _openForm(context, farm.id),
+                  return AppEmptyState(
+                    icon: Icons.home_work_outlined,
+                    title: 'No sheds yet',
+                    message: 'Add a shed to start tracking batches inside this farm.',
+                    buttonLabel: 'Add Shed',
+                    onButtonPressed: () => _openForm(context, farm.id),
                   );
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: sheds.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, i) => _ShedCard(
                     shed: sheds[i],
                     farmId: farm.id,
@@ -76,31 +91,22 @@ class ShedListScreen extends ConsumerWidget {
   }
 
   Future<void> _delete(BuildContext ctx, String farmId, ShedModel shed) async {
-    final ok = await showDialog<bool>(
+    final ok = await AppDialog.confirm(
       context: ctx,
-      builder: (_) => AlertDialog(
-        title: const Text('Delete Shed'),
-        content: Text('Delete "${shed.shedName}"? This cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+      title: 'Delete Shed',
+      message: 'Delete "${shed.shedName}"? This cannot be undone.',
+      confirmLabel: 'Delete',
+      isDanger: true,
     );
-    if (ok == true && ctx.mounted) {
+    if (ok && ctx.mounted) {
       try {
         await ShedService.deleteShed(farmId, shed.id);
       } catch (e) {
-        if (ctx.mounted)
+        if (ctx.mounted) {
           ScaffoldMessenger.of(
             ctx,
           ).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
+        }
       }
     }
   }
@@ -120,66 +126,54 @@ class _ShedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = shed.status == 'active' ? Colors.green : Colors.orange;
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 14,
-        ),
-        leading: CircleAvatar(
-          backgroundColor: statusColor.withValues(alpha: 0.15),
-          child: Icon(Icons.home_work_outlined, color: statusColor),
-        ),
-        title: Text(
-          shed.shedName,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          'Capacity: ${shed.physicalCapacity}  •  Area: ${shed.areaSqFt.toStringAsFixed(0)} ft²',
-        ),
-        trailing: PopupMenuButton<String>(
-          onSelected: (v) => v == 'edit' ? onEdit() : onDelete(),
-          itemBuilder: (_) => [
-            const PopupMenuItem(value: 'edit', child: Text('Edit')),
-            const PopupMenuItem(
-              value: 'delete',
-              child: Text('Delete', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+    final theme = Theme.of(context);
+    final statusColor = shed.status == 'active' ? AppColors.emerald : AppColors.warning;
 
-class _EmptyShedsState extends StatelessWidget {
-  const _EmptyShedsState({required this.onAdd});
-  final VoidCallback onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+    return AppCard(
+      padding: const EdgeInsets.all(16),
+      child: Row(
         children: [
-          const Icon(Icons.home_work_outlined, size: 72, color: Colors.black26),
-          const SizedBox(height: 16),
-          Text('No sheds yet', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          const Text(
-            'Add a shed to start tracking batches inside this farm.',
-            textAlign: TextAlign.center,
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: statusColor.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(Icons.home_work_outlined, color: statusColor, size: 22),
           ),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: onAdd,
-            icon: const Icon(Icons.add),
-            label: const Text('Add Shed'),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  shed.shedName,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Capacity: ${shed.physicalCapacity}  •  Area: ${shed.areaSqFt.toStringAsFixed(0)} ft²',
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+          PopupMenuButton<String>(
+            onSelected: (v) => v == 'edit' ? onEdit() : onDelete(),
+            itemBuilder: (_) => [
+              const PopupMenuItem(value: 'edit', child: Text('Edit')),
+              const PopupMenuItem(
+                value: 'delete',
+                child: Text('Delete', style: TextStyle(color: AppColors.danger)),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 }
+

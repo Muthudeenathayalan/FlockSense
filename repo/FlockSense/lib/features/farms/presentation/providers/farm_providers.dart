@@ -8,11 +8,11 @@ final farmListProvider = StreamProvider.autoDispose<List<FarmModel>>((ref) {
   final authState = ref.watch(authStateProvider);
   return authState.when(
     data: (user) {
-      if (user == null) return const Stream<List<FarmModel>>.empty();
+      if (user == null) return Stream.value(<FarmModel>[]);
       return FarmService.watchFarms(user.uid);
     },
-    loading: () => const Stream<List<FarmModel>>.empty(),
-    error: (_, __) => const Stream<List<FarmModel>>.empty(),
+    loading: () => Stream.value(<FarmModel>[]),
+    error: (_, __) => Stream.value(<FarmModel>[]),
   );
 });
 

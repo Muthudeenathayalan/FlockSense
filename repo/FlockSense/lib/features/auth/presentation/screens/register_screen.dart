@@ -2,6 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flock_sense/config/routes/app_routes.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
+import 'package:flock_sense/core/widgets/app_button.dart';
+import 'package:flock_sense/core/widgets/app_card.dart';
+import 'package:flock_sense/core/widgets/app_text_field.dart';
 import 'package:flock_sense/features/auth/data/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -43,9 +46,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: _pass.text.trim(),
       );
       if (!mounted) return;
-      // FIX: navigate through AuthWrapper so onboarding / farm-setup flow
-      // is handled automatically instead of jumping straight to main shell.
-      // This also ensures the welcome quotes screen shows for first-time users.
       Navigator.pushNamedAndRemoveUntil(
         context,
         AppRoutes.initial,
@@ -64,105 +64,96 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 Center(
                   child: Container(
-                    width: 72,
-                    height: 72,
+                    width: 70,
+                    height: 70,
                     decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(20),
+                      gradient: AppColors.farmGradient,
+                      borderRadius: BorderRadius.circular(22),
                     ),
                     child: const Icon(
                       Icons.agriculture,
-                      size: 38,
+                      size: 36,
                       color: Colors.white,
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Center(
+                Center(
                   child: Text(
                     'Join FlockSense',
-                    style: TextStyle(
-                      fontSize: 26,
+                    style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w900,
-                      color: AppColors.primary,
+                      color: isDark ? AppColors.primaryLight : AppColors.primary,
                     ),
                   ),
                 ),
-                const Center(
+                const SizedBox(height: 4),
+                Center(
                   child: Text(
                     'Create your account to get started',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
                     ),
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 28),
 
-                Container(
+                AppCard(
                   padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: AppColors.shadow,
-                        blurRadius: 20,
-                        offset: Offset(0, 6),
-                      ),
-                    ],
-                    border: Border.all(color: AppColors.border, width: 0.8),
-                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _field(
-                        _name,
-                        'Full name',
-                        Icons.person_outline,
+                      AppTextField(
+                        controller: _name,
+                        labelText: 'Full name',
+                        prefixIcon: const Icon(Icons.person_outline),
                         validator: (v) => (v?.trim().isEmpty ?? true)
                             ? 'Enter your name'
                             : null,
                       ),
                       const SizedBox(height: 14),
-                      _field(
-                        _email,
-                        'Email address',
-                        Icons.email_outlined,
-                        type: TextInputType.emailAddress,
+                      AppTextField(
+                        controller: _email,
+                        labelText: 'Email address',
+                        prefixIcon: const Icon(Icons.email_outlined),
+                        keyboardType: TextInputType.emailAddress,
                         validator: (v) =>
                             (v?.trim().isEmpty ?? true) || !(v!.contains('@'))
                             ? 'Enter a valid email'
                             : null,
                       ),
                       const SizedBox(height: 14),
-                      _passField(
-                        _pass,
-                        'Password',
-                        _showPass,
-                        () => setState(() => _showPass = !_showPass),
+                      AppTextField(
+                        controller: _pass,
+                        labelText: 'Password',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        obscureText: !_showPass,
+                        showObscureToggle: true,
                         validator: (v) =>
                             (v?.length ?? 0) < 6 ? 'Min 6 characters' : null,
                       ),
                       const SizedBox(height: 14),
-                      _passField(
-                        _confirm,
-                        'Confirm password',
-                        _showConf,
-                        () => setState(() => _showConf = !_showConf),
+                      AppTextField(
+                        controller: _confirm,
+                        labelText: 'Confirm password',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        obscureText: !_showConf,
+                        showObscureToggle: true,
                         validator: (v) =>
                             v != _pass.text ? 'Passwords do not match' : null,
                       ),
@@ -172,24 +163,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           padding: const EdgeInsets.all(12),
                           margin: const EdgeInsets.only(bottom: 14),
                           decoration: BoxDecoration(
-                            color: Colors.red.shade50,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.red.shade200),
+                            color: AppColors.dangerLight,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.danger.withOpacity(0.4)),
                           ),
                           child: Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.error_outline,
-                                color: Colors.red.shade700,
+                                color: AppColors.danger,
                                 size: 18,
                               ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   _error!,
-                                  style: TextStyle(
-                                    color: Colors.red.shade700,
+                                  style: const TextStyle(
+                                    color: AppColors.danger,
                                     fontSize: 13,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ),
@@ -197,18 +189,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ),
                       ],
-                      FilledButton(
-                        onPressed: _loading ? null : _register,
-                        child: _loading
-                            ? const SizedBox(
-                                height: 22,
-                                width: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text('Create Account'),
+                      AppButton(
+                        label: 'Create Account',
+                        onPressed: _register,
+                        isLoading: _loading,
+                        variant: AppButtonVariant.primary,
+                        size: AppButtonSize.large,
                       ),
                     ],
                   ),
@@ -217,9 +203,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
+                    Text(
                       'Already have an account? ',
-                      style: TextStyle(color: AppColors.textSecondary),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                      ),
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(context),
@@ -237,43 +225,5 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
-
-  Widget _field(
-    TextEditingController c,
-    String label,
-    IconData icon, {
-    TextInputType? type,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: c,
-      keyboardType: type,
-      decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
-      validator: validator,
-    );
-  }
-
-  Widget _passField(
-    TextEditingController c,
-    String label,
-    bool show,
-    VoidCallback toggle, {
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: c,
-      obscureText: !show,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: const Icon(Icons.lock_outline),
-        suffixIcon: IconButton(
-          icon: Icon(
-            show ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-          ),
-          onPressed: toggle,
-        ),
-      ),
-      validator: validator,
-    );
-  }
 }
+

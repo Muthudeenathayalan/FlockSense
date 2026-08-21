@@ -315,10 +315,10 @@ class BatchService {
     final user = _auth.currentUser;
     if (user == null) throw AuthException('Sign in before updating a batch.');
 
-    await _batchesRef(user.uid, farmId).doc(batchId).update({
+    await _batchesRef(user.uid, farmId).doc(batchId).set({
       ...updates,
       'updatedAt': FieldValue.serverTimestamp(),
-    });
+    }, SetOptions(merge: true));
   }
 
   static Future<void> deleteBatch(String farmId, String batchId) async {

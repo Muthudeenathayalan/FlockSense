@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flock_sense/core/models/sync_status.dart';
 import 'package:flock_sense/core/exceptions/app_exceptions.dart';
 import 'package:flock_sense/core/services/notification_service.dart';
 import 'package:flock_sense/features/daily_records/domain/daily_record_model.dart';
@@ -239,10 +240,10 @@ class DailyRecordService {
     final batch = _db.batch();
     batch.set(recordRef, record.toJson(), SetOptions(merge: true));
     if (shouldUpdateBatchSummary) {
-      batch.update(batchRef, {
+      batch.set(batchRef, {
         'currentBirds': closingBirds,
         'updatedAt': FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
     }
     await batch.commit();
 
@@ -308,10 +309,10 @@ class DailyRecordService {
       beforeDate: recordDate,
     );
     if (priorRecord != null) {
-      await _batchesRef(user.uid, farmId).doc(batchId).update({
+      await _batchesRef(user.uid, farmId).doc(batchId).set({
         'currentBirds': priorRecord.closingBirds,
         'updatedAt': FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
     }
   }
 
@@ -498,10 +499,10 @@ class DailyRecordService {
           .get();
 
       if (snapshot.docs.isEmpty) {
-        await _batchesRef(user.uid, farmId).doc(batchId).update({
+        await _batchesRef(user.uid, farmId).doc(batchId).set({
           'currentBirds': editedRecord.closingBirds,
           'updatedAt': FieldValue.serverTimestamp(),
-        });
+        }, SetOptions(merge: true));
         return;
       }
 
@@ -521,19 +522,19 @@ class DailyRecordService {
           );
         }
 
-        batch.update(doc.reference, {
+        batch.set(doc.reference, {
           'openingBirds': previousClosing,
           'closingBirds': newClosing,
           'updatedAt': FieldValue.serverTimestamp(),
-        });
+        }, SetOptions(merge: true));
 
         previousClosing = newClosing;
       }
 
-      batch.update(_batchesRef(user.uid, farmId).doc(batchId), {
+      batch.set(_batchesRef(user.uid, farmId).doc(batchId), {
         'currentBirds': previousClosing,
         'updatedAt': FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
 
       await batch.commit();
     } catch (e) {
@@ -542,5 +543,53 @@ class DailyRecordService {
       );
       rethrow;
     }
+  }
+
+  /// Sync-status stream for daily records of a specific farm & batch
+  static Stream<SyncStatus> watchSyncStatus({
+    required String farmId,
+    required String batchId,
+  }) {
+    final user = _auth.currentUser;
+    if (user == null) return Stream.value(SyncStatus.synced);
+
+    return _dailyRecordsRef(user.uid, farmId, batchId)
+        .snapshots(includeMetadataChanges: true)
+        .map(
+          (snap) => SyncStatus(
+            hasPendingWrites: snap.metadata.hasPendingWrites,
+            isFromCache: snap.metadata.isFromCache,
+          ),
+        );
+  }
+
+  /// Revert a mortality logging action (offline-safe update without transactions)
+  static Future<void> undoMortalityLog({
+    required String farmId,
+    required String batchId,
+    required DateTime recordDate,
+    required int previousMortality,
+    required int previousClosing,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    final recordId = _formatRecordDate(recordDate);
+    final recordRef = _dailyRecordsRef(user.uid, farmId, batchId).doc(recordId);
+    final batchRef = _batchesRef(user.uid, farmId).doc(batchId);
+
+    final batch = _db.batch();
+    batch.set(recordRef, {
+      'mortalityCount': previousMortality,
+      'closingBirds': previousClosing,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    batch.set(batchRef, {
+      'currentBirds': previousClosing,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    await batch.commit();
   }
 }

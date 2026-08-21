@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
+import 'package:flock_sense/core/widgets/app_button.dart';
+import 'package:flock_sense/core/widgets/app_card.dart';
+import 'package:flock_sense/core/widgets/app_dialog.dart';
 import 'package:flock_sense/features/daily_records/data/daily_record_service.dart';
 import 'package:flock_sense/features/daily_records/domain/daily_record_model.dart';
 import 'package:flock_sense/features/daily_records/presentation/widgets/daily_record_type_form_dialog.dart';
@@ -24,28 +27,15 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
   bool _isDeleting = false;
 
   Future<void> _deleteRecord() async {
-    final confirm = await showDialog<bool>(
+    final confirm = await AppDialog.confirm(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Confirm Delete'),
-        content: Text(
-          'Are you sure you want to delete the daily record for ${_formatDate(widget.record.recordDate)}?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
+      title: 'Confirm Delete',
+      message: 'Are you sure you want to delete the daily record for ${_formatDate(widget.record.recordDate)}?',
+      confirmLabel: 'Delete',
+      isDanger: true,
     );
 
-    if (confirm != true) return;
+    if (!confirm) return;
     setState(() => _isDeleting = true);
     try {
       await DailyRecordService.deleteDailyRecord(
@@ -58,7 +48,6 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Daily record deleted successfully.'),
-          backgroundColor: AppColors.textPrimary,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -92,11 +81,14 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final r = widget.record;
     final dateStr = _formatDate(r.recordDate);
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      backgroundColor: isDark ? AppColors.darkSurface : AppColors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 540),
@@ -107,7 +99,7 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: const BoxDecoration(
-                color: AppColors.primary,
+                gradient: AppColors.primaryGradient,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: Row(
@@ -148,16 +140,16 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildSectionHeader('Flock Summary', Icons.groups_rounded),
+                    _buildSectionHeader('Flock Summary', Icons.groups_rounded, theme),
                     _buildInfoGrid([
                       _InfoItem('Opening Birds', '${r.openingBirds}'),
                       _InfoItem('Mortality Count', '${r.mortalityCount}'),
                       _InfoItem('Cull Count', '${r.cullCount}'),
                       _InfoItem('Closing Birds', '${r.closingBirds}'),
-                    ]),
+                    ], context),
                     const SizedBox(height: 16),
 
-                    _buildSectionHeader('Feed & Water', Icons.restaurant_rounded),
+                    _buildSectionHeader('Feed & Water', Icons.restaurant_rounded, theme),
                     _buildInfoGrid([
                       _InfoItem('Feed Quantity', '${r.feedConsumedKg.toStringAsFixed(1)} kg'),
                       _InfoItem('Feed Type', r.feedType ?? 'Standard'),
@@ -165,17 +157,17 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
                       _InfoItem('Water Consumed', '${r.waterConsumedLiters.toStringAsFixed(1)} L'),
                       _InfoItem('Water Source', r.waterSource ?? 'N/A'),
                       _InfoItem('Water Quality', r.waterQuality ?? 'N/A'),
-                    ]),
+                    ], context),
                     const SizedBox(height: 16),
 
-                    _buildSectionHeader('Weight & Growth', Icons.monitor_weight_rounded),
+                    _buildSectionHeader('Weight & Growth', Icons.monitor_weight_rounded, theme),
                     _buildInfoGrid([
                       _InfoItem('Average Weight', '${r.avgWeightGrams.toStringAsFixed(0)} g'),
                       _InfoItem('Sample Size', r.sampleBirds != null ? '${r.sampleBirds} birds' : 'N/A'),
-                    ]),
+                    ], context),
                     const SizedBox(height: 16),
 
-                    _buildSectionHeader('Health & Vaccination', Icons.medical_services_rounded),
+                    _buildSectionHeader('Health & Vaccination', Icons.medical_services_rounded, theme),
                     _buildInfoGrid([
                       _InfoItem('Medicine Given', r.medicineGiven ? (r.medicineName ?? 'Yes') : 'No'),
                       _InfoItem('Medicine Dose', r.medicineDose ?? 'N/A'),
@@ -185,28 +177,24 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
                         'Next Vaccine Due',
                         r.vaccineNextDueDate != null ? _formatDate(r.vaccineNextDueDate!) : 'N/A',
                       ),
-                    ]),
+                    ], context),
                     const SizedBox(height: 16),
 
-                    _buildSectionHeader('Environment', Icons.thermostat_rounded),
+                    _buildSectionHeader('Environment', Icons.thermostat_rounded, theme),
                     _buildInfoGrid([
                       _InfoItem('Temperature', r.temperature != null ? '${r.temperature} °C' : 'N/A'),
                       _InfoItem('Humidity', r.humidity != null ? '${r.humidity} %' : 'N/A'),
                       _InfoItem('Weather', r.weather ?? 'N/A'),
-                    ]),
+                    ], context),
                     if (r.notes != null && r.notes!.isNotEmpty) ...[
                       const SizedBox(height: 16),
-                      _buildSectionHeader('Notes & Observations', Icons.notes_rounded),
-                      Container(
+                      _buildSectionHeader('Notes & Observations', Icons.notes_rounded, theme),
+                      AppCard(
                         padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.background,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.border),
-                        ),
+                        variant: AppCardVariant.flat,
                         child: Text(
                           r.notes!,
-                          style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+                          style: theme.textTheme.bodyMedium,
                         ),
                       ),
                     ],
@@ -220,9 +208,9 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
               padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  IconButton.outlined(
-                    style: IconButton.styleFrom(foregroundColor: AppColors.danger),
+                  IconButton(
                     onPressed: _isDeleting ? null : _deleteRecord,
+                    style: IconButton.styleFrom(foregroundColor: AppColors.danger),
                     icon: _isDeleting
                         ? const SizedBox(
                             width: 18,
@@ -232,19 +220,19 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
                         : const Icon(Icons.delete_outline_rounded),
                   ),
                   const Spacer(),
-                  OutlinedButton.icon(
+                  AppButton(
+                    label: 'Edit Record',
+                    icon: Icons.edit_rounded,
                     onPressed: _editRecord,
-                    icon: const Icon(Icons.edit_rounded),
-                    label: const Text('Edit Record'),
+                    variant: AppButtonVariant.outlined,
+                    size: AppButtonSize.small,
                   ),
-                  const SizedBox(width: 12),
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
+                  const SizedBox(width: 10),
+                  AppButton(
+                    label: 'Done',
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Done'),
+                    variant: AppButtonVariant.primary,
+                    size: AppButtonSize.small,
                   ),
                 ],
               ),
@@ -255,7 +243,7 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon) {
+  Widget _buildSectionHeader(String title, IconData icon, ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -264,10 +252,9 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
           const SizedBox(width: 8),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+            style: theme.textTheme.titleSmall?.copyWith(
               color: AppColors.primary,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
@@ -275,36 +262,33 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
     );
   }
 
-  Widget _buildInfoGrid(List<_InfoItem> items) {
+  Widget _buildInfoGrid(List<_InfoItem> items, BuildContext context) {
+    final theme = Theme.of(context);
     return Wrap(
       spacing: 10,
       runSpacing: 10,
       children: items.map((item) {
-        return Container(
-          width: 150,
+        return AppCard(
           padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF7FAF7),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8E2)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                item.label,
-                style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                item.value,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+          variant: AppCardVariant.flat,
+          child: SizedBox(
+            width: 130,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.label,
+                  style: theme.textTheme.bodySmall,
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  item.value,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       }).toList(),
@@ -321,3 +305,4 @@ class _InfoItem {
   final String value;
   const _InfoItem(this.label, this.value);
 }
+

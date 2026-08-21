@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flock_sense/core/models/sync_status.dart';
 import 'package:flock_sense/features/auth/presentation/providers/auth_provider.dart';
 import 'package:flock_sense/features/daily_records/data/daily_record_service.dart';
 import 'package:flock_sense/features/daily_records/domain/daily_record_model.dart';
@@ -78,6 +79,22 @@ final dailyRecordsStreamProvider = StreamProvider.autoDispose<List<DailyRecordMo
   }
 
   return DailyRecordService.watchAllUserDailyRecords(uid);
+});
+
+final dailyRecordSyncStatusProvider = StreamProvider.autoDispose<SyncStatus>((ref) {
+  final authState = ref.watch(authStateProvider);
+  final activeFarmId = ref.watch(activeFarmIdProvider).asData?.value;
+  final selectedFarmId = ref.watch(dailyRecordFarmIdProvider) ?? activeFarmId;
+  final selectedBatchId = ref.watch(dailyRecordBatchIdProvider);
+
+  final user = authState.asData?.value;
+  if (user == null || selectedFarmId == null || selectedBatchId == null) {
+    return Stream.value(SyncStatus.synced);
+  }
+  return DailyRecordService.watchSyncStatus(
+    farmId: selectedFarmId,
+    batchId: selectedBatchId,
+  );
 });
 
 final filteredDailyRecordsProvider = Provider.autoDispose<List<DailyRecordModel>>((ref) {
