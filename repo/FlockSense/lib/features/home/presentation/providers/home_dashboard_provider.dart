@@ -14,7 +14,9 @@ String _formatTodayRecordDate() {
       '${now.day.toString().padLeft(2, '0')}';
 }
 
-final latestDgRecordProvider = StreamProvider.autoDispose<DailyRecordModel?>((ref) {
+final latestDgRecordProvider = StreamProvider.autoDispose<DailyRecordModel?>((
+  ref,
+) {
   final authState = ref.watch(authStateProvider);
   return authState.when(
     data: (user) {
@@ -31,7 +33,8 @@ final latestDgRecordProvider = StreamProvider.autoDispose<DailyRecordModel?>((re
               }
             }
             return null;
-          }).handleError((_) => null);
+          })
+          .handleError((_) => null);
     },
     loading: () => Stream<DailyRecordModel?>.value(null),
     error: (err, stack) => Stream<DailyRecordModel?>.value(null),
@@ -109,6 +112,30 @@ final todayMortalityProvider = StreamProvider.autoDispose<int>((ref) {
   );
 });
 
+final recentDailyRecordsProvider =
+    StreamProvider.autoDispose<List<DailyRecordModel>>((ref) {
+      final authState = ref.watch(authStateProvider);
+      return authState.when(
+        data: (user) {
+          if (user == null) return Stream.value(<DailyRecordModel>[]);
+          return FirebaseFirestore.instance
+              .collectionGroup('dailyRecords')
+              .where('ownerId', isEqualTo: user.uid)
+              .snapshots()
+              .map((snapshot) {
+                final records = snapshot.docs
+                    .map((doc) => DailyRecordModel.fromJson(doc.data()))
+                    .toList();
+                records.sort((a, b) => b.recordDate.compareTo(a.recordDate));
+                return records;
+              })
+              .handleError((_) => <DailyRecordModel>[]);
+        },
+        loading: () => Stream.value(<DailyRecordModel>[]),
+        error: (_, __) => Stream.value(<DailyRecordModel>[]),
+      );
+    });
+
 class HomeDashboardData {
   const HomeDashboardData({
     required this.farms,
@@ -116,6 +143,7 @@ class HomeDashboardData {
     required this.activeBatchCount,
     required this.liveBirds,
     required this.todayMortality,
+    this.recentRecords = const <DailyRecordModel>[],
   });
 
   final List<FarmModel> farms;
@@ -123,6 +151,7 @@ class HomeDashboardData {
   final int activeBatchCount;
   final int liveBirds;
   final int todayMortality;
+  final List<DailyRecordModel> recentRecords;
 
   static const empty = HomeDashboardData(
     farms: <FarmModel>[],
@@ -130,6 +159,7 @@ class HomeDashboardData {
     activeBatchCount: 0,
     liveBirds: 0,
     todayMortality: 0,
+    recentRecords: <DailyRecordModel>[],
   );
 }
 
@@ -139,11 +169,13 @@ final homeDashboardDataProvider =
       final activeFarmIdValue = ref.watch(activeFarmIdProvider);
       final batchesValue = ref.watch(allUserBatchesProvider);
       final mortalityValue = ref.watch(todayMortalityProvider);
+      final recordsValue = ref.watch(recentDailyRecordsProvider);
 
       final farms = farmsValue.value ?? <FarmModel>[];
       final activeFarmId = activeFarmIdValue.value;
       final batches = batchesValue.value ?? <BatchModel>[];
       final todayMortality = mortalityValue.value ?? 0;
+      final recentRecords = recordsValue.value ?? <DailyRecordModel>[];
 
       FarmModel? activeFarm;
       if (activeFarmId != null) {
@@ -172,6 +204,7 @@ final homeDashboardDataProvider =
           activeBatchCount: activeBatchCount,
           liveBirds: liveBirds,
           todayMortality: todayMortality,
+          recentRecords: recentRecords,
         ),
       );
     });
