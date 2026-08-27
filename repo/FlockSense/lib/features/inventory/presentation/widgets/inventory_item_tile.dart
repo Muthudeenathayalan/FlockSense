@@ -58,9 +58,14 @@ class InventoryItemTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: _categoryColor(item.category).withValues(alpha: 0.12),
+                      color: _categoryColor(
+                        item.category,
+                      ).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -76,7 +81,10 @@ class InventoryItemTile extends StatelessWidget {
 
                   if (item.isLowStock)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.danger,
                         borderRadius: BorderRadius.circular(6),
@@ -84,11 +92,19 @@ class InventoryItemTile extends StatelessWidget {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.warning_amber_rounded, size: 12, color: Colors.white),
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            size: 12,
+                            color: Colors.white,
+                          ),
                           SizedBox(width: 3),
                           Text(
                             'LOW STOCK',
-                            style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                         ],
                       ),
@@ -97,33 +113,51 @@ class InventoryItemTile extends StatelessWidget {
                   if (item.isExpired) ...[
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFD32F2F),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: const Text(
                         'EXPIRED',
-                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ] else if (item.isExpiringIn30Days) ...[
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFE65100),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: const Text(
                         'EXPIRING SOON',
-                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ],
 
                   const Spacer(),
-                  Icon(Icons.chevron_right, color: Colors.grey.shade400, size: 20),
+                  Icon(
+                    Icons.chevron_right,
+                    color: Colors.grey.shade400,
+                    size: 20,
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
@@ -140,7 +174,10 @@ class InventoryItemTile extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 '${item.brand.isNotEmpty ? "${item.brand} • " : ""}${item.supplier.isNotEmpty ? item.supplier : "Store"} • ${item.storageLocation}',
-                style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 12),
 
@@ -151,13 +188,21 @@ class InventoryItemTile extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Quantity Available', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                      const Text(
+                        'Quantity Available',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                       Text(
                         '${item.quantityAvailable.toStringAsFixed(item.quantityAvailable % 1 == 0 ? 0 : 1)} ${item.unit}',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
-                          color: item.isLowStock ? AppColors.danger : AppColors.primary,
+                          color: item.isLowStock
+                              ? AppColors.danger
+                              : AppColors.primary,
                         ),
                       ),
                     ],
@@ -165,10 +210,20 @@ class InventoryItemTile extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      const Text('Min Stock Level', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                      const Text(
+                        'Min Stock Level',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                       Text(
                         '${item.minStockLevel.toStringAsFixed(item.minStockLevel % 1 == 0 ? 0 : 1)} ${item.unit}',
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -198,7 +253,10 @@ class InventoryItemTile extends StatelessWidget {
                     item.expiryDate != null
                         ? 'Exp: ${dateFormat.format(item.expiryDate!)}'
                         : 'Purchased: ${dateFormat.format(item.purchaseDate)}',
-                    style: const TextStyle(fontSize: 10, color: AppColors.textHint),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: AppColors.textHint,
+                    ),
                   ),
 
                   Row(
@@ -254,7 +312,14 @@ class InventoryItemTile extends StatelessWidget {
           children: [
             Icon(icon, size: 14, color: color),
             const SizedBox(width: 3),
-            Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
           ],
         ),
       ),

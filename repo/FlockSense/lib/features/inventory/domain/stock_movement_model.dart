@@ -7,7 +7,8 @@ class StockMovementModel {
   final String ownerId;
   final String action; // 'increase', 'reduce', 'transfer'
   final double quantity;
-  final String reason; // 'purchase', 'feedUsed', 'medicineUsed', 'vaccination', 'damaged', 'expired', 'transfer', 'adjustment', 'other'
+  final String
+  reason; // 'purchase', 'feedUsed', 'medicineUsed', 'vaccination', 'damaged', 'expired', 'transfer', 'adjustment', 'other'
   final DateTime date;
   final String? supplier;
   final String? invoiceNumber;

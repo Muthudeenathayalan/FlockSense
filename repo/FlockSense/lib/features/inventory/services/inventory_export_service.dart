@@ -46,7 +46,10 @@ class InventoryExportService {
               ),
               pw.Text(
                 _dateFormat.format(DateTime.now()),
-                style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                style: const pw.TextStyle(
+                  fontSize: 10,
+                  color: PdfColors.grey700,
+                ),
               ),
             ],
           ),
@@ -61,7 +64,10 @@ class InventoryExportService {
         ),
         build: (context) => [
           pw.SizedBox(height: 12),
-          pw.Text('Inventory Summary KPIs', style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold)),
+          pw.Text(
+            'Inventory Summary KPIs',
+            style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
+          ),
           pw.SizedBox(height: 8),
 
           pw.Table(
@@ -92,11 +98,17 @@ class InventoryExportService {
           ),
 
           pw.SizedBox(height: 20),
-          pw.Text('Inventory Item List (${items.length} items)', style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold)),
+          pw.Text(
+            'Inventory Item List (${items.length} items)',
+            style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
+          ),
           pw.SizedBox(height: 8),
 
           if (items.isEmpty)
-            pw.Text('No items logged in inventory.', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700))
+            pw.Text(
+              'No items logged in inventory.',
+              style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+            )
           else
             pw.Table(
               border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
@@ -155,7 +167,9 @@ class InventoryExportService {
     sb.writeln('Generated Date,${_dateFormat.format(DateTime.now())}');
     sb.writeln();
 
-    sb.writeln('Item Name,Category,Brand,Supplier,Quantity Available,Unit,Min Stock Level,Purchase Date,Expiry Date,Purchase Price,Storage Location,Batch Number,Total Value,Low Stock,Expired');
+    sb.writeln(
+      'Item Name,Category,Brand,Supplier,Quantity Available,Unit,Min Stock Level,Purchase Date,Expiry Date,Purchase Price,Storage Location,Batch Number,Total Value,Low Stock,Expired',
+    );
     for (final item in items) {
       sb.writeln(
         '"${item.itemName}","${item.category}","${item.brand}","${item.supplier}",${item.quantityAvailable},"${item.unit}",${item.minStockLevel},"${_dateFormat.format(item.purchaseDate)}","${item.expiryDate != null ? _dateFormat.format(item.expiryDate!) : "N/A"}",${item.purchasePrice},"${item.storageLocation}","${item.batchNumber ?? ''}",${item.totalValue},${item.isLowStock},${item.isExpired}',
@@ -172,10 +186,15 @@ class InventoryExportService {
     required InventoryStats stats,
     required String title,
   }) async {
-    final pdf = await generateInventoryPdfReport(items: items, stats: stats, title: title);
+    final pdf = await generateInventoryPdfReport(
+      items: items,
+      stats: stats,
+      title: title,
+    );
     await Printing.layoutPdf(
       onLayout: (PdfPageFormat format) async => pdf.save(),
-      name: 'FlockSense_Inventory_Report_${DateFormat("yyyyMMdd").format(DateTime.now())}.pdf',
+      name:
+          'FlockSense_Inventory_Report_${DateFormat("yyyyMMdd").format(DateTime.now())}.pdf',
     );
   }
 
@@ -186,16 +205,21 @@ class InventoryExportService {
     required InventoryStats stats,
     required String title,
   }) async {
-    final pdf = await generateInventoryPdfReport(items: items, stats: stats, title: title);
+    final pdf = await generateInventoryPdfReport(
+      items: items,
+      stats: stats,
+      title: title,
+    );
     final bytes = await pdf.save();
 
     final tempDir = Directory.systemTemp;
-    final file = File('${tempDir.path}/FlockSense_Inventory_${DateFormat("yyyyMMdd_HHmmss").format(DateTime.now())}.pdf');
+    final file = File(
+      '${tempDir.path}/FlockSense_Inventory_${DateFormat("yyyyMMdd_HHmmss").format(DateTime.now())}.pdf',
+    );
     await file.writeAsBytes(bytes);
 
-    await Share.shareXFiles(
-      [XFile(file.path, mimeType: 'application/pdf')],
-      text: 'FlockSense Inventory Report — $title',
-    );
+    await Share.shareXFiles([
+      XFile(file.path, mimeType: 'application/pdf'),
+    ], text: 'FlockSense Inventory Report — $title');
   }
 }

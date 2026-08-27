@@ -7,7 +7,7 @@ class InventoryService {
   final FirebaseFirestore _firestore;
 
   InventoryService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Stream real-time inventory items for a user
   Stream<List<InventoryItemModel>> watchInventoryItems({
@@ -52,9 +52,11 @@ class InventoryService {
         .collection('stockMovements')
         .orderBy('date', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => StockMovementModel.fromJson(doc.data()))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => StockMovementModel.fromJson(doc.data()))
+              .toList(),
+        );
   }
 
   /// Save new inventory item to Firestore and log initial movement
@@ -87,7 +89,10 @@ class InventoryService {
         createdAt: DateTime.now(),
       );
 
-      await docRef.collection('stockMovements').doc(initialMovement.id).set(initialMovement.toJson());
+      await docRef
+          .collection('stockMovements')
+          .doc(initialMovement.id)
+          .set(initialMovement.toJson());
     } catch (e) {
       debugPrint('Error adding inventory item: $e');
       rethrow;
@@ -147,9 +152,9 @@ class InventoryService {
         .collection('inventoryItems')
         .doc(movement.inventoryItemId);
 
-    final movementDocRef = itemDocRef.collection('stockMovements').doc(
-          movement.id.isNotEmpty ? movement.id : null,
-        );
+    final movementDocRef = itemDocRef
+        .collection('stockMovements')
+        .doc(movement.id.isNotEmpty ? movement.id : null);
 
     final updatedMovement = StockMovementModel(
       id: movementDocRef.id,

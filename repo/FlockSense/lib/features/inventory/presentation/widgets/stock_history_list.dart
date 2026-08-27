@@ -18,12 +18,19 @@ class StockHistoryList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final movementsAsync = ref.watch(stockMovementsStreamProvider((farmId: farmId, itemId: itemId)));
+    final movementsAsync = ref.watch(
+      stockMovementsStreamProvider((farmId: farmId, itemId: itemId)),
+    );
     final dateFormat = DateFormat('MMM dd, yyyy • hh:mm a');
 
     return movementsAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-      error: (e, _) => Text('Error loading history: $e', style: const TextStyle(color: AppColors.danger)),
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      ),
+      error: (e, _) => Text(
+        'Error loading history: $e',
+        style: const TextStyle(color: AppColors.danger),
+      ),
       data: (movements) {
         if (movements.isEmpty) {
           return const Center(
@@ -41,14 +48,22 @@ class StockHistoryList extends ConsumerWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: movements.length,
-          separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.border),
+          separatorBuilder: (_, __) =>
+              const Divider(height: 1, color: AppColors.border),
           itemBuilder: (context, index) {
             final m = movements[index];
             return ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 4,
+                vertical: 4,
+              ),
               leading: CircleAvatar(
                 backgroundColor: _actionColor(m.action).withValues(alpha: 0.12),
-                child: Icon(_actionIcon(m.action), color: _actionColor(m.action), size: 18),
+                child: Icon(
+                  _actionIcon(m.action),
+                  color: _actionColor(m.action),
+                  size: 18,
+                ),
               ),
               title: Row(
                 children: [
@@ -62,14 +77,21 @@ class StockHistoryList extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       _formatReason(m.reason),
-                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ),
                 ],
@@ -80,14 +102,35 @@ class StockHistoryList extends ConsumerWidget {
                   const SizedBox(height: 2),
                   Text(
                     dateFormat.format(m.date),
-                    style: const TextStyle(fontSize: 10, color: AppColors.textHint),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: AppColors.textHint,
+                    ),
                   ),
                   if (m.invoiceNumber != null && m.invoiceNumber!.isNotEmpty)
-                    Text('Inv/DC: ${m.invoiceNumber}', style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                    Text(
+                      'Inv/DC: ${m.invoiceNumber}',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                   if (m.targetLocation != null && m.targetLocation!.isNotEmpty)
-                    Text('To: ${m.targetLocation}', style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                    Text(
+                      'To: ${m.targetLocation}',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                   if (m.notes != null && m.notes!.isNotEmpty)
-                    Text(m.notes!, style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic)),
+                    Text(
+                      m.notes!,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                 ],
               ),
             );

@@ -15,7 +15,11 @@ class InventoryItemDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 2, locale: 'en_IN');
+    final currencyFormat = NumberFormat.currency(
+      symbol: '₹',
+      decimalDigits: 2,
+      locale: 'en_IN',
+    );
     final dateFormat = DateFormat('MMM dd, yyyy');
 
     return Scaffold(
@@ -56,11 +60,17 @@ class InventoryItemDetailScreen extends ConsumerWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: item.isLowStock || item.isExpired ? AppColors.danger : AppColors.border,
+                  color: item.isLowStock || item.isExpired
+                      ? AppColors.danger
+                      : AppColors.border,
                   width: item.isLowStock || item.isExpired ? 1.5 : 1.0,
                 ),
                 boxShadow: const [
-                  BoxShadow(color: Color(0x08000000), blurRadius: 10, offset: Offset(0, 4)),
+                  BoxShadow(
+                    color: Color(0x08000000),
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
                 ],
               ),
               child: Column(
@@ -69,29 +79,62 @@ class InventoryItemDetailScreen extends ConsumerWidget {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           item.category,
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       if (item.isLowStock)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(color: AppColors.danger, borderRadius: BorderRadius.circular(6)),
-                          child: const Text('LOW STOCK', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.danger,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'LOW STOCK',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       if (item.isExpired) ...[
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(color: const Color(0xFFD32F2F), borderRadius: BorderRadius.circular(6)),
-                          child: const Text('EXPIRED', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFD32F2F),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'EXPIRED',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ],
                     ],
@@ -104,13 +147,21 @@ class InventoryItemDetailScreen extends ConsumerWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Quantity Available', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                          const Text(
+                            'Quantity Available',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                           Text(
                             '${item.quantityAvailable} ${item.unit}',
                             style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w800,
-                              color: item.isLowStock ? AppColors.danger : AppColors.primary,
+                              color: item.isLowStock
+                                  ? AppColors.danger
+                                  : AppColors.primary,
                             ),
                           ),
                         ],
@@ -118,10 +169,20 @@ class InventoryItemDetailScreen extends ConsumerWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          const Text('Total Asset Value', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                          const Text(
+                            'Total Asset Value',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                           Text(
                             currencyFormat.format(item.totalValue),
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                         ],
                       ),
@@ -132,15 +193,38 @@ class InventoryItemDetailScreen extends ConsumerWidget {
                   const SizedBox(height: 14),
 
                   // Metadata Grid
-                  _infoRow('Brand / Manufacturer', item.brand.isNotEmpty ? item.brand : 'N/A'),
-                  _infoRow('Supplier Name', item.supplier.isNotEmpty ? item.supplier : 'N/A'),
+                  _infoRow(
+                    'Brand / Manufacturer',
+                    item.brand.isNotEmpty ? item.brand : 'N/A',
+                  ),
+                  _infoRow(
+                    'Supplier Name',
+                    item.supplier.isNotEmpty ? item.supplier : 'N/A',
+                  ),
                   _infoRow('Storage Location', item.storageLocation),
-                  _infoRow('Min Stock Level', '${item.minStockLevel} ${item.unit}'),
-                  _infoRow('Purchase Price', '${currencyFormat.format(item.purchasePrice)} / ${item.unit}'),
+                  _infoRow(
+                    'Min Stock Level',
+                    '${item.minStockLevel} ${item.unit}',
+                  ),
+                  _infoRow(
+                    'Purchase Price',
+                    '${currencyFormat.format(item.purchasePrice)} / ${item.unit}',
+                  ),
                   if (item.sellingPrice != null)
-                    _infoRow('Selling Price', currencyFormat.format(item.sellingPrice!)),
-                  _infoRow('Purchase Date', dateFormat.format(item.purchaseDate)),
-                  _infoRow('Expiry Date', item.expiryDate != null ? dateFormat.format(item.expiryDate!) : 'None'),
+                    _infoRow(
+                      'Selling Price',
+                      currencyFormat.format(item.sellingPrice!),
+                    ),
+                  _infoRow(
+                    'Purchase Date',
+                    dateFormat.format(item.purchaseDate),
+                  ),
+                  _infoRow(
+                    'Expiry Date',
+                    item.expiryDate != null
+                        ? dateFormat.format(item.expiryDate!)
+                        : 'None',
+                  ),
                   if (item.batchNumber != null && item.batchNumber!.isNotEmpty)
                     _infoRow('Batch Number', item.batchNumber!),
                   if (item.notes != null && item.notes!.isNotEmpty)
@@ -153,7 +237,11 @@ class InventoryItemDetailScreen extends ConsumerWidget {
             // Quick Actions Bar
             const Text(
               'Stock Actions',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
             const SizedBox(height: 10),
             Row(
@@ -164,7 +252,9 @@ class InventoryItemDetailScreen extends ConsumerWidget {
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     onPressed: () => _openStockDialog(context, 'increase'),
                     icon: const Icon(Icons.add_circle_outline, size: 18),
@@ -178,7 +268,9 @@ class InventoryItemDetailScreen extends ConsumerWidget {
                       backgroundColor: const Color(0xFFE65100),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     onPressed: () => _openStockDialog(context, 'reduce'),
                     icon: const Icon(Icons.remove_circle_outline, size: 18),
@@ -192,7 +284,9 @@ class InventoryItemDetailScreen extends ConsumerWidget {
                       backgroundColor: const Color(0xFF00838F),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     onPressed: () => _openStockDialog(context, 'transfer'),
                     icon: const Icon(Icons.swap_horiz, size: 18),
@@ -206,7 +300,11 @@ class InventoryItemDetailScreen extends ConsumerWidget {
             // Movement History Timeline
             const Text(
               'Stock Movement History',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
             const SizedBox(height: 12),
             Container(
@@ -234,8 +332,21 @@ class InventoryItemDetailScreen extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-          Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
         ],
       ),
     );
@@ -253,11 +364,19 @@ class InventoryItemDetailScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Item?'),
-        content: Text('Are you sure you want to delete "${item.itemName}"? This action cannot be undone.'),
+        content: Text(
+          'Are you sure you want to delete "${item.itemName}"? This action cannot be undone.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete'),
           ),

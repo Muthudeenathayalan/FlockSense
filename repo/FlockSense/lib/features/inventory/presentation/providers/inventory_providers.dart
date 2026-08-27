@@ -18,7 +18,9 @@ class InventorySearchNotifier extends Notifier<String> {
 }
 
 final inventorySearchQueryProvider =
-    NotifierProvider<InventorySearchNotifier, String>(InventorySearchNotifier.new);
+    NotifierProvider<InventorySearchNotifier, String>(
+      InventorySearchNotifier.new,
+    );
 
 class InventoryCategoryFilterNotifier extends Notifier<String> {
   @override
@@ -27,7 +29,9 @@ class InventoryCategoryFilterNotifier extends Notifier<String> {
 }
 
 final inventoryCategoryFilterProvider =
-    NotifierProvider<InventoryCategoryFilterNotifier, String>(InventoryCategoryFilterNotifier.new);
+    NotifierProvider<InventoryCategoryFilterNotifier, String>(
+      InventoryCategoryFilterNotifier.new,
+    );
 
 class InventorySortNotifier extends Notifier<InventorySortOption> {
   @override
@@ -36,69 +40,85 @@ class InventorySortNotifier extends Notifier<InventorySortOption> {
 }
 
 final inventorySortProvider =
-    NotifierProvider<InventorySortNotifier, InventorySortOption>(InventorySortNotifier.new);
+    NotifierProvider<InventorySortNotifier, InventorySortOption>(
+      InventorySortNotifier.new,
+    );
 
-final inventoryStreamProvider = StreamProvider.autoDispose<List<InventoryItemModel>>((ref) {
-  final authState = ref.watch(authStateProvider);
-  final activeFarmId = ref.watch(activeFarmIdProvider).value;
-  final service = ref.watch(inventoryServiceProvider);
+final inventoryStreamProvider =
+    StreamProvider.autoDispose<List<InventoryItemModel>>((ref) {
+      final authState = ref.watch(authStateProvider);
+      final activeFarmId = ref.watch(activeFarmIdProvider).value;
+      final service = ref.watch(inventoryServiceProvider);
 
-  return authState.when(
-    data: (user) {
-      if (user == null) return Stream.value([]);
-      return service.watchInventoryItems(uid: user.uid, farmId: activeFarmId);
-    },
-    loading: () => Stream.value([]),
-    error: (_, __) => Stream.value([]),
-  );
-});
+      return authState.when(
+        data: (user) {
+          if (user == null) return Stream.value([]);
+          return service.watchInventoryItems(
+            uid: user.uid,
+            farmId: activeFarmId,
+          );
+        },
+        loading: () => Stream.value([]),
+        error: (_, __) => Stream.value([]),
+      );
+    });
 
-final filteredInventoryListProvider = Provider.autoDispose<List<InventoryItemModel>>((ref) {
-  final items = ref.watch(inventoryStreamProvider).value ?? [];
-  final query = ref.watch(inventorySearchQueryProvider).toLowerCase().trim();
-  final category = ref.watch(inventoryCategoryFilterProvider);
-  final sort = ref.watch(inventorySortProvider);
+final filteredInventoryListProvider =
+    Provider.autoDispose<List<InventoryItemModel>>((ref) {
+      final items = ref.watch(inventoryStreamProvider).value ?? [];
+      final query = ref
+          .watch(inventorySearchQueryProvider)
+          .toLowerCase()
+          .trim();
+      final category = ref.watch(inventoryCategoryFilterProvider);
+      final sort = ref.watch(inventorySortProvider);
 
-  var result = items.where((item) {
-    final matchesSearch = query.isEmpty ||
-        item.itemName.toLowerCase().contains(query) ||
-        item.category.toLowerCase().contains(query) ||
-        item.supplier.toLowerCase().contains(query) ||
-        item.brand.toLowerCase().contains(query);
+      var result = items.where((item) {
+        final matchesSearch =
+            query.isEmpty ||
+            item.itemName.toLowerCase().contains(query) ||
+            item.category.toLowerCase().contains(query) ||
+            item.supplier.toLowerCase().contains(query) ||
+            item.brand.toLowerCase().contains(query);
 
-    if (!matchesSearch) return false;
+        if (!matchesSearch) return false;
 
-    if (category == 'All') return true;
-    if (category == 'Low Stock') return item.isLowStock;
-    if (category == 'Expired') return item.isExpired;
-    return item.category.toLowerCase() == category.toLowerCase();
-  }).toList();
+        if (category == 'All') return true;
+        if (category == 'Low Stock') return item.isLowStock;
+        if (category == 'Expired') return item.isExpired;
+        return item.category.toLowerCase() == category.toLowerCase();
+      }).toList();
 
-  switch (sort) {
-    case InventorySortOption.newest:
-      result.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-      break;
-    case InventorySortOption.oldest:
-      result.sort((a, b) => a.updatedAt.compareTo(b.updatedAt));
-      break;
-    case InventorySortOption.quantity:
-      result.sort((a, b) => b.quantityAvailable.compareTo(a.quantityAvailable));
-      break;
-    case InventorySortOption.expiryDate:
-      result.sort((a, b) {
-        if (a.expiryDate == null && b.expiryDate == null) return 0;
-        if (a.expiryDate == null) return 1;
-        if (b.expiryDate == null) return -1;
-        return a.expiryDate!.compareTo(b.expiryDate!);
-      });
-      break;
-    case InventorySortOption.alphabetical:
-      result.sort((a, b) => a.itemName.toLowerCase().compareTo(b.itemName.toLowerCase()));
-      break;
-  }
+      switch (sort) {
+        case InventorySortOption.newest:
+          result.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+          break;
+        case InventorySortOption.oldest:
+          result.sort((a, b) => a.updatedAt.compareTo(b.updatedAt));
+          break;
+        case InventorySortOption.quantity:
+          result.sort(
+            (a, b) => b.quantityAvailable.compareTo(a.quantityAvailable),
+          );
+          break;
+        case InventorySortOption.expiryDate:
+          result.sort((a, b) {
+            if (a.expiryDate == null && b.expiryDate == null) return 0;
+            if (a.expiryDate == null) return 1;
+            if (b.expiryDate == null) return -1;
+            return a.expiryDate!.compareTo(b.expiryDate!);
+          });
+          break;
+        case InventorySortOption.alphabetical:
+          result.sort(
+            (a, b) =>
+                a.itemName.toLowerCase().compareTo(b.itemName.toLowerCase()),
+          );
+          break;
+      }
 
-  return result;
-});
+      return result;
+    });
 
 class InventoryStats {
   final double totalFeedStockKg;
@@ -176,16 +196,23 @@ final inventoryStatsProvider = Provider.autoDispose<InventoryStats>((ref) {
 });
 
 final stockMovementsStreamProvider = StreamProvider.autoDispose
-    .family<List<StockMovementModel>, ({String farmId, String itemId})>((ref, arg) {
-  final authState = ref.watch(authStateProvider);
-  final service = ref.watch(inventoryServiceProvider);
+    .family<List<StockMovementModel>, ({String farmId, String itemId})>((
+      ref,
+      arg,
+    ) {
+      final authState = ref.watch(authStateProvider);
+      final service = ref.watch(inventoryServiceProvider);
 
-  return authState.when(
-    data: (user) {
-      if (user == null) return Stream.value([]);
-      return service.watchStockMovements(uid: user.uid, farmId: arg.farmId, itemId: arg.itemId);
-    },
-    loading: () => Stream.value([]),
-    error: (err, stack) => Stream.value([]),
-  );
-});
+      return authState.when(
+        data: (user) {
+          if (user == null) return Stream.value([]);
+          return service.watchStockMovements(
+            uid: user.uid,
+            farmId: arg.farmId,
+            itemId: arg.itemId,
+          );
+        },
+        loading: () => Stream.value([]),
+        error: (err, stack) => Stream.value([]),
+      );
+    });

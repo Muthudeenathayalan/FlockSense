@@ -67,7 +67,9 @@ class InventoryDashboardScreen extends ConsumerWidget {
                   );
                   break;
                 case 'lowStockPdf':
-                  final lowStockItems = rawItems.where((i) => i.isLowStock).toList();
+                  final lowStockItems = rawItems
+                      .where((i) => i.isLowStock)
+                      .toList();
                   InventoryExportService.printOrPreviewPdf(
                     context: context,
                     items: lowStockItems,
@@ -76,7 +78,9 @@ class InventoryDashboardScreen extends ConsumerWidget {
                   );
                   break;
                 case 'expiryPdf':
-                  final expiryItems = rawItems.where((i) => i.isExpired || i.isExpiringIn30Days).toList();
+                  final expiryItems = rawItems
+                      .where((i) => i.isExpired || i.isExpiringIn30Days)
+                      .toList();
                   InventoryExportService.printOrPreviewPdf(
                     context: context,
                     items: expiryItems,
@@ -122,7 +126,11 @@ class InventoryDashboardScreen extends ConsumerWidget {
                 value: 'lowStockPdf',
                 child: Row(
                   children: [
-                    Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 20),
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.orange,
+                      size: 20,
+                    ),
                     SizedBox(width: 10),
                     Text('Low Stock Report'),
                   ],
@@ -132,7 +140,11 @@ class InventoryDashboardScreen extends ConsumerWidget {
                 value: 'expiryPdf',
                 child: Row(
                   children: [
-                    Icon(Icons.event_busy_outlined, color: Colors.deepOrange, size: 20),
+                    Icon(
+                      Icons.event_busy_outlined,
+                      color: Colors.deepOrange,
+                      size: 20,
+                    ),
                     SizedBox(width: 10),
                     Text('Expiry Report'),
                   ],
@@ -148,13 +160,14 @@ class InventoryDashboardScreen extends ConsumerWidget {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const InventoryItemFormScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const InventoryItemFormScreen()),
           );
         },
         icon: const Icon(Icons.add),
-        label: const Text('Add Item', style: TextStyle(fontWeight: FontWeight.bold)),
+        label: const Text(
+          'Add Item',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: inventoryAsync.when(
         loading: () => const Center(
@@ -180,20 +193,32 @@ class InventoryDashboardScreen extends ConsumerWidget {
                   Expanded(
                     child: TextField(
                       onChanged: (val) {
-                        ref.read(inventorySearchQueryProvider.notifier).state = val;
+                        ref.read(inventorySearchQueryProvider.notifier).state =
+                            val;
                       },
                       decoration: InputDecoration(
                         hintText: 'Search items, suppliers, brand...',
-                        prefixIcon: const Icon(Icons.search, color: AppColors.primary),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: AppColors.primary,
+                        ),
                         suffixIcon: searchQuery.isNotEmpty
                             ? IconButton(
                                 icon: const Icon(Icons.clear, size: 18),
                                 onPressed: () {
-                                  ref.read(inventorySearchQueryProvider.notifier).state = '';
+                                  ref
+                                          .read(
+                                            inventorySearchQueryProvider
+                                                .notifier,
+                                          )
+                                          .state =
+                                      '';
                                 },
                               )
                             : null,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(color: AppColors.border),
@@ -211,7 +236,10 @@ class InventoryDashboardScreen extends ConsumerWidget {
 
                   // Sort Menu Dropdown
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(12),
@@ -220,17 +248,49 @@ class InventoryDashboardScreen extends ConsumerWidget {
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<InventorySortOption>(
                         value: selectedSort,
-                        icon: const Icon(Icons.sort_rounded, color: AppColors.primary, size: 20),
+                        icon: const Icon(
+                          Icons.sort_rounded,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
                         items: const [
-                          DropdownMenuItem(value: InventorySortOption.newest, child: Text('Newest', style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: InventorySortOption.oldest, child: Text('Oldest', style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: InventorySortOption.quantity, child: Text('Quantity', style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: InventorySortOption.expiryDate, child: Text('Expiry', style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: InventorySortOption.alphabetical, child: Text('A-Z', style: TextStyle(fontSize: 12))),
+                          DropdownMenuItem(
+                            value: InventorySortOption.newest,
+                            child: Text(
+                              'Newest',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: InventorySortOption.oldest,
+                            child: Text(
+                              'Oldest',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: InventorySortOption.quantity,
+                            child: Text(
+                              'Quantity',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: InventorySortOption.expiryDate,
+                            child: Text(
+                              'Expiry',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: InventorySortOption.alphabetical,
+                            child: Text('A-Z', style: TextStyle(fontSize: 12)),
+                          ),
                         ],
                         onChanged: (val) {
                           if (val != null) {
-                            ref.read(inventorySortProvider.notifier).state = val;
+                            ref.read(inventorySortProvider.notifier).state =
+                                val;
                           }
                         },
                       ),
@@ -252,11 +312,23 @@ class InventoryDashboardScreen extends ConsumerWidget {
                     const SizedBox(width: 6),
                     _categoryChip(ref, 'Feed', selectedCategory == 'Feed'),
                     const SizedBox(width: 6),
-                    _categoryChip(ref, 'Medicine', selectedCategory == 'Medicine'),
+                    _categoryChip(
+                      ref,
+                      'Medicine',
+                      selectedCategory == 'Medicine',
+                    ),
                     const SizedBox(width: 6),
-                    _categoryChip(ref, 'Vaccines', selectedCategory == 'Vaccines'),
+                    _categoryChip(
+                      ref,
+                      'Vaccines',
+                      selectedCategory == 'Vaccines',
+                    ),
                     const SizedBox(width: 6),
-                    _categoryChip(ref, 'Equipment', selectedCategory == 'Equipment'),
+                    _categoryChip(
+                      ref,
+                      'Equipment',
+                      selectedCategory == 'Equipment',
+                    ),
                     const SizedBox(width: 6),
                     _categoryChip(
                       ref,
@@ -289,7 +361,12 @@ class InventoryDashboardScreen extends ConsumerWidget {
                 child: filteredItems.isEmpty
                     ? _buildEmptyState(context, allRawItems.isEmpty)
                     : ListView.builder(
-                        padding: const EdgeInsets.only(left: 16, right: 16, top: 14, bottom: 80),
+                        padding: const EdgeInsets.only(
+                          left: 16,
+                          right: 16,
+                          top: 14,
+                          bottom: 80,
+                        ),
                         itemCount: filteredItems.length,
                         itemBuilder: (context, index) {
                           final item = filteredItems[index];
@@ -299,13 +376,17 @@ class InventoryDashboardScreen extends ConsumerWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => InventoryItemDetailScreen(item: item),
+                                  builder: (_) =>
+                                      InventoryItemDetailScreen(item: item),
                                 ),
                               );
                             },
-                            onIncreaseStock: () => _openStockModal(context, item, 'increase'),
-                            onReduceStock: () => _openStockModal(context, item, 'reduce'),
-                            onTransferStock: () => _openStockModal(context, item, 'transfer'),
+                            onIncreaseStock: () =>
+                                _openStockModal(context, item, 'increase'),
+                            onReduceStock: () =>
+                                _openStockModal(context, item, 'reduce'),
+                            onTransferStock: () =>
+                                _openStockModal(context, item, 'transfer'),
                           );
                         },
                       ),
@@ -340,7 +421,9 @@ class InventoryDashboardScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
               decoration: BoxDecoration(
-                color: selected ? Colors.white : (badgeColor ?? AppColors.primary),
+                color: selected
+                    ? Colors.white
+                    : (badgeColor ?? AppColors.primary),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -348,7 +431,9 @@ class InventoryDashboardScreen extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
-                  color: selected ? (badgeColor ?? AppColors.primary) : Colors.white,
+                  color: selected
+                      ? (badgeColor ?? AppColors.primary)
+                      : Colors.white,
                 ),
               ),
             ),
@@ -368,7 +453,11 @@ class InventoryDashboardScreen extends ConsumerWidget {
     );
   }
 
-  void _openStockModal(BuildContext context, InventoryItemModel item, String action) {
+  void _openStockModal(
+    BuildContext context,
+    InventoryItemModel item,
+    String action,
+  ) {
     showDialog(
       context: context,
       builder: (_) => StockMovementDialog(item: item, action: action),
@@ -398,24 +487,37 @@ class InventoryDashboardScreen extends ConsumerWidget {
                   ? 'Add your feed, medicine, vaccine, or equipment stock to start tracking.'
                   : 'Try adjusting your search query or filter selection.',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const InventoryItemFormScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const InventoryItemFormScreen(),
+                  ),
                 );
               },
               icon: const Icon(Icons.add),
-              label: const Text('Add First Item', style: TextStyle(fontWeight: FontWeight.bold)),
+              label: const Text(
+                'Add First Item',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
@@ -430,11 +532,19 @@ class InventoryDashboardScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.wifi_off_outlined, size: 54, color: AppColors.danger),
+            const Icon(
+              Icons.wifi_off_outlined,
+              size: 54,
+              color: AppColors.danger,
+            ),
             const SizedBox(height: 16),
             const Text(
               'Unable to load inventory',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -442,7 +552,10 @@ class InventoryDashboardScreen extends ConsumerWidget {
                   ? 'Permission denied. Check Firestore security rules.'
                   : 'Please check your internet connection and try again.',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 20),
             ElevatedButton.icon(
@@ -478,7 +591,10 @@ class InventoryDashboardScreen extends ConsumerWidget {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,

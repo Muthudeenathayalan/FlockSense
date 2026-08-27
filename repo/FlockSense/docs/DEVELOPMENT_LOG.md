@@ -20,7 +20,9 @@ This document tracks all completed engineering tasks, bug fixes, refactorings, t
 | 2026-08-27 | FS-014..FS-024 | Farms | Add farm dimension validation, capacity estimation, and comprehensive model test coverage | `farm_model.dart`, `farm_model_test.dart` | `flutter test test/features/farms/domain/farm_model_test.dart` (5/5 passed) | `c2846d9` |
 | 2026-08-27 | FS-025..FS-031 | Batches | Add batch placement validation, live population calculation, and unit test coverage | `batch_model.dart`, `batch_model_test.dart` | `flutter test test/features/batches/batch_model_test.dart` (5/5 passed) | `821fe90` |
 | 2026-08-27 | FS-038..FS-043, FS-108 | Analytics | Standardize cumulative FCR, ADG, EPEF formulas, add analytics formulas documentation and test suite | `performance_calculator.dart`, `performance_calculator_test.dart`, `docs/ANALYTICS_FORMULAS.md` | `flutter test test/features/performance/performance_calculator_test.dart` (5/5 passed) | `b80690b` |
-| 2026-08-27 | FS-066..FS-070 | Finance | Validate finance transaction amounts, pending calculation, budget serialization, and analytics unit tests | `finance_transaction_model.dart`, `finance_budget_model.dart`, `finance_analytics_test.dart` | `flutter test test/features/finance/finance_analytics_test.dart` (4/4 passed) | - |
+| 2026-08-27 | FS-066..FS-070 | Finance | Validate finance transaction amounts, pending calculation, budget serialization, and analytics unit tests | `finance_transaction_model.dart`, `finance_budget_model.dart`, `finance_analytics_test.dart` | `flutter test test/features/finance/finance_analytics_test.dart` (4/4 passed) | `5bc0ea5` |
+| 2026-08-27 | FS-055..FS-058 | Inventory | Add inventory quantity & price validations, stock balance calculation, low-stock/expiry detection, and model test suite | `inventory_item_model.dart`, `inventory_model_test.dart` | `flutter test test/features/inventory/inventory_model_test.dart` (4/4 passed) | - |
+
 
 
 

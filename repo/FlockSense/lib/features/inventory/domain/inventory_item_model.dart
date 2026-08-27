@@ -67,6 +67,26 @@ class InventoryItemModel {
 
   double get totalValue => quantityAvailable * purchasePrice;
 
+  /// Validates stock quantity (cannot be negative).
+  static bool isValidQuantity(double quantity) => quantity >= 0;
+
+  /// Validates price (cannot be negative).
+  static bool isValidPrice(double price) => price >= 0;
+
+  /// Calculates new stock balance given movement type ('in' or 'out').
+  static double calculateNewBalance({
+    required double currentStock,
+    required double quantity,
+    required String type,
+  }) {
+    if (type.toLowerCase() == 'in' || type.toLowerCase() == 'addition') {
+      return currentStock + quantity;
+    } else {
+      final balance = currentStock - quantity;
+      return balance >= 0 ? balance : 0.0;
+    }
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -112,7 +132,9 @@ class InventoryItemModel {
       unit: json['unit'] as String? ?? 'Units',
       minStockLevel: (json['minStockLevel'] as num?)?.toDouble() ?? 0.0,
       purchaseDate: parseDate(json['purchaseDate']),
-      expiryDate: json['expiryDate'] != null ? parseDate(json['expiryDate']) : null,
+      expiryDate: json['expiryDate'] != null
+          ? parseDate(json['expiryDate'])
+          : null,
       purchasePrice: (json['purchasePrice'] as num?)?.toDouble() ?? 0.0,
       sellingPrice: (json['sellingPrice'] as num?)?.toDouble(),
       storageLocation: json['storageLocation'] as String? ?? 'Main Store',

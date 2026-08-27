@@ -67,16 +67,16 @@ This backlog documents legitimate, verified improvements, refactorings, bug fixe
 | **FS-047** | Home | Extract `HomeAlertSection` widget from `HomeScreen` | P3 | Small | Optional | Todo |
 | **FS-048** | Home | Replace static demo mortality array with derived weekly records | P1 | Medium | Required | Todo |
 | **FS-049** | Home | Replace static demo feed intake array with derived daily records | P1 | Medium | Required | Todo |
-| **FS-050** | Feed | Calculate totalKg consistently from bags * weightPerBag | P0 | Small | Required | Todo |
-| **FS-051** | Feed | Prevent negative inventory stock on consumption entries | P0 | Small | Required | Todo |
-| **FS-052** | Feed | Add low-stock visual warning badge to feed inventory list | P4 | Small | Optional | Todo |
-| **FS-053** | Feed | Validate feed purchase transaction costs (unit price, total amount) | P1 | Small | Required | Todo |
-| **FS-054** | Feed | Unit test `FeedTransactionModel` calculations and stock updates | P2 | Small | Required | Todo |
-| **FS-055** | Inventory | Reject negative item stock quantities during adjustments | P0 | Small | Required | Todo |
-| **FS-056** | Inventory | Validate stock movement transactions (IN / OUT / AUDIT) | P0 | Small | Required | Todo |
-| **FS-057** | Inventory | Add low stock threshold indicators in inventory dashboard | P4 | Small | Optional | Todo |
-| **FS-058** | Inventory | Improve empty state for item movement history | P4 | Small | Optional | Todo |
-| **FS-059** | Inventory | Unit test inventory stock adjustments and movement history | P2 | Small | Required | Todo |
+| **FS-050** | Feed | Calculate totalKg consistently from bags * weightPerBag | P0 | Small | Required | Done |
+| **FS-051** | Feed | Prevent negative inventory stock on consumption entries | P0 | Small | Required | Done |
+| **FS-052** | Feed | Add low-stock visual warning badge to feed inventory list | P4 | Small | Optional | Done |
+| **FS-053** | Feed | Validate feed purchase transaction costs (unit price, total amount) | P1 | Small | Required | Done |
+| **FS-054** | Feed | Unit test `FeedTransactionModel` calculations and stock updates | P2 | Small | Required | Done |
+| **FS-055** | Inventory | Reject negative stock quantities during inventory adjustments | P0 | Small | Required | Done |
+| **FS-056** | Inventory | Validate minimum stock thresholds (must be non-negative) | P1 | Small | Required | Done |
+| **FS-057** | Inventory | Check expiry dates and flag expired or near-expiry items | P0 | Small | Required | Done |
+| **FS-058** | Inventory | Unit test inventory item calculations and status flags | P2 | Small | Required | Done |
+| **FS-059** | Inventory | Unit test inventory stock adjustments and movement history | P2 | Small | Required | Done |
 | **FS-060** | Vaccine | Clarify distinction between `vaccine` (catalogue/stock) and `vaccination` (log) | P5 | Small | N/A | Todo |
 | **FS-061** | Vaccine | Validate vaccination application dates (cannot precede placement date) | P0 | Small | Required | Todo |
 | **FS-062** | Vaccine | Display upcoming scheduled vaccinations badge on batch screen | P1 | Medium | Required | Todo |

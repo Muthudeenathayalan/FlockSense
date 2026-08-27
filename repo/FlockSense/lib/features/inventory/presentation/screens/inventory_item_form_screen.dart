@@ -14,10 +14,12 @@ class InventoryItemFormScreen extends ConsumerStatefulWidget {
   final InventoryItemModel? existingItem;
 
   @override
-  ConsumerState<InventoryItemFormScreen> createState() => _InventoryItemFormScreenState();
+  ConsumerState<InventoryItemFormScreen> createState() =>
+      _InventoryItemFormScreenState();
 }
 
-class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScreen> {
+class _InventoryItemFormScreenState
+    extends ConsumerState<InventoryItemFormScreen> {
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _nameController;
@@ -62,7 +64,9 @@ class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScree
     _storageLocationController = TextEditingController(
       text: item?.storageLocation ?? 'Main Store',
     );
-    _batchNumberController = TextEditingController(text: item?.batchNumber ?? '');
+    _batchNumberController = TextEditingController(
+      text: item?.batchNumber ?? '',
+    );
     _notesController = TextEditingController(text: item?.notes ?? '');
 
     if (item != null) {
@@ -107,12 +111,17 @@ class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScree
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Category Selection
-              const Text('Item Category *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const Text(
+                'Item Category *',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
                 value: _category,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                 ),
@@ -120,7 +129,10 @@ class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScree
                   DropdownMenuItem(value: 'Feed', child: Text('Feed')),
                   DropdownMenuItem(value: 'Medicine', child: Text('Medicine')),
                   DropdownMenuItem(value: 'Vaccines', child: Text('Vaccines')),
-                  DropdownMenuItem(value: 'Equipment', child: Text('Equipment')),
+                  DropdownMenuItem(
+                    value: 'Equipment',
+                    child: Text('Equipment'),
+                  ),
                 ],
                 onChanged: (val) {
                   if (val != null) {
@@ -139,12 +151,15 @@ class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScree
                 decoration: InputDecoration(
                   labelText: 'Item Name *',
                   hintText: 'e.g. Starter Feed, Amoxicillin 10%',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                 ),
-                validator: (val) =>
-                    (val == null || val.trim().isEmpty) ? 'Please enter item name' : null,
+                validator: (val) => (val == null || val.trim().isEmpty)
+                    ? 'Please enter item name'
+                    : null,
               ),
               const SizedBox(height: 14),
 
@@ -156,7 +171,9 @@ class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScree
                       controller: _brandController,
                       decoration: InputDecoration(
                         labelText: 'Brand / Manufacturer',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                       ),
@@ -168,7 +185,9 @@ class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScree
                       controller: _supplierController,
                       decoration: InputDecoration(
                         labelText: 'Supplier Name',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                       ),
@@ -185,15 +204,20 @@ class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScree
                     flex: 2,
                     child: TextFormField(
                       controller: _quantityController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       decoration: InputDecoration(
                         labelText: 'Quantity Available *',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                       ),
                       validator: (val) {
-                        if (val == null || val.trim().isEmpty) return 'Enter quantity';
+                        if (val == null || val.trim().isEmpty)
+                          return 'Enter quantity';
                         final q = double.tryParse(val.trim());
                         if (q == null || q < 0) return 'Invalid quantity';
                         return null;
@@ -207,16 +231,24 @@ class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScree
                       value: _unit,
                       decoration: InputDecoration(
                         labelText: 'Unit *',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                       ),
                       items: const [
                         DropdownMenuItem(value: 'kg', child: Text('kg')),
-                        DropdownMenuItem(value: 'Liters', child: Text('Liters')),
+                        DropdownMenuItem(
+                          value: 'Liters',
+                          child: Text('Liters'),
+                        ),
                         DropdownMenuItem(value: 'Bags', child: Text('Bags')),
                         DropdownMenuItem(value: 'Doses', child: Text('Doses')),
-                        DropdownMenuItem(value: 'Pieces', child: Text('Pieces')),
+                        DropdownMenuItem(
+                          value: 'Pieces',
+                          child: Text('Pieces'),
+                        ),
                         DropdownMenuItem(value: 'Units', child: Text('Units')),
                       ],
                       onChanged: (val) {
@@ -234,16 +266,21 @@ class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScree
                   Expanded(
                     child: TextFormField(
                       controller: _minStockController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       decoration: InputDecoration(
                         labelText: 'Min Stock Level *',
                         helperText: 'Alert badge threshold',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                       ),
                       validator: (val) {
-                        if (val == null || val.trim().isEmpty) return 'Enter min stock';
+                        if (val == null || val.trim().isEmpty)
+                          return 'Enter min stock';
                         final m = double.tryParse(val.trim());
                         if (m == null || m < 0) return 'Invalid number';
                         return null;
@@ -256,12 +293,15 @@ class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScree
                       controller: _storageLocationController,
                       decoration: InputDecoration(
                         labelText: 'Storage Location *',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                       ),
-                      validator: (val) =>
-                          (val == null || val.trim().isEmpty) ? 'Enter location' : null,
+                      validator: (val) => (val == null || val.trim().isEmpty)
+                          ? 'Enter location'
+                          : null,
                     ),
                   ),
                 ],
@@ -274,15 +314,20 @@ class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScree
                   Expanded(
                     child: TextFormField(
                       controller: _purchasePriceController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       decoration: InputDecoration(
                         labelText: 'Purchase Price (₹) *',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                       ),
                       validator: (val) {
-                        if (val == null || val.trim().isEmpty) return 'Enter price';
+                        if (val == null || val.trim().isEmpty)
+                          return 'Enter price';
                         final p = double.tryParse(val.trim());
                         if (p == null || p < 0) return 'Invalid price';
                         return null;
@@ -293,11 +338,15 @@ class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScree
                   Expanded(
                     child: TextFormField(
                       controller: _sellingPriceController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       decoration: InputDecoration(
                         labelText: 'Selling Price (₹)',
                         helperText: 'Optional',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                       ),
@@ -319,12 +368,15 @@ class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScree
                           firstDate: DateTime(2020),
                           lastDate: DateTime.now(),
                         );
-                        if (picked != null) setState(() => _purchaseDate = picked);
+                        if (picked != null)
+                          setState(() => _purchaseDate = picked);
                       },
                       child: InputDecorator(
                         decoration: InputDecoration(
                           labelText: 'Purchase Date *',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           filled: true,
                           fillColor: Colors.white,
                         ),
@@ -338,27 +390,41 @@ class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScree
                       onTap: () async {
                         final picked = await showDatePicker(
                           context: context,
-                          initialDate: _expiryDate ?? DateTime.now().add(const Duration(days: 180)),
-                          firstDate: DateTime.now().subtract(const Duration(days: 30)),
-                          lastDate: DateTime.now().add(const Duration(days: 3650)),
+                          initialDate:
+                              _expiryDate ??
+                              DateTime.now().add(const Duration(days: 180)),
+                          firstDate: DateTime.now().subtract(
+                            const Duration(days: 30),
+                          ),
+                          lastDate: DateTime.now().add(
+                            const Duration(days: 3650),
+                          ),
                         );
-                        if (picked != null) setState(() => _expiryDate = picked);
+                        if (picked != null)
+                          setState(() => _expiryDate = picked);
                       },
                       child: InputDecorator(
                         decoration: InputDecoration(
                           labelText: 'Expiry Date',
                           helperText: 'Optional',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           filled: true,
                           fillColor: Colors.white,
                           suffixIcon: _expiryDate != null
                               ? IconButton(
                                   icon: const Icon(Icons.clear, size: 18),
-                                  onPressed: () => setState(() => _expiryDate = null),
+                                  onPressed: () =>
+                                      setState(() => _expiryDate = null),
                                 )
                               : null,
                         ),
-                        child: Text(_expiryDate != null ? _dateFormat.format(_expiryDate!) : 'None'),
+                        child: Text(
+                          _expiryDate != null
+                              ? _dateFormat.format(_expiryDate!)
+                              : 'None',
+                        ),
                       ),
                     ),
                   ),
@@ -371,7 +437,9 @@ class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScree
                 controller: _batchNumberController,
                 decoration: InputDecoration(
                   labelText: 'Batch / Lot Number',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                 ),
@@ -383,7 +451,9 @@ class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScree
                 maxLines: 3,
                 decoration: InputDecoration(
                   labelText: 'Notes / Remarks',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                 ),
@@ -398,18 +468,26 @@ class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScree
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                   onPressed: _isSaving ? null : _saveItem,
                   child: _isSaving
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
                         )
                       : Text(
                           isEdit ? 'Update Item' : 'Save Item to Inventory',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                 ),
               ),
@@ -470,7 +548,9 @@ class _InventoryItemFormScreenState extends ConsumerState<InventoryItemFormScree
         batchNumber: _batchNumberController.text.trim().isNotEmpty
             ? _batchNumberController.text.trim()
             : null,
-        notes: _notesController.text.trim().isNotEmpty ? _notesController.text.trim() : null,
+        notes: _notesController.text.trim().isNotEmpty
+            ? _notesController.text.trim()
+            : null,
         createdAt: widget.existingItem?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
       );

@@ -16,7 +16,8 @@ class StockMovementDialog extends ConsumerStatefulWidget {
   final String action;
 
   @override
-  ConsumerState<StockMovementDialog> createState() => _StockMovementDialogState();
+  ConsumerState<StockMovementDialog> createState() =>
+      _StockMovementDialogState();
 }
 
 class _StockMovementDialogState extends ConsumerState<StockMovementDialog> {
@@ -39,7 +40,9 @@ class _StockMovementDialogState extends ConsumerState<StockMovementDialog> {
     } else if (widget.action == 'reduce') {
       _reason = widget.item.category == 'Feed'
           ? 'feedUsed'
-          : (widget.item.category == 'Medicine' ? 'medicineUsed' : 'vaccination');
+          : (widget.item.category == 'Medicine'
+                ? 'medicineUsed'
+                : 'vaccination');
     } else if (widget.action == 'transfer') {
       _reason = 'transfer';
     }
@@ -59,7 +62,9 @@ class _StockMovementDialogState extends ConsumerState<StockMovementDialog> {
   Widget build(BuildContext context) {
     final title = widget.action == 'increase'
         ? 'Increase Stock (+)'
-        : (widget.action == 'reduce' ? 'Reduce Stock (-)' : 'Transfer Stock (⇄)');
+        : (widget.action == 'reduce'
+              ? 'Reduce Stock (-)'
+              : 'Transfer Stock (⇄)');
 
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -76,24 +81,34 @@ class _StockMovementDialogState extends ConsumerState<StockMovementDialog> {
             children: [
               Text(
                 'Item: ${widget.item.itemName} (${widget.item.quantityAvailable} ${widget.item.unit} currently available)',
-                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 16),
 
               // Quantity Field
               TextFormField(
                 controller: _quantityController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Quantity to ${widget.action} *',
                   suffixText: widget.item.unit,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty) return 'Please enter quantity';
+                  if (val == null || val.trim().isEmpty)
+                    return 'Please enter quantity';
                   final qty = double.tryParse(val.trim());
-                  if (qty == null || qty <= 0) return 'Enter a valid positive number';
-                  if ((widget.action == 'reduce' || widget.action == 'transfer') &&
+                  if (qty == null || qty <= 0)
+                    return 'Enter a valid positive number';
+                  if ((widget.action == 'reduce' ||
+                          widget.action == 'transfer') &&
                       qty > widget.item.quantityAvailable) {
                     return 'Quantity exceeds available stock (${widget.item.quantityAvailable})';
                   }
@@ -107,7 +122,9 @@ class _StockMovementDialogState extends ConsumerState<StockMovementDialog> {
                 value: _reason,
                 decoration: InputDecoration(
                   labelText: 'Reason *',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 items: _getReasonOptions(),
                 onChanged: (val) {
@@ -121,7 +138,9 @@ class _StockMovementDialogState extends ConsumerState<StockMovementDialog> {
                   controller: _supplierController,
                   decoration: InputDecoration(
                     labelText: 'Supplier',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -129,7 +148,9 @@ class _StockMovementDialogState extends ConsumerState<StockMovementDialog> {
                   controller: _invoiceController,
                   decoration: InputDecoration(
                     labelText: 'Invoice / DC Number',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ],
@@ -140,10 +161,13 @@ class _StockMovementDialogState extends ConsumerState<StockMovementDialog> {
                   controller: _targetLocationController,
                   decoration: InputDecoration(
                     labelText: 'Target Shed / Location *',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty) return 'Enter target location';
+                    if (val == null || val.trim().isEmpty)
+                      return 'Enter target location';
                     return null;
                   },
                 ),
@@ -155,7 +179,9 @@ class _StockMovementDialogState extends ConsumerState<StockMovementDialog> {
                 maxLines: 2,
                 decoration: InputDecoration(
                   labelText: 'Notes / Remarks',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ],
@@ -171,16 +197,23 @@ class _StockMovementDialogState extends ConsumerState<StockMovementDialog> {
           style: ElevatedButton.styleFrom(
             backgroundColor: widget.action == 'increase'
                 ? AppColors.primary
-                : (widget.action == 'reduce' ? AppColors.danger : const Color(0xFF00838F)),
+                : (widget.action == 'reduce'
+                      ? AppColors.danger
+                      : const Color(0xFF00838F)),
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
           onPressed: _isSubmitting ? null : _submit,
           child: _isSubmitting
               ? const SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 )
               : const Text('Submit'),
         ),
@@ -199,15 +232,24 @@ class _StockMovementDialogState extends ConsumerState<StockMovementDialog> {
     } else if (widget.action == 'reduce') {
       return const [
         DropdownMenuItem(value: 'feedUsed', child: Text('Feed Consumed')),
-        DropdownMenuItem(value: 'medicineUsed', child: Text('Medicine Applied')),
-        DropdownMenuItem(value: 'vaccination', child: Text('Vaccination Administered')),
+        DropdownMenuItem(
+          value: 'medicineUsed',
+          child: Text('Medicine Applied'),
+        ),
+        DropdownMenuItem(
+          value: 'vaccination',
+          child: Text('Vaccination Administered'),
+        ),
         DropdownMenuItem(value: 'damaged', child: Text('Damaged / Spilled')),
         DropdownMenuItem(value: 'expired', child: Text('Expired Disposal')),
         DropdownMenuItem(value: 'other', child: Text('Other')),
       ];
     } else {
       return const [
-        DropdownMenuItem(value: 'transfer', child: Text('Transfer to Shed/Location')),
+        DropdownMenuItem(
+          value: 'transfer',
+          child: Text('Transfer to Shed/Location'),
+        ),
         DropdownMenuItem(value: 'other', child: Text('Other Transfer')),
       ];
     }

@@ -10,7 +10,11 @@ class InventorySummaryCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0, locale: 'en_IN');
+    final currencyFormat = NumberFormat.currency(
+      symbol: '₹',
+      decimalDigits: 0,
+      locale: 'en_IN',
+    );
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -47,9 +51,13 @@ class InventorySummaryCards extends StatelessWidget {
           _summaryCard(
             title: 'Low Stock Items',
             value: '${stats.lowStockCount}',
-            subtitle: stats.lowStockCount > 0 ? 'Requires reorder' : 'All stock optimal',
+            subtitle: stats.lowStockCount > 0
+                ? 'Requires reorder'
+                : 'All stock optimal',
             icon: Icons.warning_amber_rounded,
-            color: stats.lowStockCount > 0 ? AppColors.danger : AppColors.primary,
+            color: stats.lowStockCount > 0
+                ? AppColors.danger
+                : AppColors.primary,
           ),
           const SizedBox(width: 10),
           _summaryCard(
@@ -131,7 +139,9 @@ class InventorySummaryCards extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w800,
-              color: color == AppColors.danger ? AppColors.danger : AppColors.textPrimary,
+              color: color == AppColors.danger
+                  ? AppColors.danger
+                  : AppColors.textPrimary,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -140,7 +150,10 @@ class InventorySummaryCards extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               subtitle,
-              style: const TextStyle(fontSize: 9, color: AppColors.textSecondary),
+              style: const TextStyle(
+                fontSize: 9,
+                color: AppColors.textSecondary,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
