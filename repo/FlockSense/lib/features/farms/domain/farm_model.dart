@@ -57,6 +57,24 @@ class FarmModel {
   double get farmArea => totalSqFt;
   bool get isActive => status == 'active';
 
+  /// Validates farm dimensions (must both be positive if provided).
+  static bool isValidDimensions(double lengthFt, double widthFt) {
+    if (lengthFt < 0 || widthFt < 0) return false;
+    return true;
+  }
+
+  /// Validates physical bird capacity.
+  static bool isValidCapacity(int? capacity) {
+    if (capacity == null) return true;
+    return capacity >= 0;
+  }
+
+  /// Calculates expected bird capacity based on 1.2 sq ft per broiler standard.
+  static int estimateBroilerCapacity(double totalSqFt) {
+    if (totalSqFt <= 0) return 0;
+    return (totalSqFt / 1.2).floor();
+  }
+
   factory FarmModel.fromJson(Map<String, dynamic> json) {
     DateTime _parseDate(dynamic v) {
       if (v is Timestamp) return v.toDate();

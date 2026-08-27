@@ -31,7 +31,7 @@ This backlog documents legitimate, verified improvements, refactorings, bug fixe
 | **FS-011** | Daily Records | Reject negative mortality values in daily records form & domain | P0 | Small | Required | Done |
 | **FS-012** | Daily Records | Prevent mortality input from exceeding current live bird population | P0 | Small | Required | Done |
 | **FS-013** | Feed | Validate feed bag quantity, weight per bag, and prevent negative stock | P0 | Small | Required | Done |
-| **FS-014** | Farms | Validate farm dimensions, area calculation, and physical capacity | P1 | Small | Required | Todo |
+| **FS-014** | Farms | Validate farm dimensions, area calculation, and physical capacity | P1 | Small | Required | Done |
 | **FS-015** | Farms | Extract `FarmIdentityHeader` from `FarmCommandCenterScreen` | P3 | Medium | Required | Done |
 | **FS-016** | Farms | Extract `FarmOperationalSummary` metrics card from Command Center | P3 | Small | Optional | Done |
 | **FS-017** | Farms | Extract `FarmActiveBatchesSection` from Command Center | P3 | Medium | Optional | Done |
@@ -41,7 +41,7 @@ This backlog documents legitimate, verified improvements, refactorings, bug fixe
 | **FS-021** | Farms | Standardize farm status badges across list and command center | P4 | Small | Optional | Todo |
 | **FS-022** | Farms | Improve empty and error states in `FarmListScreen` | P4 | Small | Optional | Todo |
 | **FS-023** | Farms | Add farm search and status filter in `FarmListScreen` | P1 | Medium | Required | Todo |
-| **FS-024** | Farms | Unit test `FarmModel` serialization and dimension parsing | P2 | Small | Required | Todo |
+| **FS-024** | Farms | Unit test `FarmModel` serialization and dimension parsing | P2 | Small | Required | Done |
 | **FS-025** | Batches | Validate batch placement bird count (must be positive integer) | P0 | Small | Required | Todo |
 | **FS-026** | Batches | Warn when batch bird count exceeds farm or shed capacity | P1 | Medium | Required | Todo |
 | **FS-027** | Batches | Calculate remaining live birds (`totalBirds - mortality - culls + adj`) | P0 | Small | Required | Todo |
