@@ -58,41 +58,32 @@ class AuthService {
     return userCredential;
   }
 
-  // ── Email OTP ────────────────────────────────────────────────────────────
-  // TODO: Implement via Cloud Function for secure OTP generation and delivery.
-  // Currently disabled: client-side OTP generation is not secure.
+  // ── Authentication Methods & Capabilities ──────────────────────────────
+  /// Supported authentication methods in FlockSense.
+  static const bool isGoogleAuthAvailable = true;
+  static const bool isPhoneOtpAvailable = true;
+  static const bool isEmailPasswordAvailable = true;
 
+  /// Email OTP is disabled until Cloud Functions backend is connected.
+  /// Client-side OTP generation in Firestore is strictly prohibited for security.
+  static const bool isEmailOtpAvailable = false;
+
+  // ── Email OTP (Backend Required) ──────────────────────────────────────────
+  /// Sends an Email OTP via secure backend.
+  /// Throws [UnsupportedError] until the Cloud Function endpoint is configured.
   static Future<String> sendEmailOtp(String email) async {
     throw UnsupportedError(
-      'Email OTP is not yet implemented. Use phone OTP or Google Sign-In instead.',
+      'Email OTP requires a secure backend (Cloud Functions). Please use Phone OTP or Google Sign-In.',
     );
   }
 
+  /// Verifies an Email OTP securely.
+  /// Throws [UnsupportedError] until the Cloud Function endpoint is configured.
   static Future<bool> verifyEmailOtp(String email, String entered) async {
-    final key = _otpKey(email);
-    final doc = await _db.collection('otp_requests').doc(key).get();
-    if (!doc.exists) return false;
-
-    final d = doc.data()!;
-    final expires = DateTime.parse(d['expiresAt'] as String);
-    final stored = d['code'] as String;
-    final attempts = (d['attempts'] as int? ?? 0);
-
-    if (DateTime.now().isAfter(expires) || attempts >= 3) return false;
-    await doc.reference.update({'attempts': attempts + 1});
-
-    if (entered.trim() == stored) {
-      await doc.reference.delete();
-      return true;
-    }
-    return false;
+    throw UnsupportedError(
+      'Email OTP verification must be processed server-side via Cloud Functions.',
+    );
   }
-
-  static String _otpKey(String email) => email
-      .trim()
-      .toLowerCase()
-      .replaceAll('@', '_at_')
-      .replaceAll('.', '_dot_');
 
   // ── Phone OTP (Firebase phone auth) ──────────────────────────────────────
 
