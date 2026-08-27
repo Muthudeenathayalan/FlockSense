@@ -20,9 +20,15 @@ class _BudgetSettingsDialogState extends State<BudgetSettingsDialog> {
   @override
   void initState() {
     super.initState();
-    _monthlyController = TextEditingController(text: widget.currentBudget.monthlyBudget.toStringAsFixed(0));
-    _feedController = TextEditingController(text: widget.currentBudget.feedBudget.toStringAsFixed(0));
-    _medicineController = TextEditingController(text: widget.currentBudget.medicineBudget.toStringAsFixed(0));
+    _monthlyController = TextEditingController(
+      text: widget.currentBudget.monthlyBudget.toStringAsFixed(0),
+    );
+    _feedController = TextEditingController(
+      text: widget.currentBudget.feedBudget.toStringAsFixed(0),
+    );
+    _medicineController = TextEditingController(
+      text: widget.currentBudget.medicineBudget.toStringAsFixed(0),
+    );
   }
 
   @override
@@ -96,9 +102,15 @@ class _BudgetSettingsDialogState extends State<BudgetSettingsDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B5E20), foregroundColor: Colors.white),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF1B5E20),
+            foregroundColor: Colors.white,
+          ),
           onPressed: _save,
           child: const Text('Save Budgets'),
         ),

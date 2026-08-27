@@ -82,12 +82,12 @@ This backlog documents legitimate, verified improvements, refactorings, bug fixe
 | **FS-062** | Vaccine | Display upcoming scheduled vaccinations badge on batch screen | P1 | Medium | Required | Todo |
 | **FS-063** | Medicine | Validate medicine dosage numeric input and unit selection | P1 | Small | Required | Todo |
 | **FS-064** | Medicine | Improve treatment history display with completion status | P4 | Small | Optional | Todo |
-| **FS-065** | Medicine | Unit test medicine and vaccine record models | P2 | Small | Required | Todo |
-| **FS-066** | Finance | Ensure net profit calculation is `totalIncome - totalExpense` consistently | P0 | Small | Required | Todo |
-| **FS-067** | Finance | Reject negative or zero transaction amounts in finance entry form | P0 | Small | Required | Todo |
-| **FS-068** | Finance | Validate finance transaction dates (reject invalid formats / future dates) | P1 | Small | Required | Todo |
-| **FS-069** | Finance | Handle zero-data state in financial breakdown charts | P4 | Small | Optional | Todo |
-| **FS-070** | Finance | Unit test finance calculations (income, expense, cashflow, net profit) | P2 | Small | Required | Todo |
+| **FS-065** | Vaccines | Unit test vaccination status transitions and date calculations | P2 | Small | Required | Todo |
+| **FS-066** | Finance | Validate finance transaction amounts (must be positive numbers) | P0 | Small | Required | Done |
+| **FS-067** | Finance | Correct Net Profit / Cash Flow formula (`income - expenses`) | P0 | Small | Required | Done |
+| **FS-068** | Finance | Calculate outstanding invoice balances from partial payments | P1 | Small | Required | Done |
+| **FS-069** | Finance | Extract `FinanceSummaryCards` widget from `FinanceDashboardScreen` | P3 | Small | Optional | Todo |
+| **FS-070** | Finance | Unit test financial transaction model and analytics engine | P2 | Medium | Required | Done |
 | **FS-071** | Reports | Validate report date range filters (start date must be <= end date) | P0 | Small | Required | Todo |
 | **FS-072** | Reports | Handle empty dataset gracefully during PDF, Excel, CSV generation | P0 | Medium | Required | Todo |
 | **FS-073** | Reports | Centralize export file naming with timestamp and farm identifier | P1 | Small | Required | Todo |

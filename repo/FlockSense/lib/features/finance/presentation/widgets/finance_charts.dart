@@ -32,7 +32,11 @@ class RevenueExpenseChart extends StatelessWidget {
                 children: const [
                   Text(
                     'REVENUE VS EXPENSE TREND (₹)',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1B5E20)),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: Color(0xFF1B5E20),
+                    ),
                   ),
                   SizedBox(height: 2),
                   Text(
@@ -41,7 +45,11 @@ class RevenueExpenseChart extends StatelessWidget {
                   ),
                 ],
               ),
-              const Icon(Icons.analytics_outlined, size: 22, color: Color(0xFF1B5E20)),
+              const Icon(
+                Icons.analytics_outlined,
+                size: 22,
+                color: Color(0xFF1B5E20),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -49,9 +57,15 @@ class RevenueExpenseChart extends StatelessWidget {
           // Legend Row
           Row(
             children: [
-              _buildLegendBadge('Revenue (Gross Sales)', const Color(0xFF1B5E20)),
+              _buildLegendBadge(
+                'Revenue (Gross Sales)',
+                const Color(0xFF1B5E20),
+              ),
               const SizedBox(width: 16),
-              _buildLegendBadge('Expenses (Production Cost)', const Color(0xFFE65100)),
+              _buildLegendBadge(
+                'Expenses (Production Cost)',
+                const Color(0xFFE65100),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -64,19 +78,36 @@ class RevenueExpenseChart extends StatelessWidget {
                   show: true,
                   drawVerticalLine: true,
                   horizontalInterval: 50000,
-                  getDrawingHorizontalLine: (val) => FlLine(color: Colors.grey.shade200, strokeWidth: 1),
-                  getDrawingVerticalLine: (val) => FlLine(color: Colors.grey.shade200, strokeWidth: 1),
+                  getDrawingHorizontalLine: (val) =>
+                      FlLine(color: Colors.grey.shade200, strokeWidth: 1),
+                  getDrawingVerticalLine: (val) =>
+                      FlLine(color: Colors.grey.shade200, strokeWidth: 1),
                 ),
                 titlesData: FlTitlesData(
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 45,
                       getTitlesWidget: (value, meta) {
-                        if (value == 0) return const Text('0', style: TextStyle(fontSize: 10, color: Colors.grey));
-                        return Text('₹${(value / 1000).toStringAsFixed(0)}k', style: const TextStyle(fontSize: 9, color: Colors.grey, fontWeight: FontWeight.bold));
+                        if (value == 0)
+                          return const Text(
+                            '0',
+                            style: TextStyle(fontSize: 10, color: Colors.grey),
+                          );
+                        return Text(
+                          '₹${(value / 1000).toStringAsFixed(0)}k',
+                          style: const TextStyle(
+                            fontSize: 9,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
                       },
                     ),
                   ),
@@ -87,7 +118,14 @@ class RevenueExpenseChart extends StatelessWidget {
                       getTitlesWidget: (value, meta) {
                         final week = value.toInt();
                         if (week >= 1 && week <= 5) {
-                          return Text('Wk $week', style: const TextStyle(fontSize: 10, color: Colors.black87, fontWeight: FontWeight.bold));
+                          return Text(
+                            'Wk $week',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.black87,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          );
                         }
                         return const SizedBox.shrink();
                       },
@@ -106,7 +144,9 @@ class RevenueExpenseChart extends StatelessWidget {
                         return LineTooltipItem(
                           '${isRevenue ? "Revenue" : "Expense"}: ₹${spot.y.toStringAsFixed(0)}',
                           TextStyle(
-                            color: isRevenue ? Colors.green.shade200 : Colors.orange.shade200,
+                            color: isRevenue
+                                ? Colors.green.shade200
+                                : Colors.orange.shade200,
                             fontWeight: FontWeight.bold,
                             fontSize: 11,
                           ),
@@ -118,8 +158,11 @@ class RevenueExpenseChart extends StatelessWidget {
                 lineBarsData: [
                   LineChartBarData(
                     spots: const [
-                      FlSpot(1, 40000), FlSpot(2, 85000), FlSpot(3, 160000),
-                      FlSpot(4, 240000), FlSpot(5, 320000),
+                      FlSpot(1, 40000),
+                      FlSpot(2, 85000),
+                      FlSpot(3, 160000),
+                      FlSpot(4, 240000),
+                      FlSpot(5, 320000),
                     ],
                     isCurved: true,
                     color: const Color(0xFF1B5E20),
@@ -127,13 +170,18 @@ class RevenueExpenseChart extends StatelessWidget {
                     dotData: const FlDotData(show: true),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: const Color(0xFF1B5E20).withAlpha((0.08 * 255).toInt()),
+                      color: const Color(
+                        0xFF1B5E20,
+                      ).withAlpha((0.08 * 255).toInt()),
                     ),
                   ),
                   LineChartBarData(
                     spots: const [
-                      FlSpot(1, 35000), FlSpot(2, 70000), FlSpot(3, 125000),
-                      FlSpot(4, 175000), FlSpot(5, 235000),
+                      FlSpot(1, 35000),
+                      FlSpot(2, 70000),
+                      FlSpot(3, 125000),
+                      FlSpot(4, 175000),
+                      FlSpot(5, 235000),
                     ],
                     isCurved: true,
                     color: const Color(0xFFE65100),
@@ -159,7 +207,14 @@ class RevenueExpenseChart extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
-        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black87)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
       ],
     );
   }
@@ -193,7 +248,11 @@ class ExpensePieChart extends StatelessWidget {
             children: const [
               Text(
                 'EXPENSE BREAKDOWN BY CATEGORY',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1B5E20)),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: Color(0xFF1B5E20),
+                ),
               ),
               Icon(Icons.pie_chart, size: 22, color: Color(0xFF1B5E20)),
             ],
@@ -211,10 +270,50 @@ class ExpensePieChart extends StatelessWidget {
                       sectionsSpace: 3,
                       centerSpaceRadius: 42,
                       sections: [
-                        PieChartSectionData(color: const Color(0xFF1B5E20), value: 68, title: '68%\nFeed', radius: 55, titleStyle: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold)),
-                        PieChartSectionData(color: const Color(0xFFE65100), value: 18, title: '18%\nChicks', radius: 52, titleStyle: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
-                        PieChartSectionData(color: const Color(0xFF00838F), value: 7, title: '7%\nMed', radius: 48, titleStyle: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
-                        PieChartSectionData(color: Colors.purple.shade700, value: 7, title: '7%\nMisc', radius: 46, titleStyle: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+                        PieChartSectionData(
+                          color: const Color(0xFF1B5E20),
+                          value: 68,
+                          title: '68%\nFeed',
+                          radius: 55,
+                          titleStyle: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        PieChartSectionData(
+                          color: const Color(0xFFE65100),
+                          value: 18,
+                          title: '18%\nChicks',
+                          radius: 52,
+                          titleStyle: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        PieChartSectionData(
+                          color: const Color(0xFF00838F),
+                          value: 7,
+                          title: '7%\nMed',
+                          radius: 48,
+                          titleStyle: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        PieChartSectionData(
+                          color: Colors.purple.shade700,
+                          value: 7,
+                          title: '7%\nMisc',
+                          radius: 46,
+                          titleStyle: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -228,13 +327,29 @@ class ExpensePieChart extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildPieLegendRow('Feed Pellets', '68% (₹160k)', const Color(0xFF1B5E20)),
+                      _buildPieLegendRow(
+                        'Feed Pellets',
+                        '68% (₹160k)',
+                        const Color(0xFF1B5E20),
+                      ),
                       const SizedBox(height: 8),
-                      _buildPieLegendRow('Day-Old Chicks', '18% (₹42k)', const Color(0xFFE65100)),
+                      _buildPieLegendRow(
+                        'Day-Old Chicks',
+                        '18% (₹42k)',
+                        const Color(0xFFE65100),
+                      ),
                       const SizedBox(height: 8),
-                      _buildPieLegendRow('Meds & Vaccine', '7% (₹16k)', const Color(0xFF00838F)),
+                      _buildPieLegendRow(
+                        'Meds & Vaccine',
+                        '7% (₹16k)',
+                        const Color(0xFF00838F),
+                      ),
                       const SizedBox(height: 8),
-                      _buildPieLegendRow('Labour & Misc', '7% (₹17k)', Colors.purple.shade700),
+                      _buildPieLegendRow(
+                        'Labour & Misc',
+                        '7% (₹17k)',
+                        Colors.purple.shade700,
+                      ),
                     ],
                   ),
                 ),
@@ -252,14 +367,33 @@ class ExpensePieChart extends StatelessWidget {
       children: [
         Row(
           children: [
-            Container(width: 10, height: 10, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2))),
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
             const SizedBox(width: 6),
-            Expanded(child: Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black87))),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
           ],
         ),
         Padding(
           padding: const EdgeInsets.only(left: 16, top: 1),
-          child: Text(share, style: TextStyle(fontSize: 9, color: Colors.grey.shade700)),
+          child: Text(
+            share,
+            style: TextStyle(fontSize: 9, color: Colors.grey.shade700),
+          ),
         ),
       ],
     );

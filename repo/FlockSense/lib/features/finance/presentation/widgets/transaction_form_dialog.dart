@@ -25,9 +25,15 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
   late String _category;
   final TextEditingController _partyController = TextEditingController();
   final TextEditingController _qtyController = TextEditingController(text: '1');
-  final TextEditingController _priceController = TextEditingController(text: '0');
-  final TextEditingController _totalController = TextEditingController(text: '0');
-  final TextEditingController _paidController = TextEditingController(text: '0');
+  final TextEditingController _priceController = TextEditingController(
+    text: '0',
+  );
+  final TextEditingController _totalController = TextEditingController(
+    text: '0',
+  );
+  final TextEditingController _paidController = TextEditingController(
+    text: '0',
+  );
   final TextEditingController _invoiceController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
@@ -35,15 +41,35 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
   PaymentStatus _paymentStatus = PaymentStatus.paid;
   DateTime _selectedDate = DateTime.now();
 
-  static const _incomeCategories = ['Bird Sales', 'Egg Sales', 'Manure Sales', 'Equipment Sales', 'Other Income'];
-  static const _expenseCategories = ['Feed', 'Medicine', 'Vaccination', 'Electricity', 'Water', 'Labour', 'Transport', 'Maintenance', 'Equipment', 'Other'];
+  static const _incomeCategories = [
+    'Bird Sales',
+    'Egg Sales',
+    'Manure Sales',
+    'Equipment Sales',
+    'Other Income',
+  ];
+  static const _expenseCategories = [
+    'Feed',
+    'Medicine',
+    'Vaccination',
+    'Electricity',
+    'Water',
+    'Labour',
+    'Transport',
+    'Maintenance',
+    'Equipment',
+    'Other',
+  ];
 
   @override
   void initState() {
     super.initState();
     _type = widget.initialType;
-    _category = _type == FinanceTransactionType.income ? _incomeCategories.first : _expenseCategories.first;
-    _invoiceController.text = 'INV-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+    _category = _type == FinanceTransactionType.income
+        ? _incomeCategories.first
+        : _expenseCategories.first;
+    _invoiceController.text =
+        'INV-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
   }
 
   @override
@@ -76,7 +102,9 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
     final qty = double.tryParse(_qtyController.text) ?? 1.0;
     final price = double.tryParse(_priceController.text) ?? 0.0;
     final total = double.tryParse(_totalController.text) ?? (qty * price);
-    final paid = double.tryParse(_paidController.text) ?? (_paymentStatus == PaymentStatus.paid ? total : 0.0);
+    final paid =
+        double.tryParse(_paidController.text) ??
+        (_paymentStatus == PaymentStatus.paid ? total : 0.0);
 
     final tx = FinanceTransactionModel(
       id: 'tx_${DateTime.now().millisecondsSinceEpoch}',
@@ -86,7 +114,9 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
       type: _type,
       category: _category,
       date: _selectedDate,
-      customerOrSupplier: _partyController.text.trim().isNotEmpty ? _partyController.text.trim() : 'General',
+      customerOrSupplier: _partyController.text.trim().isNotEmpty
+          ? _partyController.text.trim()
+          : 'General',
       quantity: qty,
       unitPrice: price,
       totalAmount: total,
@@ -105,12 +135,16 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final categories = _type == FinanceTransactionType.income ? _incomeCategories : _expenseCategories;
+    final categories = _type == FinanceTransactionType.income
+        ? _incomeCategories
+        : _expenseCategories;
 
     return AlertDialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       title: Text(
-        _type == FinanceTransactionType.income ? 'Record Income Transaction' : 'Record Expense Transaction',
+        _type == FinanceTransactionType.income
+            ? 'Record Income Transaction'
+            : 'Record Expense Transaction',
         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
       content: SizedBox(
@@ -124,14 +158,32 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
                 // Type Toggle
                 SegmentedButton<FinanceTransactionType>(
                   segments: const [
-                    ButtonSegment(value: FinanceTransactionType.income, label: Text('Income', style: TextStyle(fontSize: 12)), icon: Icon(Icons.arrow_downward, color: Colors.green, size: 16)),
-                    ButtonSegment(value: FinanceTransactionType.expense, label: Text('Expense', style: TextStyle(fontSize: 12)), icon: Icon(Icons.arrow_upward, color: Colors.orange, size: 16)),
+                    ButtonSegment(
+                      value: FinanceTransactionType.income,
+                      label: Text('Income', style: TextStyle(fontSize: 12)),
+                      icon: Icon(
+                        Icons.arrow_downward,
+                        color: Colors.green,
+                        size: 16,
+                      ),
+                    ),
+                    ButtonSegment(
+                      value: FinanceTransactionType.expense,
+                      label: Text('Expense', style: TextStyle(fontSize: 12)),
+                      icon: Icon(
+                        Icons.arrow_upward,
+                        color: Colors.orange,
+                        size: 16,
+                      ),
+                    ),
                   ],
                   selected: {_type},
                   onSelectionChanged: (set) {
                     setState(() {
                       _type = set.first;
-                      _category = _type == FinanceTransactionType.income ? _incomeCategories.first : _expenseCategories.first;
+                      _category = _type == FinanceTransactionType.income
+                          ? _incomeCategories.first
+                          : _expenseCategories.first;
                     });
                   },
                 ),
@@ -142,10 +194,20 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
                   isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: 'Category',
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     border: OutlineInputBorder(),
                   ),
-                  items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 13)))).toList(),
+                  items: categories
+                      .map(
+                        (c) => DropdownMenuItem(
+                          value: c,
+                          child: Text(c, style: const TextStyle(fontSize: 13)),
+                        ),
+                      )
+                      .toList(),
                   onChanged: (val) => setState(() => _category = val!),
                 ),
                 const SizedBox(height: 10),
@@ -153,8 +215,13 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
                 TextFormField(
                   controller: _partyController,
                   decoration: InputDecoration(
-                    labelText: _type == FinanceTransactionType.income ? 'Customer / Buyer Name' : 'Supplier / Vendor Name',
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    labelText: _type == FinanceTransactionType.income
+                        ? 'Customer / Buyer Name'
+                        : 'Supplier / Vendor Name',
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     border: const OutlineInputBorder(),
                   ),
                 ),
@@ -168,7 +235,10 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
                           labelText: 'Qty',
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
                           border: OutlineInputBorder(),
                         ),
                         onChanged: (_) => _calculateTotal(),
@@ -181,7 +251,10 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
                           labelText: 'Unit Price (₹)',
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
                           border: OutlineInputBorder(),
                         ),
                         onChanged: (_) => _calculateTotal(),
@@ -196,7 +269,10 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
                     labelText: 'Total Amount (₹)',
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -210,13 +286,26 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
                         isExpanded: true,
                         decoration: const InputDecoration(
                           labelText: 'Method',
-                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
                           border: OutlineInputBorder(),
                         ),
-                        items: ['Cash', 'Bank Transfer', 'UPI', 'Cheque', 'Credit']
-                            .map((m) => DropdownMenuItem(value: m, child: Text(m, style: const TextStyle(fontSize: 12))))
-                            .toList(),
-                        onChanged: (val) => setState(() => _paymentMethod = val!),
+                        items:
+                            ['Cash', 'Bank Transfer', 'UPI', 'Cheque', 'Credit']
+                                .map(
+                                  (m) => DropdownMenuItem(
+                                    value: m,
+                                    child: Text(
+                                      m,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged: (val) =>
+                            setState(() => _paymentMethod = val!),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -226,13 +315,28 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
                         isExpanded: true,
                         decoration: const InputDecoration(
                           labelText: 'Status',
-                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
                           border: OutlineInputBorder(),
                         ),
                         items: PaymentStatus.values
-                            .map((s) => DropdownMenuItem(value: s, child: Text(s.name.toUpperCase(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold))))
+                            .map(
+                              (s) => DropdownMenuItem(
+                                value: s,
+                                child: Text(
+                                  s.name.toUpperCase(),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            )
                             .toList(),
-                        onChanged: (val) => setState(() => _paymentStatus = val!),
+                        onChanged: (val) =>
+                            setState(() => _paymentStatus = val!),
                       ),
                     ),
                   ],
@@ -243,7 +347,10 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
                   controller: _invoiceController,
                   decoration: const InputDecoration(
                     labelText: 'Invoice Number',
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -253,9 +360,15 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1B5E20), foregroundColor: Colors.white),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF1B5E20),
+            foregroundColor: Colors.white,
+          ),
           onPressed: _submit,
           child: const Text('Save Transaction'),
         ),

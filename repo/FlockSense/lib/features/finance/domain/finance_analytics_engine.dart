@@ -93,10 +93,14 @@ class FinanceAnalyticsEngine {
   }) {
     final now = DateTime.now();
 
-    final todayTxs = transactions.where((t) =>
-        t.date.year == now.year &&
-        t.date.month == now.month &&
-        t.date.day == now.day).toList();
+    final todayTxs = transactions
+        .where(
+          (t) =>
+              t.date.year == now.year &&
+              t.date.month == now.month &&
+              t.date.day == now.day,
+        )
+        .toList();
 
     final todayIncome = todayTxs
         .where((t) => t.type == FinanceTransactionType.income)
@@ -106,8 +110,9 @@ class FinanceAnalyticsEngine {
         .fold(0.0, (sum, t) => sum + t.totalAmount);
     final todayProfit = todayIncome - todayExpense;
 
-    final monthlyTxs = transactions.where((t) =>
-        t.date.year == now.year && t.date.month == now.month).toList();
+    final monthlyTxs = transactions
+        .where((t) => t.date.year == now.year && t.date.month == now.month)
+        .toList();
 
     final monthlyRevenue = monthlyTxs
         .where((t) => t.type == FinanceTransactionType.income)
@@ -126,36 +131,60 @@ class FinanceAnalyticsEngine {
 
     final currentCashFlow = totalRevenueAllTime - totalExpenseAllTime;
     final outstandingPayments = transactions
-        .where((t) => t.paymentStatus == PaymentStatus.pending || t.paymentStatus == PaymentStatus.overdue || t.paymentStatus == PaymentStatus.partial)
+        .where(
+          (t) =>
+              t.paymentStatus == PaymentStatus.pending ||
+              t.paymentStatus == PaymentStatus.overdue ||
+              t.paymentStatus == PaymentStatus.partial,
+        )
         .fold(0.0, (sum, t) => sum + t.pendingAmount);
 
     final profitMarginPct = monthlyRevenue > 0
         ? (monthlyProfit / monthlyRevenue) * 100.0
-        : (totalRevenueAllTime > 0 ? ((totalRevenueAllTime - totalExpenseAllTime) / totalRevenueAllTime) * 100.0 : 18.5);
+        : (totalRevenueAllTime > 0
+              ? ((totalRevenueAllTime - totalExpenseAllTime) /
+                        totalRevenueAllTime) *
+                    100.0
+              : 18.5);
 
     final roiPct = totalExpenseAllTime > 0
-        ? ((totalRevenueAllTime - totalExpenseAllTime) / totalExpenseAllTime) * 100.0
+        ? ((totalRevenueAllTime - totalExpenseAllTime) / totalExpenseAllTime) *
+              100.0
         : 24.2;
 
     // Unit Economics
     final birds = activeBirdCount > 0 ? activeBirdCount : 5000;
-    final costPerBird = (monthlyExpenses > 0 ? monthlyExpenses : 210000.0) / birds;
-    final revenuePerBird = (monthlyRevenue > 0 ? monthlyRevenue : 280000.0) / birds;
+    final costPerBird =
+        (monthlyExpenses > 0 ? monthlyExpenses : 210000.0) / birds;
+    final revenuePerBird =
+        (monthlyRevenue > 0 ? monthlyRevenue : 280000.0) / birds;
 
     final feedExpenses = monthlyTxs
-        .where((t) => t.type == FinanceTransactionType.expense && t.category == 'Feed')
+        .where(
+          (t) =>
+              t.type == FinanceTransactionType.expense && t.category == 'Feed',
+        )
         .fold(0.0, (sum, t) => sum + t.totalAmount);
-    final feedCostPerBird = (feedExpenses > 0 ? feedExpenses : 150000.0) / birds;
+    final feedCostPerBird =
+        (feedExpenses > 0 ? feedExpenses : 150000.0) / birds;
 
     final medExpenses = monthlyTxs
-        .where((t) => t.type == FinanceTransactionType.expense && (t.category == 'Medicine' || t.category == 'Vaccination'))
+        .where(
+          (t) =>
+              t.type == FinanceTransactionType.expense &&
+              (t.category == 'Medicine' || t.category == 'Vaccination'),
+        )
         .fold(0.0, (sum, t) => sum + t.totalAmount);
-    final medicineCostPerBird = (medExpenses > 0 ? medExpenses : 15000.0) / birds;
+    final medicineCostPerBird =
+        (medExpenses > 0 ? medExpenses : 15000.0) / birds;
 
     // Business Insights (Highest Expense Category)
     final categoryTotals = <String, double>{};
-    for (final t in transactions.where((t) => t.type == FinanceTransactionType.expense)) {
-      categoryTotals[t.category] = (categoryTotals[t.category] ?? 0.0) + t.totalAmount;
+    for (final t in transactions.where(
+      (t) => t.type == FinanceTransactionType.expense,
+    )) {
+      categoryTotals[t.category] =
+          (categoryTotals[t.category] ?? 0.0) + t.totalAmount;
     }
 
     var highestCat = 'Feed';
@@ -168,9 +197,15 @@ class FinanceAnalyticsEngine {
     });
 
     // Budget Warnings
-    final monthlyBudgetPct = budget.monthlyBudget > 0 ? (monthlyExpenses / budget.monthlyBudget) * 100.0 : 0.0;
-    final feedBudgetPct = budget.feedBudget > 0 ? (feedExpenses / budget.feedBudget) * 100.0 : 0.0;
-    final medicineBudgetPct = budget.medicineBudget > 0 ? (medExpenses / budget.medicineBudget) * 100.0 : 0.0;
+    final monthlyBudgetPct = budget.monthlyBudget > 0
+        ? (monthlyExpenses / budget.monthlyBudget) * 100.0
+        : 0.0;
+    final feedBudgetPct = budget.feedBudget > 0
+        ? (feedExpenses / budget.feedBudget) * 100.0
+        : 0.0;
+    final medicineBudgetPct = budget.medicineBudget > 0
+        ? (medExpenses / budget.medicineBudget) * 100.0
+        : 0.0;
 
     return FinanceAnalyticsResult(
       todayIncome: todayIncome > 0 ? todayIncome : 14500.0,
@@ -180,7 +215,9 @@ class FinanceAnalyticsEngine {
       monthlyExpenses: monthlyExpenses > 0 ? monthlyExpenses : 235000.0,
       monthlyProfit: monthlyProfit != 0 ? monthlyProfit : 85000.0,
       currentCashFlow: currentCashFlow != 0 ? currentCashFlow : 145000.0,
-      outstandingPayments: outstandingPayments > 0 ? outstandingPayments : 18500.0,
+      outstandingPayments: outstandingPayments > 0
+          ? outstandingPayments
+          : 18500.0,
       profitMarginPct: profitMarginPct,
       roiPct: roiPct,
       costPerBird: costPerBird,
@@ -199,7 +236,9 @@ class FinanceAnalyticsEngine {
       expectedProfit: (revenuePerBird * birds * 1.05) - (costPerBird * birds),
       expectedFeedCost: feedCostPerBird * birds * 1.02,
       expectedMedicineCost: medicineCostPerBird * birds,
-      expectedMonthlyIncome: monthlyRevenue > 0 ? monthlyRevenue * 1.1 : 350000.0,
+      expectedMonthlyIncome: monthlyRevenue > 0
+          ? monthlyRevenue * 1.1
+          : 350000.0,
       isMonthlyBudgetExceeded: monthlyExpenses > budget.monthlyBudget,
       monthlyBudgetPct: monthlyBudgetPct,
       isFeedBudgetExceeded: feedExpenses > budget.feedBudget,

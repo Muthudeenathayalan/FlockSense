@@ -44,7 +44,11 @@ class FinanceKpiCard extends StatelessWidget {
                   label.toUpperCase(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 8, color: Colors.black54),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 8,
+                    color: Colors.black54,
+                  ),
                 ),
               ),
               const SizedBox(width: 4),
@@ -56,7 +60,11 @@ class FinanceKpiCard extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: Text(
               value,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: color),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+                color: color,
+              ),
             ),
           ),
           Text(

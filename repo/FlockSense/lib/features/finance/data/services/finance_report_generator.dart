@@ -45,12 +45,33 @@ class FinanceReportGenerator {
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text('FLOCKSENSE FINANCE & BI REPORT', style: pw.TextStyle(font: fontBold, fontSize: 14, color: PdfColors.white)),
+                      pw.Text(
+                        'FLOCKSENSE FINANCE & BI REPORT',
+                        style: pw.TextStyle(
+                          font: fontBold,
+                          fontSize: 14,
+                          color: PdfColors.white,
+                        ),
+                      ),
                       pw.SizedBox(height: 4),
-                      pw.Text(title.toUpperCase(), style: pw.TextStyle(font: fontRegular, fontSize: 10, color: PdfColor.fromHex('#E2E8F0'))),
+                      pw.Text(
+                        title.toUpperCase(),
+                        style: pw.TextStyle(
+                          font: fontRegular,
+                          fontSize: 10,
+                          color: PdfColor.fromHex('#E2E8F0'),
+                        ),
+                      ),
                     ],
                   ),
-                  pw.Text(DateFormat('dd MMM yyyy').format(DateTime.now()), style: pw.TextStyle(font: fontBold, fontSize: 10, color: PdfColors.white)),
+                  pw.Text(
+                    DateFormat('dd MMM yyyy').format(DateTime.now()),
+                    style: pw.TextStyle(
+                      font: fontBold,
+                      fontSize: 10,
+                      color: PdfColors.white,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -62,13 +83,30 @@ class FinanceReportGenerator {
                 pw.Expanded(
                   child: pw.Container(
                     padding: const pw.EdgeInsets.all(10),
-                    decoration: pw.BoxDecoration(color: PdfColor.fromHex('#F8FAFC'), border: pw.Border.all(color: PdfColor.fromHex('#CBD5E1'))),
+                    decoration: pw.BoxDecoration(
+                      color: PdfColor.fromHex('#F8FAFC'),
+                      border: pw.Border.all(color: PdfColor.fromHex('#CBD5E1')),
+                    ),
                     child: pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        pw.Text('TOTAL REVENUE', style: pw.TextStyle(font: fontBold, fontSize: 8, color: PdfColor.fromHex('#455A64'))),
+                        pw.Text(
+                          'TOTAL REVENUE',
+                          style: pw.TextStyle(
+                            font: fontBold,
+                            fontSize: 8,
+                            color: PdfColor.fromHex('#455A64'),
+                          ),
+                        ),
                         pw.SizedBox(height: 4),
-                        pw.Text('₹${totalIncome.toStringAsFixed(0)}', style: pw.TextStyle(font: fontBold, fontSize: 14, color: PdfColor.fromHex('#1B5E20'))),
+                        pw.Text(
+                          '₹${totalIncome.toStringAsFixed(0)}',
+                          style: pw.TextStyle(
+                            font: fontBold,
+                            fontSize: 14,
+                            color: PdfColor.fromHex('#1B5E20'),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -77,13 +115,30 @@ class FinanceReportGenerator {
                 pw.Expanded(
                   child: pw.Container(
                     padding: const pw.EdgeInsets.all(10),
-                    decoration: pw.BoxDecoration(color: PdfColor.fromHex('#F8FAFC'), border: pw.Border.all(color: PdfColor.fromHex('#CBD5E1'))),
+                    decoration: pw.BoxDecoration(
+                      color: PdfColor.fromHex('#F8FAFC'),
+                      border: pw.Border.all(color: PdfColor.fromHex('#CBD5E1')),
+                    ),
                     child: pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        pw.Text('TOTAL EXPENSES', style: pw.TextStyle(font: fontBold, fontSize: 8, color: PdfColor.fromHex('#455A64'))),
+                        pw.Text(
+                          'TOTAL EXPENSES',
+                          style: pw.TextStyle(
+                            font: fontBold,
+                            fontSize: 8,
+                            color: PdfColor.fromHex('#455A64'),
+                          ),
+                        ),
                         pw.SizedBox(height: 4),
-                        pw.Text('₹${totalExpense.toStringAsFixed(0)}', style: pw.TextStyle(font: fontBold, fontSize: 14, color: PdfColor.fromHex('#E65100'))),
+                        pw.Text(
+                          '₹${totalExpense.toStringAsFixed(0)}',
+                          style: pw.TextStyle(
+                            font: fontBold,
+                            fontSize: 14,
+                            color: PdfColor.fromHex('#E65100'),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -92,13 +147,32 @@ class FinanceReportGenerator {
                 pw.Expanded(
                   child: pw.Container(
                     padding: const pw.EdgeInsets.all(10),
-                    decoration: pw.BoxDecoration(color: PdfColor.fromHex('#F8FAFC'), border: pw.Border.all(color: PdfColor.fromHex('#CBD5E1'))),
+                    decoration: pw.BoxDecoration(
+                      color: PdfColor.fromHex('#F8FAFC'),
+                      border: pw.Border.all(color: PdfColor.fromHex('#CBD5E1')),
+                    ),
                     child: pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        pw.Text('NET OPERATING PROFIT', style: pw.TextStyle(font: fontBold, fontSize: 8, color: PdfColor.fromHex('#455A64'))),
+                        pw.Text(
+                          'NET OPERATING PROFIT',
+                          style: pw.TextStyle(
+                            font: fontBold,
+                            fontSize: 8,
+                            color: PdfColor.fromHex('#455A64'),
+                          ),
+                        ),
                         pw.SizedBox(height: 4),
-                        pw.Text('₹${netProfit.toStringAsFixed(0)}', style: pw.TextStyle(font: fontBold, fontSize: 14, color: netProfit >= 0 ? PdfColor.fromHex('#1B5E20') : PdfColor.fromHex('#C62828'))),
+                        pw.Text(
+                          '₹${netProfit.toStringAsFixed(0)}',
+                          style: pw.TextStyle(
+                            font: fontBold,
+                            fontSize: 14,
+                            color: netProfit >= 0
+                                ? PdfColor.fromHex('#1B5E20')
+                                : PdfColor.fromHex('#C62828'),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -107,7 +181,14 @@ class FinanceReportGenerator {
             ),
             pw.SizedBox(height: 18),
 
-            pw.Text('TRANSACTION AUDIT LEDGER', style: pw.TextStyle(font: fontBold, fontSize: 11, color: PdfColor.fromHex('#0A3200'))),
+            pw.Text(
+              'TRANSACTION AUDIT LEDGER',
+              style: pw.TextStyle(
+                font: fontBold,
+                fontSize: 11,
+                color: PdfColor.fromHex('#0A3200'),
+              ),
+            ),
             pw.SizedBox(height: 8),
 
             // Ledger Table
@@ -115,33 +196,125 @@ class FinanceReportGenerator {
               border: pw.TableBorder.all(color: PdfColor.fromHex('#CBD5E1')),
               children: [
                 pw.TableRow(
-                  decoration: pw.BoxDecoration(color: PdfColor.fromHex('#1B5E20')),
-                  children: ['Date', 'Type', 'Category', 'Party/Customer', 'Invoice', 'Amount (₹)', 'Status']
-                      .map((h) => pw.Padding(padding: const pw.EdgeInsets.all(6), child: pw.Text(h, style: pw.TextStyle(font: fontBold, fontSize: 8, color: PdfColors.white))))
-                      .toList(),
+                  decoration: pw.BoxDecoration(
+                    color: PdfColor.fromHex('#1B5E20'),
+                  ),
+                  children:
+                      [
+                            'Date',
+                            'Type',
+                            'Category',
+                            'Party/Customer',
+                            'Invoice',
+                            'Amount (₹)',
+                            'Status',
+                          ]
+                          .map(
+                            (h) => pw.Padding(
+                              padding: const pw.EdgeInsets.all(6),
+                              child: pw.Text(
+                                h,
+                                style: pw.TextStyle(
+                                  font: fontBold,
+                                  fontSize: 8,
+                                  color: PdfColors.white,
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
                 ),
-                ...transactions.take(25).map((t) => pw.TableRow(
-                      children: [
-                        pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text(DateFormat('dd/MM/yy').format(t.date), style: pw.TextStyle(fontSize: 8))),
-                        pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text(t.type.name.toUpperCase(), style: pw.TextStyle(font: fontBold, fontSize: 8, color: t.type == FinanceTransactionType.income ? PdfColor.fromHex('#1B5E20') : PdfColor.fromHex('#E65100')))),
-                        pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text(t.category, style: pw.TextStyle(fontSize: 8))),
-                        pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text(t.customerOrSupplier, style: pw.TextStyle(fontSize: 8))),
-                        pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text(t.invoiceNumber, style: pw.TextStyle(fontSize: 8))),
-                        pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text('₹${t.totalAmount.toStringAsFixed(0)}', style: pw.TextStyle(font: fontBold, fontSize: 8))),
-                        pw.Padding(padding: const pw.EdgeInsets.all(5), child: pw.Text(t.paymentStatus.name.toUpperCase(), style: pw.TextStyle(fontSize: 8))),
-                      ],
-                    )),
+                ...transactions
+                    .take(25)
+                    .map(
+                      (t) => pw.TableRow(
+                        children: [
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(5),
+                            child: pw.Text(
+                              DateFormat('dd/MM/yy').format(t.date),
+                              style: pw.TextStyle(fontSize: 8),
+                            ),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(5),
+                            child: pw.Text(
+                              t.type.name.toUpperCase(),
+                              style: pw.TextStyle(
+                                font: fontBold,
+                                fontSize: 8,
+                                color: t.type == FinanceTransactionType.income
+                                    ? PdfColor.fromHex('#1B5E20')
+                                    : PdfColor.fromHex('#E65100'),
+                              ),
+                            ),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(5),
+                            child: pw.Text(
+                              t.category,
+                              style: pw.TextStyle(fontSize: 8),
+                            ),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(5),
+                            child: pw.Text(
+                              t.customerOrSupplier,
+                              style: pw.TextStyle(fontSize: 8),
+                            ),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(5),
+                            child: pw.Text(
+                              t.invoiceNumber,
+                              style: pw.TextStyle(fontSize: 8),
+                            ),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(5),
+                            child: pw.Text(
+                              '₹${t.totalAmount.toStringAsFixed(0)}',
+                              style: pw.TextStyle(font: fontBold, fontSize: 8),
+                            ),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(5),
+                            child: pw.Text(
+                              t.paymentStatus.name.toUpperCase(),
+                              style: pw.TextStyle(fontSize: 8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
               ],
             ),
             pw.Spacer(),
             pw.Container(
               padding: const pw.EdgeInsets.only(top: 8),
-              decoration: pw.BoxDecoration(border: pw.Border(top: pw.BorderSide(color: PdfColor.fromHex('#CBD5E1')))),
+              decoration: pw.BoxDecoration(
+                border: pw.Border(
+                  top: pw.BorderSide(color: PdfColor.fromHex('#CBD5E1')),
+                ),
+              ),
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text('Confidential — FlockSense Financial Analytics Engine', style: pw.TextStyle(fontSize: 8, color: PdfColor.fromHex('#455A64'))),
-                  pw.Text('Verified Report', style: pw.TextStyle(font: fontBold, fontSize: 8, color: PdfColor.fromHex('#1B5E20'))),
+                  pw.Text(
+                    'Confidential — FlockSense Financial Analytics Engine',
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      color: PdfColor.fromHex('#455A64'),
+                    ),
+                  ),
+                  pw.Text(
+                    'Verified Report',
+                    style: pw.TextStyle(
+                      font: fontBold,
+                      fontSize: 8,
+                      color: PdfColor.fromHex('#1B5E20'),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -155,11 +328,15 @@ class FinanceReportGenerator {
 
   static String generateCsvReport(List<FinanceTransactionModel> transactions) {
     final buffer = StringBuffer();
-    buffer.writeln('Transaction ID,Date,Type,Category,Party/Customer,Quantity,UnitPrice,TotalAmount,PaidAmount,PendingAmount,PaymentStatus,PaymentMethod,InvoiceNumber');
+    buffer.writeln(
+      'Transaction ID,Date,Type,Category,Party/Customer,Quantity,UnitPrice,TotalAmount,PaidAmount,PendingAmount,PaymentStatus,PaymentMethod,InvoiceNumber',
+    );
 
     for (final t in transactions) {
       final dateStr = DateFormat('yyyy-MM-dd').format(t.date);
-      buffer.writeln('"${t.id}","$dateStr","${t.type.name}","${t.category}","${t.customerOrSupplier}",${t.quantity},${t.unitPrice},${t.totalAmount},${t.paidAmount},${t.pendingAmount},"${t.paymentStatus.name}","${t.paymentMethod}","${t.invoiceNumber}"');
+      buffer.writeln(
+        '"${t.id}","$dateStr","${t.type.name}","${t.category}","${t.customerOrSupplier}",${t.quantity},${t.unitPrice},${t.totalAmount},${t.paidAmount},${t.pendingAmount},"${t.paymentStatus.name}","${t.paymentMethod}","${t.invoiceNumber}"',
+      );
     }
 
     return buffer.toString();
@@ -176,7 +353,11 @@ class FinanceReportGenerator {
     late File file;
 
     if (format == ExportFormat.pdf) {
-      final bytes = await generatePdfReport(transactions: transactions, title: title, farmName: farmName);
+      final bytes = await generatePdfReport(
+        transactions: transactions,
+        title: title,
+        farmName: farmName,
+      );
       file = File('${dir.path}/flocksense_finance_$time.pdf');
       await file.writeAsBytes(bytes, flush: true);
     } else {
@@ -189,9 +370,8 @@ class FinanceReportGenerator {
     final xFile = XFile(file.path, name: file.path.split('/').last);
 
     // ignore: deprecated_member_use
-    await Share.shareXFiles(
-      [xFile],
-      text: 'FlockSense Finance Report - $farmName',
-    );
+    await Share.shareXFiles([
+      xFile,
+    ], text: 'FlockSense Finance Report - $farmName');
   }
 }

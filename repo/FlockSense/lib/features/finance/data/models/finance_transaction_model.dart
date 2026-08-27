@@ -10,7 +10,8 @@ class FinanceTransactionModel {
   final String batchId;
   final String ownerId;
   final FinanceTransactionType type;
-  final String category; // Income: Bird Sales, Egg Sales, etc. Expense: Feed, Medicine, etc.
+  final String
+  category; // Income: Bird Sales, Egg Sales, etc. Expense: Feed, Medicine, etc.
   final DateTime date;
   final String customerOrSupplier;
   final double quantity;
@@ -46,6 +47,12 @@ class FinanceTransactionModel {
   });
 
   double get pendingAmount => totalAmount - paidAmount;
+
+  /// Validates transaction amount (must be positive).
+  static bool isValidAmount(double amount) => amount > 0;
+
+  /// Validates item quantity (must be positive).
+  static bool isValidQuantity(double quantity) => quantity > 0;
 
   Map<String, dynamic> toJson() {
     return {

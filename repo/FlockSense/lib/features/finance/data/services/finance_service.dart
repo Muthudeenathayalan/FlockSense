@@ -28,13 +28,15 @@ class FinanceService {
         .collection('finance_transactions')
         .orderBy('date', descending: true)
         .snapshots()
-        .map((snap) => snap.docs
-            .map((doc) => FinanceTransactionModel.fromJson(doc.data()))
-            .toList())
+        .map(
+          (snap) => snap.docs
+              .map((doc) => FinanceTransactionModel.fromJson(doc.data()))
+              .toList(),
+        )
         .handleError((err) {
-      debugPrint('[FinanceService] Stream transactions error: $err');
-      return List.unmodifiable(_localTransactions);
-    });
+          debugPrint('[FinanceService] Stream transactions error: $err');
+          return List.unmodifiable(_localTransactions);
+        });
   }
 
   static Future<List<FinanceTransactionModel>> getCombinedTransactions() async {
@@ -73,26 +75,30 @@ class FinanceService {
               final txId = 'med_${m.id}';
               if (!list.any((t) => t.id == txId)) {
                 final cost = m.valueRs ?? 500.0;
-                list.add(FinanceTransactionModel(
-                  id: txId,
-                  farmId: m.farmId,
-                  batchId: m.batchId,
-                  ownerId: m.ownerId,
-                  type: FinanceTransactionType.expense,
-                  category: 'Medicine',
-                  date: m.date,
-                  customerOrSupplier: 'Vet Pharmacy',
-                  quantity: m.quantity,
-                  unitPrice: cost / (m.quantity > 0 ? m.quantity : 1.0),
-                  totalAmount: cost,
-                  paymentMethod: 'Cash',
-                  paymentStatus: PaymentStatus.paid,
-                  paidAmount: cost,
-                  invoiceNumber: 'INV-MED-${m.id.length > 5 ? m.id.substring(0, 5) : m.id}',
-                  notes: '${m.medicineName} (${m.notes ?? "Routine treatment"})',
-                  createdAt: m.createdAt,
-                  updatedAt: m.updatedAt,
-                ));
+                list.add(
+                  FinanceTransactionModel(
+                    id: txId,
+                    farmId: m.farmId,
+                    batchId: m.batchId,
+                    ownerId: m.ownerId,
+                    type: FinanceTransactionType.expense,
+                    category: 'Medicine',
+                    date: m.date,
+                    customerOrSupplier: 'Vet Pharmacy',
+                    quantity: m.quantity,
+                    unitPrice: cost / (m.quantity > 0 ? m.quantity : 1.0),
+                    totalAmount: cost,
+                    paymentMethod: 'Cash',
+                    paymentStatus: PaymentStatus.paid,
+                    paidAmount: cost,
+                    invoiceNumber:
+                        'INV-MED-${m.id.length > 5 ? m.id.substring(0, 5) : m.id}',
+                    notes:
+                        '${m.medicineName} (${m.notes ?? "Routine treatment"})',
+                    createdAt: m.createdAt,
+                    updatedAt: m.updatedAt,
+                  ),
+                );
               }
             }
           }
@@ -106,7 +112,9 @@ class FinanceService {
     return list;
   }
 
-  static Future<FinanceTransactionModel> createTransaction(FinanceTransactionModel transaction) async {
+  static Future<FinanceTransactionModel> createTransaction(
+    FinanceTransactionModel transaction,
+  ) async {
     final user = _auth.currentUser;
     _localTransactions.insert(0, transaction);
 
@@ -162,7 +170,10 @@ class FinanceService {
         .collection('finance_budgets')
         .doc(monthYear)
         .snapshots()
-        .map((doc) => doc.exists ? FinanceBudgetModel.fromJson(doc.data()!) : fallback)
+        .map(
+          (doc) =>
+              doc.exists ? FinanceBudgetModel.fromJson(doc.data()!) : fallback,
+        )
         .handleError((err) => fallback);
   }
 

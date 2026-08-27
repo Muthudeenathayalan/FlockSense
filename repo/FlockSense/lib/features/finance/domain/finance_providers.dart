@@ -22,8 +22,8 @@ class FinanceFilterState {
     int? month,
     int? year,
     this.searchQuery = '',
-  })  : month = month ?? 8,
-        year = year ?? 2026;
+  }) : month = month ?? 8,
+       year = year ?? 2026;
 
   FinanceFilterState copyWith({
     String? selectedFarmId,
@@ -39,10 +39,16 @@ class FinanceFilterState {
     bool clearStatus = false,
   }) {
     return FinanceFilterState(
-      selectedFarmId: clearFarm ? null : (selectedFarmId ?? this.selectedFarmId),
-      selectedBatchId: clearBatch ? null : (selectedBatchId ?? this.selectedBatchId),
+      selectedFarmId: clearFarm
+          ? null
+          : (selectedFarmId ?? this.selectedFarmId),
+      selectedBatchId: clearBatch
+          ? null
+          : (selectedBatchId ?? this.selectedBatchId),
       typeFilter: clearType ? null : (typeFilter ?? this.typeFilter),
-      paymentStatusFilter: clearStatus ? null : (paymentStatusFilter ?? this.paymentStatusFilter),
+      paymentStatusFilter: clearStatus
+          ? null
+          : (paymentStatusFilter ?? this.paymentStatusFilter),
       month: month ?? this.month,
       year: year ?? this.year,
       searchQuery: searchQuery ?? this.searchQuery,
@@ -67,7 +73,10 @@ class FinanceFilterNotifier extends Notifier<FinanceFilterState> {
   }
 
   void setPaymentStatusFilter(PaymentStatus? status) {
-    state = state.copyWith(paymentStatusFilter: status, clearStatus: status == null);
+    state = state.copyWith(
+      paymentStatusFilter: status,
+      clearStatus: status == null,
+    );
   }
 
   void setSearchQuery(String query) {
@@ -81,16 +90,15 @@ class FinanceFilterNotifier extends Notifier<FinanceFilterState> {
 
 final financeFilterProvider =
     NotifierProvider<FinanceFilterNotifier, FinanceFilterState>(
-  FinanceFilterNotifier.new,
-);
+      FinanceFilterNotifier.new,
+    );
 
 final financeTransactionsProvider =
     FutureProvider<List<FinanceTransactionModel>>((ref) async {
-  return FinanceService.getCombinedTransactions();
-});
+      return FinanceService.getCombinedTransactions();
+    });
 
-final financeBudgetStreamProvider =
-    StreamProvider<FinanceBudgetModel>((ref) {
+final financeBudgetStreamProvider = StreamProvider<FinanceBudgetModel>((ref) {
   final currentMonthYear = DateFormat('yyyy-MM').format(DateTime.now());
   return FinanceService.streamBudget(currentMonthYear);
 });
@@ -100,7 +108,8 @@ final financeAnalyticsProvider = Provider<FinanceAnalyticsResult>((ref) {
   final budgetAsync = ref.watch(financeBudgetStreamProvider);
 
   final transactions = txsAsync.asData?.value ?? [];
-  final budget = budgetAsync.asData?.value ??
+  final budget =
+      budgetAsync.asData?.value ??
       FinanceBudgetModel(
         id: 'bud_current',
         farmId: 'all',
