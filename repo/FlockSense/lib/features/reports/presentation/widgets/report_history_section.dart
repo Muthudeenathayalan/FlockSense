@@ -25,7 +25,11 @@ class ReportHistorySection extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(Icons.description_outlined, size: 20, color: AppColors.primary),
+            const Icon(
+              Icons.description_outlined,
+              size: 20,
+              color: AppColors.primary,
+            ),
             const SizedBox(width: 8),
             const Text(
               'Report History',
@@ -53,7 +57,8 @@ class ReportHistorySection extends StatelessWidget {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: historyItems.length,
-            separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.border),
+            separatorBuilder: (_, __) =>
+                const Divider(height: 1, color: AppColors.border),
             itemBuilder: (context, i) {
               final item = historyItems[i];
               return ListTile(
@@ -64,21 +69,34 @@ class ReportHistorySection extends StatelessWidget {
                     color: item.reportType.color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(item.reportType.icon, color: item.reportType.color, size: 20),
+                  child: Icon(
+                    item.reportType.icon,
+                    color: item.reportType.color,
+                    size: 20,
+                  ),
                 ),
                 title: Text(
                   item.reportTitle,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 subtitle: Text(
                   '${item.farmName} • ${item.batchName}\n${_formatDate(item.generatedAt)}',
-                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.surfaceSoft,
                         borderRadius: BorderRadius.circular(8),
@@ -86,17 +104,28 @@ class ReportHistorySection extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          Icon(item.format.icon, size: 12, color: AppColors.textPrimary),
+                          Icon(
+                            item.format.icon,
+                            size: 12,
+                            color: AppColors.textPrimary,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             item.format.name.toUpperCase(),
-                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textHint),
+                      icon: const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 14,
+                        color: AppColors.textHint,
+                      ),
                       onPressed: () {
                         ReportPreviewModal.show(
                           context,

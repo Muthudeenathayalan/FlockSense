@@ -47,7 +47,8 @@ class ReportExportHandler {
 
     final dir = await getTemporaryDirectory();
     final sanitizedTitle = reportType.title.replaceAll(' ', '_').toLowerCase();
-    final filename = 'flocksense_${sanitizedTitle}_${DateTime.now().millisecondsSinceEpoch}${format.extension}';
+    final filename =
+        'flocksense_${sanitizedTitle}_${DateTime.now().millisecondsSinceEpoch}${format.extension}';
     final file = File('${dir.path}/$filename');
     await file.writeAsBytes(bytes, flush: true);
 
@@ -87,10 +88,9 @@ class ReportExportHandler {
     );
 
     // ignore: deprecated_member_use
-    await Share.shareXFiles(
-      [xFile],
-      text: 'FlockSense ${reportType.title} - ${data.farm.farmName}',
-    );
+    await Share.shareXFiles([
+      xFile,
+    ], text: 'FlockSense ${reportType.title} - ${data.farm.farmName}');
   }
 
   static String _getMimeType(ExportFormat format) {

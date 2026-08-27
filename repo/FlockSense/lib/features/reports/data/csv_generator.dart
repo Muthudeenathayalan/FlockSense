@@ -16,7 +16,10 @@ class CsvGenerator {
     rows.add(['FLOCKSENSE POULTRY REPORT', reportType.title]);
     rows.add(['Farm Name', data.farm.farmName]);
     rows.add(['Batch Name', data.batch.batchName]);
-    rows.add(['Generated At', DateFormat('yyyy-MM-dd HH:mm').format(data.generatedAt)]);
+    rows.add([
+      'Generated At',
+      DateFormat('yyyy-MM-dd HH:mm').format(data.generatedAt),
+    ]);
     rows.add([]);
 
     switch (reportType) {
@@ -40,7 +43,8 @@ class CsvGenerator {
         ]);
         for (final r in data.dailyRecords) {
           final fcr = r.avgWeightGrams > 0
-              ? (r.feedConsumedKg / (r.avgWeightGrams / 1000.0)).toStringAsFixed(2)
+              ? (r.feedConsumedKg / (r.avgWeightGrams / 1000.0))
+                    .toStringAsFixed(2)
               : '-';
           rows.add([
             r.batchAgeDay,
@@ -89,35 +93,43 @@ class CsvGenerator {
         rows.add(['Revenue', 'Bird Sales', data.totalRevenue]);
         rows.add(['Expense', 'Feed Cost', data.totalFeedKg * 42.0]);
         rows.add(['Expense', 'Chick Purchase', data.batch.totalBirds * 35.0]);
-        rows.add(['Expense', 'Medicines & Vaccines', data.totalExpenses - (data.totalFeedKg * 42.0) - (data.batch.totalBirds * 35.0)]);
+        rows.add([
+          'Expense',
+          'Medicines & Vaccines',
+          data.totalExpenses -
+              (data.totalFeedKg * 42.0) -
+              (data.batch.totalBirds * 35.0),
+        ]);
         rows.add(['Summary', 'Net Profit', data.netProfit]);
         break;
 
       default:
-        rows.add([
-          'Metric',
-          'Value',
-        ]);
+        rows.add(['Metric', 'Value']);
         rows.add(['Initial Birds', data.batch.totalBirds]);
         rows.add(['Total Mortality', data.totalMortality]);
         rows.add(['Livability (%)', data.liveabilityPct.toStringAsFixed(2)]);
         rows.add(['Total Feed (kg)', data.totalFeedKg.toStringAsFixed(1)]);
         rows.add(['Total Water (L)', data.totalWaterLiters.toStringAsFixed(1)]);
         rows.add(['Overall FCR', (data.overallFcr ?? 1.55).toStringAsFixed(2)]);
-        rows.add(['Avg Body Weight (g)', (data.avgBodyWeightGrams ?? 0).toStringAsFixed(0)]);
+        rows.add([
+          'Avg Body Weight (g)',
+          (data.avgBodyWeightGrams ?? 0).toStringAsFixed(0),
+        ]);
         rows.add(['EPEF Score', (data.pef ?? 0).toStringAsFixed(1)]);
         break;
     }
 
     final csvBuffer = StringBuffer();
     for (final row in rows) {
-      final line = row.map((cell) {
-        final str = cell?.toString() ?? '';
-        if (str.contains(',') || str.contains('"') || str.contains('\n')) {
-          return '"${str.replaceAll('"', '""')}"';
-        }
-        return str;
-      }).join(',');
+      final line = row
+          .map((cell) {
+            final str = cell?.toString() ?? '';
+            if (str.contains(',') || str.contains('"') || str.contains('\n')) {
+              return '"${str.replaceAll('"', '""')}"';
+            }
+            return str;
+          })
+          .join(',');
       csvBuffer.writeln(line);
     }
 

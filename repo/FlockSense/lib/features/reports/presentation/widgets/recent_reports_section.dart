@@ -72,10 +72,16 @@ class RecentReportsSection extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: item.reportType.color.withValues(alpha: 0.12),
+                            color: item.reportType.color.withValues(
+                              alpha: 0.12,
+                            ),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Icon(item.reportType.icon, color: item.reportType.color, size: 16),
+                          child: Icon(
+                            item.reportType.icon,
+                            color: item.reportType.color,
+                            size: 16,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -91,14 +97,21 @@ class RecentReportsSection extends StatelessWidget {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.surfaceSoft,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             item.format.name.toUpperCase(),
-                            style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+                            style: const TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ),
                       ],
@@ -107,14 +120,20 @@ class RecentReportsSection extends StatelessWidget {
                       '${item.farmName} • ${item.fileSizeKb.toStringAsFixed(0)} KB',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           _formatTime(item.generatedAt),
-                          style: const TextStyle(fontSize: 10, color: AppColors.textHint),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: AppColors.textHint,
+                          ),
                         ),
                         GestureDetector(
                           onTap: () {

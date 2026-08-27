@@ -40,7 +40,8 @@ class ReportsFilterNotifier extends Notifier<ReportFilterState> {
 
 final reportsFilterProvider =
     NotifierProvider<ReportsFilterNotifier, ReportFilterState>(
-        ReportsFilterNotifier.new);
+      ReportsFilterNotifier.new,
+    );
 
 // Data Provider watching active filter
 final reportsDataProvider = FutureProvider<ReportData>((ref) async {
@@ -74,4 +75,5 @@ class ReportsHistoryNotifier extends Notifier<List<ReportHistoryItem>> {
 
 final reportsHistoryProvider =
     NotifierProvider<ReportsHistoryNotifier, List<ReportHistoryItem>>(
-        ReportsHistoryNotifier.new);
+      ReportsHistoryNotifier.new,
+    );

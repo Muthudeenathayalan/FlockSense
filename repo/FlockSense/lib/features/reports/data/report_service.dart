@@ -39,13 +39,21 @@ class ReportService {
       }
 
       final targetFarm = filter.selectedFarmId != null
-          ? farms.firstWhere((f) => f.id == filter.selectedFarmId, orElse: () => farms.first)
+          ? farms.firstWhere(
+              (f) => f.id == filter.selectedFarmId,
+              orElse: () => farms.first,
+            )
           : farms.first;
 
       final batches = await BatchService.getBatchesForFarm(targetFarm.id);
       final targetBatch = (filter.selectedBatchId != null && batches.isNotEmpty)
-          ? batches.firstWhere((b) => b.id == filter.selectedBatchId, orElse: () => batches.first)
-          : (batches.isNotEmpty ? batches.first : _createFallbackBatch(targetFarm.id));
+          ? batches.firstWhere(
+              (b) => b.id == filter.selectedBatchId,
+              orElse: () => batches.first,
+            )
+          : (batches.isNotEmpty
+                ? batches.first
+                : _createFallbackBatch(targetFarm.id));
 
       final sheds = await ShedService.getShedsByFarmId(targetFarm.id);
 
@@ -105,7 +113,11 @@ class ReportService {
       } catch (_) {}
 
       if (records.isEmpty) {
-        records = _generateFallbackDailyRecords(targetFarm.id, targetBatch.id, user.uid);
+        records = _generateFallbackDailyRecords(
+          targetFarm.id,
+          targetBatch.id,
+          user.uid,
+        );
       }
       if (inventory.isEmpty) {
         inventory = _generateFallbackInventoryItems(targetFarm.id, user.uid);
@@ -116,7 +128,8 @@ class ReportService {
 
       if (startDate != null || endDate != null) {
         records = records.where((r) {
-          if (startDate != null && r.recordDate.isBefore(startDate)) return false;
+          if (startDate != null && r.recordDate.isBefore(startDate))
+            return false;
           if (endDate != null && r.recordDate.isAfter(endDate)) return false;
           return true;
         }).toList();
@@ -180,7 +193,11 @@ class ReportService {
     );
 
     final batch = _createFallbackBatch(farm.id);
-    final records = _generateFallbackDailyRecords(farm.id, batch.id, 'user_demo');
+    final records = _generateFallbackDailyRecords(
+      farm.id,
+      batch.id,
+      'user_demo',
+    );
     final inventory = _generateFallbackInventoryItems(farm.id, 'user_demo');
 
     final startDate = filter?.effectiveStartDate;
@@ -317,7 +334,11 @@ class ReportService {
     );
   }
 
-  static List<DailyRecordModel> _generateFallbackDailyRecords(String farmId, String batchId, String uid) {
+  static List<DailyRecordModel> _generateFallbackDailyRecords(
+    String farmId,
+    String batchId,
+    String uid,
+  ) {
     final now = DateTime.now();
     return List.generate(38, (index) {
       final day = index + 1;
@@ -353,7 +374,10 @@ class ReportService {
     });
   }
 
-  static List<InventoryItemModel> _generateFallbackInventoryItems(String farmId, String uid) {
+  static List<InventoryItemModel> _generateFallbackInventoryItems(
+    String farmId,
+    String uid,
+  ) {
     final now = DateTime.now();
     return [
       InventoryItemModel(

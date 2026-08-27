@@ -133,11 +133,7 @@ extension ReportTypeX on ReportType {
   }
 }
 
-enum ExportFormat {
-  pdf,
-  excel,
-  csv,
-}
+enum ExportFormat { pdf, excel, csv }
 
 extension ExportFormatX on ExportFormat {
   String get label {
@@ -174,12 +170,7 @@ extension ExportFormatX on ExportFormat {
   }
 }
 
-enum DateRangePreset {
-  today,
-  last7Days,
-  last30Days,
-  custom,
-}
+enum DateRangePreset { today, last7Days, last30Days, custom }
 
 extension DateRangePresetX on DateRangePreset {
   String get label {
@@ -224,8 +215,12 @@ class ReportFilterState {
     bool clearBatch = false,
   }) {
     return ReportFilterState(
-      selectedFarmId: clearFarm ? null : (selectedFarmId ?? this.selectedFarmId),
-      selectedBatchId: clearBatch ? null : (selectedBatchId ?? this.selectedBatchId),
+      selectedFarmId: clearFarm
+          ? null
+          : (selectedFarmId ?? this.selectedFarmId),
+      selectedBatchId: clearBatch
+          ? null
+          : (selectedBatchId ?? this.selectedBatchId),
       datePreset: datePreset ?? this.datePreset,
       customStartDate: customStartDate ?? this.customStartDate,
       customEndDate: customEndDate ?? this.customEndDate,
@@ -259,6 +254,33 @@ class ReportFilterState {
         return customEndDate ?? now;
     }
   }
+
+  /// Validates that custom start date is not after custom end date.
+  bool get isValidDateRange {
+    if (datePreset != DateRangePreset.custom) return true;
+    if (customStartDate == null || customEndDate == null) return true;
+    return !customStartDate!.isAfter(customEndDate!);
+  }
+
+  /// Generates a standardized sanitized file export name.
+  static String formatExportFilename({
+    required String reportTitle,
+    required String extension,
+    String? farmName,
+    DateTime? timestamp,
+  }) {
+    final ts = timestamp ?? DateTime.now();
+    final dateStr =
+        '${ts.year}${ts.month.toString().padLeft(2, '0')}${ts.day.toString().padLeft(2, '0')}_${ts.hour.toString().padLeft(2, '0')}${ts.minute.toString().padLeft(2, '0')}';
+    final cleanTitle = reportTitle
+        .replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')
+        .toLowerCase();
+    final cleanFarm = (farmName != null && farmName.isNotEmpty)
+        ? '_${farmName.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_').toLowerCase()}'
+        : '';
+    final cleanExt = extension.replaceAll('.', '');
+    return '${cleanTitle}${cleanFarm}_$dateStr.$cleanExt';
+  }
 }
 
 class ReportHistoryItem {
@@ -285,16 +307,16 @@ class ReportHistoryItem {
   final String? filePath;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'reportType': reportType.name,
-        'reportTitle': reportTitle,
-        'farmName': farmName,
-        'batchName': batchName,
-        'format': format.name,
-        'generatedAt': generatedAt.toIso8601String(),
-        'fileSizeKb': fileSizeKb,
-        'filePath': filePath,
-      };
+    'id': id,
+    'reportType': reportType.name,
+    'reportTitle': reportTitle,
+    'farmName': farmName,
+    'batchName': batchName,
+    'format': format.name,
+    'generatedAt': generatedAt.toIso8601String(),
+    'fileSizeKb': fileSizeKb,
+    'filePath': filePath,
+  };
 
   factory ReportHistoryItem.fromJson(Map<String, dynamic> json) {
     return ReportHistoryItem(
@@ -310,7 +332,8 @@ class ReportHistoryItem {
         (e) => e.name == json['format'],
         orElse: () => ExportFormat.pdf,
       ),
-      generatedAt: DateTime.tryParse(json['generatedAt'] as String? ?? '') ??
+      generatedAt:
+          DateTime.tryParse(json['generatedAt'] as String? ?? '') ??
           DateTime.now(),
       fileSizeKb: (json['fileSizeKb'] as num?)?.toDouble() ?? 0.0,
       filePath: json['filePath'] as String?,

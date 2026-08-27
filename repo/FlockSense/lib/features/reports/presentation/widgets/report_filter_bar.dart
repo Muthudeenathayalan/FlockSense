@@ -40,7 +40,11 @@ class ReportFilterBar extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.filter_list_rounded, size: 20, color: AppColors.primary),
+              const Icon(
+                Icons.filter_list_rounded,
+                size: 20,
+                color: AppColors.primary,
+              ),
               const SizedBox(width: 8),
               const Text(
                 'Filter Reports Data',
@@ -73,7 +77,10 @@ class ReportFilterBar extends ConsumerWidget {
               // Farm Dropdown
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceSoft,
                     borderRadius: BorderRadius.circular(14),
@@ -83,16 +90,39 @@ class ReportFilterBar extends ConsumerWidget {
                     child: DropdownButton<String?>(
                       value: filterState.selectedFarmId,
                       isExpanded: true,
-                      hint: const Text('All Farms', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+                      hint: const Text(
+                        'All Farms',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                       items: [
                         const DropdownMenuItem<String?>(
                           value: null,
-                          child: Text('All Farms', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                          child: Text(
+                            'All Farms',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
-                        ...farms.map((f) => DropdownMenuItem<String?>(
-                              value: f.id,
-                              child: Text(f.farmName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                            )),
+                        ...farms.map(
+                          (f) => DropdownMenuItem<String?>(
+                            value: f.id,
+                            child: Text(
+                              f.farmName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                       onChanged: (val) => filterNotifier.setFarmId(val),
                     ),
@@ -103,7 +133,10 @@ class ReportFilterBar extends ConsumerWidget {
               // Batch Dropdown
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceSoft,
                     borderRadius: BorderRadius.circular(14),
@@ -113,16 +146,39 @@ class ReportFilterBar extends ConsumerWidget {
                     child: DropdownButton<String?>(
                       value: filterState.selectedBatchId,
                       isExpanded: true,
-                      hint: const Text('All Batches', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+                      hint: const Text(
+                        'All Batches',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                       items: [
                         const DropdownMenuItem<String?>(
                           value: null,
-                          child: Text('All Batches', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                          child: Text(
+                            'All Batches',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
-                        ...batches.map((b) => DropdownMenuItem<String?>(
-                              value: b.id,
-                              child: Text(b.batchName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                            )),
+                        ...batches.map(
+                          (b) => DropdownMenuItem<String?>(
+                            value: b.id,
+                            child: Text(
+                              b.batchName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                       onChanged: (val) => filterNotifier.setBatchId(val),
                     ),
@@ -145,7 +201,9 @@ class ReportFilterBar extends ConsumerWidget {
                     label: Text(preset.label),
                     labelStyle: TextStyle(
                       fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                      fontWeight: isSelected
+                          ? FontWeight.w800
+                          : FontWeight.w600,
                       color: isSelected ? Colors.white : AppColors.textPrimary,
                     ),
                     backgroundColor: AppColors.surfaceSoft,
@@ -153,7 +211,9 @@ class ReportFilterBar extends ConsumerWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                       side: BorderSide(
-                        color: isSelected ? AppColors.primary : AppColors.border,
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.border,
                       ),
                     ),
                     onSelected: (_) {

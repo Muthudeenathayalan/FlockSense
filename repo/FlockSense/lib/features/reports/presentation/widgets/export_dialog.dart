@@ -8,11 +8,7 @@ import 'package:flock_sense/features/reports/domain/report_data.dart';
 import 'package:flock_sense/features/reports/domain/report_types.dart';
 
 class ExportDialog extends StatefulWidget {
-  const ExportDialog({
-    super.key,
-    required this.reportType,
-    required this.data,
-  });
+  const ExportDialog({super.key, required this.reportType, required this.data});
 
   final ReportType reportType;
   final ReportData data;
@@ -55,10 +51,14 @@ class _ExportDialogState extends State<ExportDialog> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Report generated successfully: ${file.path.split('/').last}'),
+            content: Text(
+              'Report generated successfully: ${file.path.split('/').last}',
+            ),
             backgroundColor: AppColors.primary,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -70,7 +70,9 @@ class _ExportDialogState extends State<ExportDialog> {
           content: Text('Export failed: ${e.toString()}'),
           backgroundColor: AppColors.danger,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     } finally {
@@ -94,7 +96,9 @@ class _ExportDialogState extends State<ExportDialog> {
           Text(
             'Select desired export file format:',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 14),
@@ -117,12 +121,20 @@ class _ExportDialogState extends State<ExportDialog> {
                   format.label,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                    color: isSelected ? AppColors.primary : (isDark ? AppColors.darkTextPrimary : AppColors.textPrimary),
+                    color: isSelected
+                        ? AppColors.primary
+                        : (isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.textPrimary),
                   ),
                 ),
                 secondary: Icon(
                   format.icon,
-                  color: isSelected ? AppColors.primary : (isDark ? AppColors.darkTextSecondary : AppColors.textSecondary),
+                  color: isSelected
+                      ? AppColors.primary
+                      : (isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.textSecondary),
                   size: 20,
                 ),
               ),
@@ -158,4 +170,3 @@ class _ExportDialogState extends State<ExportDialog> {
     );
   }
 }
-

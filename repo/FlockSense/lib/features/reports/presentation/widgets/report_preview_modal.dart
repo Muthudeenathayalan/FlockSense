@@ -34,7 +34,8 @@ class ReportPreviewModal extends StatefulWidget {
   State<ReportPreviewModal> createState() => _ReportPreviewModalState();
 }
 
-class _ReportPreviewModalState extends State<ReportPreviewModal> with SingleTickerProviderStateMixin {
+class _ReportPreviewModalState extends State<ReportPreviewModal>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   ExportFormat _selectedFormat = ExportFormat.pdf;
 
@@ -172,7 +173,9 @@ class _ReportPreviewModalState extends State<ReportPreviewModal> with SingleTick
                 style: ElevatedButton.styleFrom(
                   backgroundColor: widget.reportType.color,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
               ),
             ],
@@ -195,12 +198,19 @@ class _ReportPreviewModalState extends State<ReportPreviewModal> with SingleTick
         children: [
           Text(
             widget.data.farm.farmName,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             'Batch: ${widget.data.batch.batchName} • ${widget.data.dailyRecords.length} Records',
-            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
           ),
         ],
       ),
@@ -219,24 +229,58 @@ class _ReportPreviewModalState extends State<ReportPreviewModal> with SingleTick
         scrollDirection: Axis.horizontal,
         child: DataTable(
           columns: const [
-            DataColumn(label: Text('Day', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('Date', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('Closing Birds', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('Mortality', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('Feed (kg)', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('Water (L)', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('Avg Wt (g)', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(
+              label: Text('Day', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            DataColumn(
+              label: Text(
+                'Date',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Closing Birds',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Mortality',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Feed (kg)',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Water (L)',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'Avg Wt (g)',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
           ],
           rows: widget.data.dailyRecords.map((r) {
-            return DataRow(cells: [
-              DataCell(Text('${r.batchAgeDay}')),
-              DataCell(Text('${r.recordDate.month}/${r.recordDate.day}')),
-              DataCell(Text('${r.closingBirds}')),
-              DataCell(Text('${r.mortalityCount}')),
-              DataCell(Text('${r.feedConsumedKg}')),
-              DataCell(Text('${r.waterConsumedLiters}')),
-              DataCell(Text('${r.avgWeightGrams}')),
-            ]);
+            return DataRow(
+              cells: [
+                DataCell(Text('${r.batchAgeDay}')),
+                DataCell(Text('${r.recordDate.month}/${r.recordDate.day}')),
+                DataCell(Text('${r.closingBirds}')),
+                DataCell(Text('${r.mortalityCount}')),
+                DataCell(Text('${r.feedConsumedKg}')),
+                DataCell(Text('${r.waterConsumedLiters}')),
+                DataCell(Text('${r.avgWeightGrams}')),
+              ],
+            );
           }).toList(),
         ),
       ),

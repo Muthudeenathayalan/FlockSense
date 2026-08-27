@@ -108,11 +108,18 @@ class ReportCard extends StatelessWidget {
                       child: TextButton.icon(
                         onPressed: onTapPreview,
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 6,
+                          ),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        icon: const Icon(Icons.remove_red_eye_outlined, size: 14, color: AppColors.primary),
+                        icon: const Icon(
+                          Icons.remove_red_eye_outlined,
+                          size: 14,
+                          color: AppColors.primary,
+                        ),
                         label: const Text(
                           'Preview',
                           maxLines: 1,
@@ -133,8 +140,13 @@ class ReportCard extends StatelessWidget {
                           backgroundColor: color,
                           foregroundColor: Colors.white,
                           elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 7),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 7,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),

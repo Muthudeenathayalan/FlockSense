@@ -88,11 +88,11 @@ This backlog documents legitimate, verified improvements, refactorings, bug fixe
 | **FS-068** | Finance | Calculate outstanding invoice balances from partial payments | P1 | Small | Required | Done |
 | **FS-069** | Finance | Extract `FinanceSummaryCards` widget from `FinanceDashboardScreen` | P3 | Small | Optional | Todo |
 | **FS-070** | Finance | Unit test financial transaction model and analytics engine | P2 | Medium | Required | Done |
-| **FS-071** | Reports | Validate report date range filters (start date must be <= end date) | P0 | Small | Required | Todo |
+| **FS-071** | Reports | Validate report date range filters (start date must be <= end date) | P0 | Small | Required | Done |
 | **FS-072** | Reports | Handle empty dataset gracefully during PDF, Excel, CSV generation | P0 | Medium | Required | Todo |
-| **FS-073** | Reports | Centralize export file naming with timestamp and farm identifier | P1 | Small | Required | Todo |
-| **FS-074** | Reports | Add metadata summary to report history entries | P4 | Small | Optional | Todo |
-| **FS-075** | Reports | Unit test report export data structure generation | P2 | Small | Required | Todo |
+| **FS-073** | Reports | Centralize export file naming with timestamp and farm identifier | P1 | Small | Required | Done |
+| **FS-074** | Reports | Extract `ReportPreviewModal` widget from reports screen | P3 | Medium | Optional | Todo |
+| **FS-075** | Reports | Unit test report export builders, generators, and data formatting | P2 | Medium | Required | Done |
 | **FS-076** | Notifications | Prevent duplicate smart alert creation for identical events on same day | P0 | Medium | Required | Todo |
 | **FS-077** | Notifications | Add real-time unread notification count badge on navigation bar | P1 | Small | Required | Todo |
 | **FS-078** | Notifications | Handle missing or invalid FCM token gracefully without throwing | P0 | Small | Required | Todo |

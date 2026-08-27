@@ -13,7 +13,11 @@ class ReportHistoryService {
         return _getInitialDefaultHistory();
       }
       final List<dynamic> list = jsonDecode(jsonString);
-      return list.map((item) => ReportHistoryItem.fromJson(item as Map<String, dynamic>)).toList();
+      return list
+          .map(
+            (item) => ReportHistoryItem.fromJson(item as Map<String, dynamic>),
+          )
+          .toList();
     } catch (e) {
       return _getInitialDefaultHistory();
     }
