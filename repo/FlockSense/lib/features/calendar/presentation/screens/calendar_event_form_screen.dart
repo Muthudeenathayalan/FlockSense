@@ -13,10 +13,12 @@ class CalendarEventFormScreen extends ConsumerStatefulWidget {
   final CalendarEventModel? existingEvent;
 
   @override
-  ConsumerState<CalendarEventFormScreen> createState() => _CalendarEventFormScreenState();
+  ConsumerState<CalendarEventFormScreen> createState() =>
+      _CalendarEventFormScreenState();
 }
 
-class _CalendarEventFormScreenState extends ConsumerState<CalendarEventFormScreen> {
+class _CalendarEventFormScreenState
+    extends ConsumerState<CalendarEventFormScreen> {
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _titleController;
@@ -111,12 +113,17 @@ class _CalendarEventFormScreenState extends ConsumerState<CalendarEventFormScree
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Event Type Dropdown
-              const Text('Event Type *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              const Text(
+                'Event Type *',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
                 value: _eventType,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                 ),
@@ -135,12 +142,15 @@ class _CalendarEventFormScreenState extends ConsumerState<CalendarEventFormScree
                 decoration: InputDecoration(
                   labelText: 'Event Title *',
                   hintText: 'e.g. Lasota Vaccination, Feed Restock',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                 ),
-                validator: (val) =>
-                    (val == null || val.trim().isEmpty) ? 'Please enter event title' : null,
+                validator: (val) => (val == null || val.trim().isEmpty)
+                    ? 'Please enter event title'
+                    : null,
               ),
               const SizedBox(height: 14),
 
@@ -151,7 +161,9 @@ class _CalendarEventFormScreenState extends ConsumerState<CalendarEventFormScree
                 decoration: InputDecoration(
                   labelText: 'Description',
                   hintText: 'Details or instructions...',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                 ),
@@ -175,7 +187,9 @@ class _CalendarEventFormScreenState extends ConsumerState<CalendarEventFormScree
                       child: InputDecorator(
                         decoration: InputDecoration(
                           labelText: 'Event Date *',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           filled: true,
                           fillColor: Colors.white,
                         ),
@@ -196,7 +210,9 @@ class _CalendarEventFormScreenState extends ConsumerState<CalendarEventFormScree
                       child: InputDecorator(
                         decoration: InputDecoration(
                           labelText: 'Event Time *',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           filled: true,
                           fillColor: Colors.white,
                         ),
@@ -216,15 +232,26 @@ class _CalendarEventFormScreenState extends ConsumerState<CalendarEventFormScree
                       value: _reminderBeforeMinutes,
                       decoration: InputDecoration(
                         labelText: 'Remind Before *',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                       ),
                       items: _reminderOptions.entries
-                          .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value, style: const TextStyle(fontSize: 12))))
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e.key,
+                              child: Text(
+                                e.value,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          )
                           .toList(),
                       onChanged: (val) {
-                        if (val != null) setState(() => _reminderBeforeMinutes = val);
+                        if (val != null)
+                          setState(() => _reminderBeforeMinutes = val);
                       },
                     ),
                   ),
@@ -234,15 +261,23 @@ class _CalendarEventFormScreenState extends ConsumerState<CalendarEventFormScree
                       value: _priority,
                       decoration: InputDecoration(
                         labelText: 'Priority *',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                       ),
                       items: const [
                         DropdownMenuItem(value: 'low', child: Text('Low')),
-                        DropdownMenuItem(value: 'medium', child: Text('Medium')),
+                        DropdownMenuItem(
+                          value: 'medium',
+                          child: Text('Medium'),
+                        ),
                         DropdownMenuItem(value: 'high', child: Text('High')),
-                        DropdownMenuItem(value: 'urgent', child: Text('Urgent')),
+                        DropdownMenuItem(
+                          value: 'urgent',
+                          child: Text('Urgent'),
+                        ),
                       ],
                       onChanged: (val) {
                         if (val != null) setState(() => _priority = val);
@@ -258,15 +293,23 @@ class _CalendarEventFormScreenState extends ConsumerState<CalendarEventFormScree
                 value: _repeat,
                 decoration: InputDecoration(
                   labelText: 'Repeat Event *',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                 ),
                 items: const [
-                  DropdownMenuItem(value: 'none', child: Text('Does not repeat')),
+                  DropdownMenuItem(
+                    value: 'none',
+                    child: Text('Does not repeat'),
+                  ),
                   DropdownMenuItem(value: 'daily', child: Text('Every day')),
                   DropdownMenuItem(value: 'weekly', child: Text('Every week')),
-                  DropdownMenuItem(value: 'monthly', child: Text('Every month')),
+                  DropdownMenuItem(
+                    value: 'monthly',
+                    child: Text('Every month'),
+                  ),
                 ],
                 onChanged: (val) {
                   if (val != null) setState(() => _repeat = val);
@@ -280,7 +323,9 @@ class _CalendarEventFormScreenState extends ConsumerState<CalendarEventFormScree
                 maxLines: 2,
                 decoration: InputDecoration(
                   labelText: 'Notes / Remarks',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                 ),
@@ -295,18 +340,28 @@ class _CalendarEventFormScreenState extends ConsumerState<CalendarEventFormScree
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                   onPressed: _isSaving ? null : _saveEvent,
                   child: _isSaving
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
                         )
                       : Text(
-                          isEdit ? 'Update Event & Reminder' : 'Save Event & Schedule Reminder',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          isEdit
+                              ? 'Update Event & Reminder'
+                              : 'Save Event & Schedule Reminder',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                 ),
               ),
@@ -332,7 +387,8 @@ class _CalendarEventFormScreenState extends ConsumerState<CalendarEventFormScree
 
       final service = ref.read(calendarServiceProvider);
 
-      final timeStr = '${_eventTime.hour.toString().padLeft(2, '0')}:${_eventTime.minute.toString().padLeft(2, '0')}';
+      final timeStr =
+          '${_eventTime.hour.toString().padLeft(2, '0')}:${_eventTime.minute.toString().padLeft(2, '0')}';
 
       final event = CalendarEventModel(
         id: widget.existingEvent?.id ?? '',
@@ -341,7 +397,9 @@ class _CalendarEventFormScreenState extends ConsumerState<CalendarEventFormScree
         ownerId: user.uid,
         title: _titleController.text.trim(),
         eventType: _eventType,
-        description: _descriptionController.text.trim().isNotEmpty ? _descriptionController.text.trim() : null,
+        description: _descriptionController.text.trim().isNotEmpty
+            ? _descriptionController.text.trim()
+            : null,
         eventDate: _eventDate,
         eventTime: timeStr,
         repeat: _repeat,
@@ -351,7 +409,9 @@ class _CalendarEventFormScreenState extends ConsumerState<CalendarEventFormScree
         completedAt: widget.existingEvent?.completedAt,
         isAutoGenerated: widget.existingEvent?.isAutoGenerated ?? false,
         autoSource: widget.existingEvent?.autoSource,
-        notes: _notesController.text.trim().isNotEmpty ? _notesController.text.trim() : null,
+        notes: _notesController.text.trim().isNotEmpty
+            ? _notesController.text.trim()
+            : null,
         createdAt: widget.existingEvent?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
       );

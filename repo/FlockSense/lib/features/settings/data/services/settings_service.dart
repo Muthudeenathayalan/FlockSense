@@ -66,20 +66,30 @@ class SettingsService {
         .collection('settings')
         .doc('preferences')
         .snapshots()
-        .map((doc) => doc.exists ? UserPreferencesModel.fromJson(doc.data()!) : _memoryCache)
+        .map(
+          (doc) => doc.exists
+              ? UserPreferencesModel.fromJson(doc.data()!)
+              : _memoryCache,
+        )
         .handleError((err) {
-      debugPrint('[SettingsService] streamPreferences error: $err');
-      return _memoryCache;
-    });
+          debugPrint('[SettingsService] streamPreferences error: $err');
+          return _memoryCache;
+        });
   }
 
   // Account Actions
-  static Future<void> updateProfile({required String displayName, required String phone}) async {
+  static Future<void> updateProfile({
+    required String displayName,
+    required String phone,
+  }) async {
     final user = _auth.currentUser;
     if (user != null) {
       await user.updateDisplayName(displayName);
     }
-    final updated = _memoryCache.copyWith(displayName: displayName, phone: phone);
+    final updated = _memoryCache.copyWith(
+      displayName: displayName,
+      phone: phone,
+    );
     await savePreferences(updated);
   }
 

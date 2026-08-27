@@ -93,8 +93,11 @@ class AiMessageModel {
         (e) => e.name == json['messageType'],
         orElse: () => AiMessageType.text,
       ),
-      attachments: (json['attachments'] as List<dynamic>?)
-              ?.map((a) => AiAttachmentModel.fromJson(a as Map<String, dynamic>))
+      attachments:
+          (json['attachments'] as List<dynamic>?)
+              ?.map(
+                (a) => AiAttachmentModel.fromJson(a as Map<String, dynamic>),
+              )
               .toList() ??
           const [],
       chartData: json['chartData'] as Map<String, dynamic>?,

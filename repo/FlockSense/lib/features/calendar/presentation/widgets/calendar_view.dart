@@ -118,7 +118,11 @@ class CalendarViewWidget extends ConsumerWidget {
               color: AppColors.surfaceSoft,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.chevron_left_rounded, color: AppColors.primary, size: 20),
+            child: const Icon(
+              Icons.chevron_left_rounded,
+              color: AppColors.primary,
+              size: 20,
+            ),
           ),
           rightChevronIcon: Container(
             padding: const EdgeInsets.all(6),
@@ -126,7 +130,11 @@ class CalendarViewWidget extends ConsumerWidget {
               color: AppColors.surfaceSoft,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.chevron_right_rounded, color: AppColors.primary, size: 20),
+            child: const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.primary,
+              size: 20,
+            ),
           ),
         ),
         calendarBuilders: CalendarBuilders(

@@ -52,16 +52,8 @@ const Color _kRedTint = Color(0xFFFEE2E2);
 const Color _kIndigoTint = Color(0xFFEEF2FF);
 
 const List<BoxShadow> _kCardShadow = [
-  BoxShadow(
-    color: Color(0x060F172A),
-    blurRadius: 10,
-    offset: Offset(0, 4),
-  ),
-  BoxShadow(
-    color: Color(0x040F172A),
-    blurRadius: 2,
-    offset: Offset(0, 1),
-  ),
+  BoxShadow(color: Color(0x060F172A), blurRadius: 10, offset: Offset(0, 4)),
+  BoxShadow(color: Color(0x040F172A), blurRadius: 2, offset: Offset(0, 1)),
 ];
 
 // 7-day benchmark dataset
@@ -88,14 +80,16 @@ class HomeScreen extends ConsumerWidget {
         .maybeWhen(data: (u) => u, orElse: () => null);
     final displayName = user?.displayName?.trim();
 
-    final activeBatches = ref
+    final activeBatches =
+        ref
             .watch(allUserBatchesProvider)
             .value
             ?.where((b) => b.status == 'active')
             .toList() ??
         const <BatchModel>[];
 
-    final targetFarmId = data.activeFarm?.id ??
+    final targetFarmId =
+        data.activeFarm?.id ??
         (data.farms.isNotEmpty ? data.farms.first.id : '');
 
     void navigateToAddBatch() {
@@ -115,19 +109,22 @@ class HomeScreen extends ConsumerWidget {
       backgroundColor: _kBackground,
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics()),
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
         slivers: [
           // Header
           _CommandCenterHeader(
             displayName: displayName,
-            activeFarmName: data.activeFarm?.farmName ??
+            activeFarmName:
+                data.activeFarm?.farmName ??
                 (data.farms.isNotEmpty
                     ? data.farms.first.farmName
                     : 'Main Facility'),
             onNotificationTap: () => Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (_) => const NotificationCenterScreen()),
+                builder: (_) => const NotificationCenterScreen(),
+              ),
             ),
             onFarmTap: () => Navigator.pushNamed(context, AppRoutes.farms),
           ),
@@ -161,7 +158,9 @@ class HomeScreen extends ConsumerWidget {
                             onTap: navigateToAddBatch,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 5),
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
                               decoration: BoxDecoration(
                                 color: _kGreenTint,
                                 borderRadius: BorderRadius.circular(20),
@@ -169,8 +168,11 @@ class HomeScreen extends ConsumerWidget {
                               child: const Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.add_rounded,
-                                      size: 14, color: _kPrimary),
+                                  Icon(
+                                    Icons.add_rounded,
+                                    size: 14,
+                                    color: _kPrimary,
+                                  ),
                                   SizedBox(width: 4),
                                   Text(
                                     'New Batch',
@@ -230,7 +232,9 @@ class HomeScreen extends ConsumerWidget {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [_kIndigo, _kBlue],
@@ -240,8 +244,11 @@ class HomeScreen extends ConsumerWidget {
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.auto_awesome_rounded,
-                                size: 12, color: Colors.white),
+                            Icon(
+                              Icons.auto_awesome_rounded,
+                              size: 12,
+                              color: Colors.white,
+                            ),
                             SizedBox(width: 5),
                             Text(
                               'AI Intelligence',
@@ -281,8 +288,7 @@ class HomeScreen extends ConsumerWidget {
                     onDailyRecordsTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            const DailyRecordsDashboardScreen(),
+                        builder: (_) => const DailyRecordsDashboardScreen(),
                       ),
                     ),
                   ),
@@ -298,8 +304,7 @@ class HomeScreen extends ConsumerWidget {
                     onAddRecord: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            const DailyRecordsDashboardScreen(),
+                        builder: (_) => const DailyRecordsDashboardScreen(),
                       ),
                     ),
                     onFeedInventory: () => Navigator.push(
@@ -326,18 +331,14 @@ class HomeScreen extends ConsumerWidget {
                   // Farm Card
                   if (data.farms.isEmpty)
                     _EmptyFarmCard(
-                      onCreateFarm: () => Navigator.pushNamed(
-                        context,
-                        AppRoutes.farmSetup,
-                      ),
+                      onCreateFarm: () =>
+                          Navigator.pushNamed(context, AppRoutes.farmSetup),
                     )
                   else ...[
                     _ActiveFarmCard(
                       data: data,
-                      onManageTap: () => Navigator.pushNamed(
-                        context,
-                        AppRoutes.farms,
-                      ),
+                      onManageTap: () =>
+                          Navigator.pushNamed(context, AppRoutes.farms),
                     ),
                     if (data.farms.length > 1) ...[
                       const SizedBox(height: 16),
@@ -412,11 +413,7 @@ class _CommandCenterHeader extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF0F172A),
-                Color(0xFF132E23),
-                Color(0xFF166534),
-              ],
+              colors: [Color(0xFF0F172A), Color(0xFF132E23), Color(0xFF166534)],
             ),
           ),
           child: Stack(
@@ -447,7 +444,9 @@ class _CommandCenterHeader extends StatelessWidget {
                           onTap: onFarmTap,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 5),
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.10),
                               borderRadius: BorderRadius.circular(20),
@@ -458,12 +457,16 @@ class _CommandCenterHeader extends StatelessWidget {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.warehouse_rounded,
-                                    size: 13, color: Color(0xFF4ADE80)),
+                                const Icon(
+                                  Icons.warehouse_rounded,
+                                  size: 13,
+                                  color: Color(0xFF4ADE80),
+                                ),
                                 const SizedBox(width: 6),
                                 ConstrainedBox(
-                                  constraints:
-                                      const BoxConstraints(maxWidth: 130),
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 130,
+                                  ),
                                   child: Text(
                                     activeFarmName,
                                     style: const TextStyle(
@@ -475,8 +478,11 @@ class _CommandCenterHeader extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                const Icon(Icons.keyboard_arrow_down_rounded,
-                                    size: 14, color: Colors.white70),
+                                const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  size: 14,
+                                  color: Colors.white70,
+                                ),
                               ],
                             ),
                           ),
@@ -484,7 +490,9 @@ class _CommandCenterHeader extends StatelessWidget {
                         const Spacer(),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 9, vertical: 4),
+                            horizontal: 9,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.black.withValues(alpha: 0.20),
                             borderRadius: BorderRadius.circular(16),
@@ -508,13 +516,17 @@ class _CommandCenterHeader extends StatelessWidget {
                               color: Colors.white.withValues(alpha: 0.10),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.15)),
+                                color: Colors.white.withValues(alpha: 0.15),
+                              ),
                             ),
                             child: Stack(
                               alignment: Alignment.center,
                               children: [
-                                const Icon(Icons.notifications_outlined,
-                                    size: 16, color: Colors.white),
+                                const Icon(
+                                  Icons.notifications_outlined,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
                                 Positioned(
                                   top: 6,
                                   right: 6,
@@ -755,8 +767,7 @@ class _ExecutiveStatCard extends StatelessWidget {
                 child: Icon(icon, color: iconColor, size: 19),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
                   color: badgeBg,
                   borderRadius: BorderRadius.circular(6),
@@ -898,8 +909,10 @@ class _BatchAvatarCard extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: status.bg,
                       borderRadius: BorderRadius.circular(4),
@@ -1005,8 +1018,11 @@ class _BatchAvatarCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 2),
-                  Icon(Icons.arrow_forward_rounded,
-                      size: 12, color: gradient[0]),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 12,
+                    color: gradient[0],
+                  ),
                 ],
               ),
             ],
@@ -1075,8 +1091,7 @@ class _EmptyBatchCard extends StatelessWidget {
               color: _kGreenTint,
               shape: BoxShape.circle,
             ),
-            child:
-                const Icon(Icons.layers_rounded, color: _kPrimary, size: 22),
+            child: const Icon(Icons.layers_rounded, color: _kPrimary, size: 22),
           ),
           const SizedBox(width: 12),
           const Expanded(
@@ -1105,8 +1120,7 @@ class _EmptyBatchCard extends StatelessWidget {
           GestureDetector(
             onTap: onAddBatch,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: _kPrimary,
                 borderRadius: BorderRadius.circular(_kSmRadius),
@@ -1236,7 +1250,9 @@ class _PerformanceAnalyticsPanelState
                       duration: const Duration(milliseconds: 180),
                       margin: const EdgeInsets.only(right: 8),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 7),
+                        horizontal: 12,
+                        vertical: 7,
+                      ),
                       decoration: BoxDecoration(
                         color: selected ? _kPrimary : _kBackground,
                         borderRadius: BorderRadius.circular(20),
@@ -1251,8 +1267,7 @@ class _PerformanceAnalyticsPanelState
                           Icon(
                             _tabIcons[i],
                             size: 13,
-                            color:
-                                selected ? Colors.white : _kTextSecondary,
+                            color: selected ? Colors.white : _kTextSecondary,
                           ),
                           const SizedBox(width: 5),
                           Text(
@@ -1260,9 +1275,7 @@ class _PerformanceAnalyticsPanelState
                             style: TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w700,
-                              color: selected
-                                  ? Colors.white
-                                  : _kTextSecondary,
+                              color: selected ? Colors.white : _kTextSecondary,
                             ),
                           ),
                         ],
@@ -1275,16 +1288,18 @@ class _PerformanceAnalyticsPanelState
           ),
           Container(
             margin: const EdgeInsets.fromLTRB(14, 10, 14, 0),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: _kBackground,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline_rounded,
-                    size: 12, color: _kTextSecondary),
+                const Icon(
+                  Icons.info_outline_rounded,
+                  size: 12,
+                  color: _kTextSecondary,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -1331,19 +1346,19 @@ Widget _dayTitle(double v, TitleMeta meta) {
     child: Text(
       _kDays[i],
       style: const TextStyle(
-          fontSize: 10, fontWeight: FontWeight.w600, color: _kTextMuted),
+        fontSize: 10,
+        fontWeight: FontWeight.w600,
+        color: _kTextMuted,
+      ),
     ),
   );
 }
 
 FlGridData _cleanGrid() => FlGridData(
-      show: true,
-      drawVerticalLine: false,
-      getDrawingHorizontalLine: (_) => FlLine(
-        color: _kBorderLight,
-        strokeWidth: 1,
-      ),
-    );
+  show: true,
+  drawVerticalLine: false,
+  getDrawingHorizontalLine: (_) => FlLine(color: _kBorderLight, strokeWidth: 1),
+);
 
 class _PopulationChart extends StatelessWidget {
   const _PopulationChart({super.key});
@@ -1410,7 +1425,10 @@ class _PopulationChart extends StatelessWidget {
         titlesData: FlTitlesData(
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
-                showTitles: true, reservedSize: 26, getTitlesWidget: _dayTitle),
+              showTitles: true,
+              reservedSize: 26,
+              getTitlesWidget: _dayTitle,
+            ),
           ),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
@@ -1419,16 +1437,19 @@ class _PopulationChart extends StatelessWidget {
               getTitlesWidget: (v, _) => Text(
                 v.toInt().toString(),
                 style: const TextStyle(
-                    fontSize: 9,
-                    color: _kTextMuted,
-                    fontWeight: FontWeight.w600),
+                  fontSize: 9,
+                  color: _kTextMuted,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
         ),
         gridData: _cleanGrid(),
         borderData: FlBorderData(show: false),
@@ -1443,9 +1464,13 @@ class _FeedEfficiencyChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final feedSpots = List<FlSpot>.generate(
-        7, (i) => FlSpot(i.toDouble(), _kFeed[i] / 1000));
-    final fcrSpots =
-        List<FlSpot>.generate(7, (i) => FlSpot(i.toDouble(), _kFcr[i]));
+      7,
+      (i) => FlSpot(i.toDouble(), _kFeed[i] / 1000),
+    );
+    final fcrSpots = List<FlSpot>.generate(
+      7,
+      (i) => FlSpot(i.toDouble(), _kFcr[i]),
+    );
 
     return LineChart(
       LineChartData(
@@ -1490,7 +1515,10 @@ class _FeedEfficiencyChart extends StatelessWidget {
         titlesData: FlTitlesData(
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
-                showTitles: true, reservedSize: 26, getTitlesWidget: _dayTitle),
+              showTitles: true,
+              reservedSize: 26,
+              getTitlesWidget: _dayTitle,
+            ),
           ),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
@@ -1499,16 +1527,19 @@ class _FeedEfficiencyChart extends StatelessWidget {
               getTitlesWidget: (v, _) => Text(
                 v.toStringAsFixed(2),
                 style: const TextStyle(
-                    fontSize: 9,
-                    color: _kTextMuted,
-                    fontWeight: FontWeight.w600),
+                  fontSize: 9,
+                  color: _kTextMuted,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
         ),
         gridData: _cleanGrid(),
         borderData: FlBorderData(show: false),
@@ -1540,8 +1571,9 @@ class _MortalityChart extends StatelessWidget {
                 toY: _kMortality[i] == 0 ? 0.20 : _kMortality[i],
                 color: _barColor(_kMortality[i]),
                 width: 26,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(6)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(6),
+                ),
                 backDrawRodData: BackgroundBarChartRodData(
                   show: true,
                   toY: 5,
@@ -1564,9 +1596,10 @@ class _MortalityChart extends StatelessWidget {
                   child: Text(
                     _kDays[i],
                     style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: _kTextMuted),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: _kTextMuted,
+                    ),
                   ),
                 );
               },
@@ -1581,17 +1614,20 @@ class _MortalityChart extends StatelessWidget {
                 return Text(
                   v.toInt().toString(),
                   style: const TextStyle(
-                      fontSize: 9,
-                      color: _kTextMuted,
-                      fontWeight: FontWeight.w600),
+                    fontSize: 9,
+                    color: _kTextMuted,
+                    fontWeight: FontWeight.w600,
+                  ),
                 );
               },
             ),
           ),
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
         ),
         gridData: _cleanGrid(),
         borderData: FlBorderData(show: false),
@@ -1606,9 +1642,13 @@ class _RevenueChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actual = List<FlSpot>.generate(
-        7, (i) => FlSpot(i.toDouble(), _kRevActual[i]));
+      7,
+      (i) => FlSpot(i.toDouble(), _kRevActual[i]),
+    );
     final forecast = List<FlSpot>.generate(
-        7, (i) => FlSpot(i.toDouble(), _kRevForecast[i]));
+      7,
+      (i) => FlSpot(i.toDouble(), _kRevForecast[i]),
+    );
 
     return LineChart(
       LineChartData(
@@ -1664,7 +1704,10 @@ class _RevenueChart extends StatelessWidget {
         titlesData: FlTitlesData(
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
-                showTitles: true, reservedSize: 26, getTitlesWidget: _dayTitle),
+              showTitles: true,
+              reservedSize: 26,
+              getTitlesWidget: _dayTitle,
+            ),
           ),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
@@ -1673,16 +1716,19 @@ class _RevenueChart extends StatelessWidget {
               getTitlesWidget: (v, _) => Text(
                 '₹${v.toStringAsFixed(1)}L',
                 style: const TextStyle(
-                    fontSize: 8.5,
-                    color: _kTextMuted,
-                    fontWeight: FontWeight.w600),
+                  fontSize: 8.5,
+                  color: _kTextMuted,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
         ),
         gridData: _cleanGrid(),
         borderData: FlBorderData(show: false),
@@ -1859,8 +1905,11 @@ class _FacilityOperationsSection extends StatelessWidget {
                       color: riskColor.withValues(alpha: 0.10),
                       shape: BoxShape.circle,
                     ),
-                    child:
-                        Icon(Icons.shield_rounded, color: riskColor, size: 20),
+                    child: Icon(
+                      Icons.shield_rounded,
+                      color: riskColor,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -1880,7 +1929,9 @@ class _FacilityOperationsSection extends StatelessWidget {
                             const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: isSafe ? _kGreenTint : _kRedTint,
                                 borderRadius: BorderRadius.circular(4),
@@ -1900,13 +1951,18 @@ class _FacilityOperationsSection extends StatelessWidget {
                         const Text(
                           'Telemetry normal • Safe disinfection & water sanitation active',
                           style: TextStyle(
-                              fontSize: 11.5, color: _kTextSecondary),
+                            fontSize: 11.5,
+                            color: _kTextSecondary,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right_rounded,
-                      size: 18, color: _kTextMuted),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    size: 18,
+                    color: _kTextMuted,
+                  ),
                 ],
               ),
             ),
@@ -1930,8 +1986,9 @@ class _DgFuelStatusCard extends ConsumerWidget {
 
     final double pct = (fuelLevel / 200.0).clamp(0.0, 1.0);
     final isLow = fuelLevel < 80.0;
-    final statusColor =
-        isLow ? (fuelLevel < 50.0 ? _kRed : _kAmber) : _kPrimary;
+    final statusColor = isLow
+        ? (fuelLevel < 50.0 ? _kRed : _kAmber)
+        : _kPrimary;
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -1953,8 +2010,11 @@ class _DgFuelStatusCard extends ConsumerWidget {
                   color: _kAmberTint,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.electric_bolt_rounded,
-                    color: _kAmber, size: 20),
+                child: const Icon(
+                  Icons.electric_bolt_rounded,
+                  color: _kAmber,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1974,7 +2034,9 @@ class _DgFuelStatusCard extends ConsumerWidget {
                     Text(
                       'Automated Shed Power Backup • ~${(fuelLevel / 6.5).toStringAsFixed(1)} hrs run time',
                       style: const TextStyle(
-                          fontSize: 11, color: _kTextSecondary),
+                        fontSize: 11,
+                        color: _kTextSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -2104,10 +2166,7 @@ class _QuickActionTile extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: bg,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
                 child: Icon(icon, size: 18, color: color),
               ),
               const SizedBox(height: 7),
@@ -2134,10 +2193,7 @@ class _QuickActionTile extends StatelessWidget {
 // ACTIVE FARM CARD & OTHER FACILITIES
 // ─────────────────────────────────────────────────────────────────────────────
 class _ActiveFarmCard extends StatelessWidget {
-  const _ActiveFarmCard({
-    required this.data,
-    required this.onManageTap,
-  });
+  const _ActiveFarmCard({required this.data, required this.onManageTap});
 
   final HomeDashboardData data;
   final VoidCallback onManageTap;
@@ -2156,10 +2212,7 @@ class _ActiveFarmCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0F172A),
-            Color(0xFF1E293B),
-          ],
+          colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
         ),
         borderRadius: BorderRadius.circular(_kCardRadius),
         boxShadow: _kCardShadow,
@@ -2172,8 +2225,11 @@ class _ActiveFarmCard extends StatelessWidget {
               color: _kPrimary.withValues(alpha: 0.20),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.agriculture_rounded,
-                color: Color(0xFF4ADE80), size: 20),
+            child: const Icon(
+              Icons.agriculture_rounded,
+              color: Color(0xFF4ADE80),
+              size: 20,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -2205,14 +2261,11 @@ class _ActiveFarmCard extends StatelessWidget {
           GestureDetector(
             onTap: onManageTap,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.25),
-                ),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
               ),
               child: const Text(
                 'All Farms',
@@ -2268,8 +2321,11 @@ class _OtherFacilityCard extends StatelessWidget {
                   color: _kGreenTint,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.warehouse_rounded,
-                    color: _kPrimary, size: 16),
+                child: const Icon(
+                  Icons.warehouse_rounded,
+                  color: _kPrimary,
+                  size: 16,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -2288,13 +2344,18 @@ class _OtherFacilityCard extends StatelessWidget {
                     Text(
                       '$type • $status',
                       style: const TextStyle(
-                          fontSize: 11, color: _kTextSecondary),
+                        fontSize: 11,
+                        color: _kTextSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded,
-                  size: 18, color: _kTextMuted),
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: _kTextMuted,
+              ),
             ],
           ),
         ),
@@ -2326,8 +2387,11 @@ class _EmptyFarmCard extends StatelessWidget {
               color: _kGreenTint,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.add_home_work_rounded,
-                color: _kPrimary, size: 28),
+            child: const Icon(
+              Icons.add_home_work_rounded,
+              color: _kPrimary,
+              size: 28,
+            ),
           ),
           const SizedBox(height: 14),
           const Text(
@@ -2342,14 +2406,16 @@ class _EmptyFarmCard extends StatelessWidget {
           const Text(
             'Add your farm shed dimensions, automated ventilation specs, and bird capacity to unlock full analytics.',
             style: TextStyle(
-                fontSize: 12.5, color: _kTextSecondary, height: 1.35),
+              fontSize: 12.5,
+              color: _kTextSecondary,
+              height: 1.35,
+            ),
           ),
           const SizedBox(height: 16),
           GestureDetector(
             onTap: onCreateFarm,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: _kPrimary,
                 borderRadius: BorderRadius.circular(_kSmRadius),

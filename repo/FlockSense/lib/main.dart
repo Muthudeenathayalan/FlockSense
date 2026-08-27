@@ -15,7 +15,9 @@ Future<void> main() async {
   // 1. Firebase core init.
   try {
     if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
     }
   } catch (e) {
     if (!e.toString().contains('duplicate-app')) {

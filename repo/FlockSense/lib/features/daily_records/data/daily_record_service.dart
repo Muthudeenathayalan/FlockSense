@@ -212,10 +212,7 @@ class DailyRecordService {
           createdAt: DateTime.now(),
           relatedFarmId: farmId,
           relatedBatchId: batchId,
-          metadata: {
-            'currentLevel': dgLevelLiters,
-            'generatorName': dgName,
-          },
+          metadata: {'currentLevel': dgLevelLiters, 'generatorName': dgName},
         );
         await NotificationFirestoreService.saveNotification(notif);
         await NotificationService.checkLowDgFuelAlert(
@@ -260,7 +257,9 @@ class DailyRecordService {
           reason: 'Feed Used (Daily Telemetry Log)',
         );
       }
-      if (medicineGiven && medicineName != null && medicineName.trim().isNotEmpty) {
+      if (medicineGiven &&
+          medicineName != null &&
+          medicineName.trim().isNotEmpty) {
         await invService.autoDeductStock(
           uid: uid,
           farmId: farmId,
@@ -270,7 +269,9 @@ class DailyRecordService {
           reason: 'Medicine Used (${medicineName.trim()})',
         );
       }
-      if (vaccineGiven && vaccineName != null && vaccineName.trim().isNotEmpty) {
+      if (vaccineGiven &&
+          vaccineName != null &&
+          vaccineName.trim().isNotEmpty) {
         await invService.autoDeductStock(
           uid: uid,
           farmId: farmId,
@@ -326,9 +327,11 @@ class DailyRecordService {
     if (user == null) return;
 
     try {
-      final stream = _dailyRecordsRef(user.uid, farmId, batchId)
-          .orderBy('recordDate', descending: true)
-          .snapshots();
+      final stream = _dailyRecordsRef(
+        user.uid,
+        farmId,
+        batchId,
+      ).orderBy('recordDate', descending: true).snapshots();
 
       await for (final snap in stream) {
         final list = snap.docs
@@ -343,12 +346,12 @@ class DailyRecordService {
   }
 
   /// Stream ALL daily records across user farms
-  static Stream<List<DailyRecordModel>> watchAllUserDailyRecords(String uid) async* {
+  static Stream<List<DailyRecordModel>> watchAllUserDailyRecords(
+    String uid,
+  ) async* {
     yield const [];
     try {
-      final stream = _db
-          .collectionGroup('dailyRecords')
-          .snapshots();
+      final stream = _db.collectionGroup('dailyRecords').snapshots();
 
       await for (final snap in stream) {
         final list = snap.docs
@@ -395,7 +398,9 @@ class DailyRecordService {
   }
 
   static Future<int> getTodayMortalityCount(String uid) async {
-    final effectiveUid = uid.isNotEmpty ? uid : (_auth.currentUser?.uid ?? 'local_user');
+    final effectiveUid = uid.isNotEmpty
+        ? uid
+        : (_auth.currentUser?.uid ?? 'local_user');
     final farms = await _db
         .collection('users')
         .doc(effectiveUid)

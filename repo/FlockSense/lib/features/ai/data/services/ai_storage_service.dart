@@ -25,7 +25,8 @@ class AiStorageService {
 
     if (user != null) {
       try {
-        final storagePath = 'users/${user.uid}/ai_uploads/$conversationId/$fileId-$fileName';
+        final storagePath =
+            'users/${user.uid}/ai_uploads/$conversationId/$fileId-$fileName';
         final ref = _storage.ref().child(storagePath);
 
         final uploadTask = await ref.putFile(
@@ -49,7 +50,9 @@ class AiStorageService {
     // Local copy if storage fails or offline
     if (downloadUrl.isEmpty) {
       final appDir = await getTemporaryDirectory();
-      final localSavedFile = await file.copy('${appDir.path}/$fileId-$fileName');
+      final localSavedFile = await file.copy(
+        '${appDir.path}/$fileId-$fileName',
+      );
       downloadUrl = 'file://${localSavedFile.path}';
     }
 

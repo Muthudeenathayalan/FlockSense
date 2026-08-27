@@ -29,12 +29,16 @@ class CalendarNotificationService {
   }
 
   /// Schedule a local notification for a calendar event
-  static Future<void> scheduleEventNotification(CalendarEventModel event) async {
+  static Future<void> scheduleEventNotification(
+    CalendarEventModel event,
+  ) async {
     try {
       if (event.isCompleted) return;
 
       final fullTime = event.fullDateTime;
-      final triggerTime = fullTime.subtract(Duration(minutes: event.reminderBeforeMinutes));
+      final triggerTime = fullTime.subtract(
+        Duration(minutes: event.reminderBeforeMinutes),
+      );
 
       if (triggerTime.isBefore(DateTime.now())) {
         return; // Don't schedule past notifications

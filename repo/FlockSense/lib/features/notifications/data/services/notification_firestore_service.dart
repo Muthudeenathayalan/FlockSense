@@ -11,13 +11,16 @@ class NotificationFirestoreService {
 
   static final List<NotificationModel> _localNotifications = [];
   static final List<ReminderModel> _localReminders = [];
-  static NotificationSettingsModel _localSettings = const NotificationSettingsModel();
+  static NotificationSettingsModel _localSettings =
+      const NotificationSettingsModel();
 
   // --- Notifications Stream & CRUD ---
   static Stream<List<NotificationModel>> streamNotifications() {
     final user = _auth.currentUser;
     if (user == null) {
-      return Stream<List<NotificationModel>>.value(List<NotificationModel>.unmodifiable(_localNotifications));
+      return Stream<List<NotificationModel>>.value(
+        List<NotificationModel>.unmodifiable(_localNotifications),
+      );
     }
 
     return _firestore
@@ -27,17 +30,26 @@ class NotificationFirestoreService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map<List<NotificationModel>>((snap) {
-      final list = snap.docs.map((doc) => NotificationModel.fromJson(doc.data())).toList();
-      return list.isEmpty ? List<NotificationModel>.unmodifiable(_localNotifications) : list;
-    }).handleError((err) {
-      debugPrint('[NotificationFirestoreService] streamNotifications error: $err');
-      return List<NotificationModel>.unmodifiable(_localNotifications);
-    });
+          final list = snap.docs
+              .map((doc) => NotificationModel.fromJson(doc.data()))
+              .toList();
+          return list.isEmpty
+              ? List<NotificationModel>.unmodifiable(_localNotifications)
+              : list;
+        })
+        .handleError((err) {
+          debugPrint(
+            '[NotificationFirestoreService] streamNotifications error: $err',
+          );
+          return List<NotificationModel>.unmodifiable(_localNotifications);
+        });
   }
 
   static Future<void> saveNotification(NotificationModel notification) async {
     final user = _auth.currentUser;
-    final index = _localNotifications.indexWhere((n) => n.id == notification.id);
+    final index = _localNotifications.indexWhere(
+      (n) => n.id == notification.id,
+    );
     if (index >= 0) {
       _localNotifications[index] = notification;
     } else {
@@ -53,7 +65,9 @@ class NotificationFirestoreService {
             .doc(notification.id)
             .set(notification.toJson());
       } catch (e) {
-        debugPrint('[NotificationFirestoreService] saveNotification failed: $e');
+        debugPrint(
+          '[NotificationFirestoreService] saveNotification failed: $e',
+        );
       }
     }
   }
@@ -61,7 +75,9 @@ class NotificationFirestoreService {
   static Future<void> markAsRead(String notificationId) async {
     final index = _localNotifications.indexWhere((n) => n.id == notificationId);
     if (index >= 0) {
-      _localNotifications[index] = _localNotifications[index].copyWith(status: NotificationStatus.read);
+      _localNotifications[index] = _localNotifications[index].copyWith(
+        status: NotificationStatus.read,
+      );
     }
 
     final user = _auth.currentUser;
@@ -81,7 +97,9 @@ class NotificationFirestoreService {
 
   static Future<void> markAllAsRead() async {
     for (var i = 0; i < _localNotifications.length; i++) {
-      _localNotifications[i] = _localNotifications[i].copyWith(status: NotificationStatus.read);
+      _localNotifications[i] = _localNotifications[i].copyWith(
+        status: NotificationStatus.read,
+      );
     }
 
     final user = _auth.currentUser;
@@ -109,7 +127,9 @@ class NotificationFirestoreService {
     final index = _localNotifications.indexWhere((n) => n.id == notificationId);
     if (index >= 0) {
       final current = _localNotifications[index];
-      final newStatus = current.status == NotificationStatus.pinned ? NotificationStatus.read : NotificationStatus.pinned;
+      final newStatus = current.status == NotificationStatus.pinned
+          ? NotificationStatus.read
+          : NotificationStatus.pinned;
       _localNotifications[index] = current.copyWith(status: newStatus);
 
       final user = _auth.currentUser;
@@ -131,7 +151,9 @@ class NotificationFirestoreService {
   static Future<void> archiveNotification(String notificationId) async {
     final index = _localNotifications.indexWhere((n) => n.id == notificationId);
     if (index >= 0) {
-      _localNotifications[index] = _localNotifications[index].copyWith(status: NotificationStatus.archived);
+      _localNotifications[index] = _localNotifications[index].copyWith(
+        status: NotificationStatus.archived,
+      );
     }
 
     final user = _auth.currentUser;
@@ -144,7 +166,9 @@ class NotificationFirestoreService {
             .doc(notificationId)
             .update({'status': NotificationStatus.archived.name});
       } catch (e) {
-        debugPrint('[NotificationFirestoreService] archiveNotification failed: $e');
+        debugPrint(
+          '[NotificationFirestoreService] archiveNotification failed: $e',
+        );
       }
     }
   }
@@ -162,7 +186,9 @@ class NotificationFirestoreService {
             .doc(notificationId)
             .delete();
       } catch (e) {
-        debugPrint('[NotificationFirestoreService] deleteNotification failed: $e');
+        debugPrint(
+          '[NotificationFirestoreService] deleteNotification failed: $e',
+        );
       }
     }
   }
@@ -171,7 +197,9 @@ class NotificationFirestoreService {
   static Stream<List<ReminderModel>> streamReminders() {
     final user = _auth.currentUser;
     if (user == null) {
-      return Stream<List<ReminderModel>>.value(List<ReminderModel>.unmodifiable(_localReminders));
+      return Stream<List<ReminderModel>>.value(
+        List<ReminderModel>.unmodifiable(_localReminders),
+      );
     }
 
     return _firestore
@@ -181,12 +209,19 @@ class NotificationFirestoreService {
         .orderBy('date', descending: false)
         .snapshots()
         .map<List<ReminderModel>>((snap) {
-      final list = snap.docs.map((doc) => ReminderModel.fromJson(doc.data())).toList();
-      return list.isEmpty ? List<ReminderModel>.unmodifiable(_localReminders) : list;
-    }).handleError((err) {
-      debugPrint('[NotificationFirestoreService] streamReminders error: $err');
-      return List<ReminderModel>.unmodifiable(_localReminders);
-    });
+          final list = snap.docs
+              .map((doc) => ReminderModel.fromJson(doc.data()))
+              .toList();
+          return list.isEmpty
+              ? List<ReminderModel>.unmodifiable(_localReminders)
+              : list;
+        })
+        .handleError((err) {
+          debugPrint(
+            '[NotificationFirestoreService] streamReminders error: $err',
+          );
+          return List<ReminderModel>.unmodifiable(_localReminders);
+        });
   }
 
   static Future<void> createReminder(ReminderModel reminder) async {
@@ -224,7 +259,9 @@ class NotificationFirestoreService {
               .doc(reminderId)
               .update({'isCompleted': updated.isCompleted});
         } catch (e) {
-          debugPrint('[NotificationFirestoreService] toggleReminderCompletion failed: $e');
+          debugPrint(
+            '[NotificationFirestoreService] toggleReminderCompletion failed: $e',
+          );
         }
       }
     }
@@ -261,7 +298,11 @@ class NotificationFirestoreService {
         .collection('notification_settings')
         .doc('general')
         .snapshots()
-        .map((doc) => doc.exists ? NotificationSettingsModel.fromJson(doc.data()!) : _localSettings)
+        .map(
+          (doc) => doc.exists
+              ? NotificationSettingsModel.fromJson(doc.data()!)
+              : _localSettings,
+        )
         .handleError((err) => _localSettings);
   }
 

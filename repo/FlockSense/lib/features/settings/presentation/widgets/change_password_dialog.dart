@@ -62,7 +62,8 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
               obscureText: true,
               showObscureToggle: true,
               labelText: 'New Password',
-              validator: (v) => v != null && v.length >= 6 ? null : 'Min 6 characters',
+              validator: (v) =>
+                  v != null && v.length >= 6 ? null : 'Min 6 characters',
             ),
             const SizedBox(height: 14),
             AppTextField(
@@ -70,7 +71,8 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
               obscureText: true,
               showObscureToggle: true,
               labelText: 'Confirm New Password',
-              validator: (v) => v == _passController.text ? null : 'Passwords do not match',
+              validator: (v) =>
+                  v == _passController.text ? null : 'Passwords do not match',
             ),
           ],
         ),
@@ -94,4 +96,3 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
     );
   }
 }
-

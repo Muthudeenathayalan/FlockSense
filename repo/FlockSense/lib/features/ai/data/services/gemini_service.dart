@@ -55,26 +55,21 @@ class GeminiService {
           final base64String = base64Encode(bytes);
 
           parts.add({
-            'inline_data': {
-              'mime_type': mime,
-              'data': base64String,
-            }
+            'inline_data': {'mime_type': mime, 'data': base64String},
           });
         }
       }
 
       final body = {
         'contents': [
-          {
-            'parts': parts,
-          }
+          {'parts': parts},
         ],
         'generationConfig': {
           'temperature': 0.7,
           'topK': 40,
           'topP': 0.95,
           'maxOutputTokens': 2048,
-        }
+        },
       };
 
       final response = await http
@@ -100,10 +95,14 @@ class GeminiService {
         }
         return 'No response text returned from Gemini API.';
       } else if (response.statusCode == 400 || response.statusCode == 403) {
-        debugPrint('[GeminiService] API Key error ${response.statusCode}: ${response.body}');
+        debugPrint(
+          '[GeminiService] API Key error ${response.statusCode}: ${response.body}',
+        );
         return _generateOfflineSmartResponse(prompt, contextSnapshot);
       } else {
-        debugPrint('[GeminiService] HTTP Error ${response.statusCode}: ${response.body}');
+        debugPrint(
+          '[GeminiService] HTTP Error ${response.statusCode}: ${response.body}',
+        );
         return _generateOfflineSmartResponse(prompt, contextSnapshot);
       }
     } catch (e) {
@@ -113,10 +112,15 @@ class GeminiService {
   }
 
   /// High-performance offline expert intelligence engine fallback
-  static String _generateOfflineSmartResponse(String prompt, String contextSnapshot) {
+  static String _generateOfflineSmartResponse(
+    String prompt,
+    String contextSnapshot,
+  ) {
     final query = prompt.toLowerCase();
 
-    if (query.contains('mortality') || query.contains('dying') || query.contains('death')) {
+    if (query.contains('mortality') ||
+        query.contains('dying') ||
+        query.contains('death')) {
       return '''### ⚠️ Mortality & Biosecurity Analysis
 
 Based on your live farm telemetry:
@@ -128,7 +132,9 @@ Based on your live farm telemetry:
   4. **Post-Mortem Steps:** Inspect liver, trachea, and gut tract for viral or bacterial lesions.
 
 [CHART: mortality]''';
-    } else if (query.contains('feed') || query.contains('fcr') || query.contains('nutrition')) {
+    } else if (query.contains('feed') ||
+        query.contains('fcr') ||
+        query.contains('nutrition')) {
       return '''### 🌾 Feed Efficiency & FCR Breakdown
 
 - **Feed Conversion Ratio (FCR):** Target FCR for Cobb 500 is **1.55 - 1.60**.
@@ -138,7 +144,10 @@ Based on your live farm telemetry:
   3. **Toxin Binders:** Mix quality mold/mycotoxin binder in feed during monsoon or high-humidity periods.
 
 [CHART: feed]''';
-    } else if (query.contains('weight') || query.contains('growth') || query.contains('adg') || query.contains('gain')) {
+    } else if (query.contains('weight') ||
+        query.contains('growth') ||
+        query.contains('adg') ||
+        query.contains('gain')) {
       return '''### 📈 Bird Weight Growth & ADG Assessment
 
 - **Average Daily Gain (ADG):** Target ADG is **55g/day**.
@@ -148,7 +157,10 @@ Based on your live farm telemetry:
   3. **Water Intake Ratio:** Maintain a **2:1 water-to-feed ratio**.
 
 [CHART: weight]''';
-    } else if (query.contains('profit') || query.contains('expense') || query.contains('finance') || query.contains('cost')) {
+    } else if (query.contains('profit') ||
+        query.contains('expense') ||
+        query.contains('finance') ||
+        query.contains('cost')) {
       return '''### 💰 Profitability & Cost Optimization
 
 - **Cost Breakdown:** Feed accounts for ~70% of total operating expenses.
@@ -158,7 +170,9 @@ Based on your live farm telemetry:
   3. **Sales Timing:** Target 2.1kg - 2.3kg live weight for optimal market price per kg.
 
 [CHART: profit]''';
-    } else if (query.contains('vaccine') || query.contains('vaccination') || query.contains('medicine')) {
+    } else if (query.contains('vaccine') ||
+        query.contains('vaccination') ||
+        query.contains('medicine')) {
       return '''### 💉 Vaccination & Health Schedule Advisor
 
 - **Standard Broiler Schedule:**

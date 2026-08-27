@@ -10,9 +10,7 @@ class DgFuelTrendChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dgRecords = records
-        .where((r) => r.dgLevelLiters != null)
-        .toList()
+    final dgRecords = records.where((r) => r.dgLevelLiters != null).toList()
       ..sort((a, b) => a.recordDate.compareTo(b.recordDate));
 
     if (dgRecords.isEmpty) {
@@ -43,11 +41,19 @@ class DgFuelTrendChart extends StatelessWidget {
         children: [
           const Row(
             children: [
-              Icon(Icons.electric_bolt_outlined, color: AppColors.primary, size: 20),
+              Icon(
+                Icons.electric_bolt_outlined,
+                color: AppColors.primary,
+                size: 20,
+              ),
               SizedBox(width: 8),
               Text(
                 'DG Fuel Level Trend (Liters)',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ],
           ),
@@ -58,8 +64,12 @@ class DgFuelTrendChart extends StatelessWidget {
               LineChartData(
                 gridData: const FlGridData(show: true, drawVerticalLine: false),
                 titlesData: const FlTitlesData(
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [

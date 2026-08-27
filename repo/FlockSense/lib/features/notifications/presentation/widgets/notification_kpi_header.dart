@@ -32,13 +32,33 @@ class NotificationKpiHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _buildItem('Unread', '$unreadCount', Icons.mark_email_unread_outlined, const Color(0xFF1B5E20)),
+          _buildItem(
+            'Unread',
+            '$unreadCount',
+            Icons.mark_email_unread_outlined,
+            const Color(0xFF1B5E20),
+          ),
           _buildDivider(),
-          _buildItem("Today's", '$todayAlertsCount', Icons.today_outlined, const Color(0xFF00838F)),
+          _buildItem(
+            "Today's",
+            '$todayAlertsCount',
+            Icons.today_outlined,
+            const Color(0xFF00838F),
+          ),
           _buildDivider(),
-          _buildItem('Critical', '$criticalAlertsCount', Icons.warning_amber_rounded, const Color(0xFFE65100)),
+          _buildItem(
+            'Critical',
+            '$criticalAlertsCount',
+            Icons.warning_amber_rounded,
+            const Color(0xFFE65100),
+          ),
           _buildDivider(),
-          _buildItem('Reminders', '$completedRemindersCount', Icons.task_alt_outlined, Colors.purple.shade700),
+          _buildItem(
+            'Reminders',
+            '$completedRemindersCount',
+            Icons.task_alt_outlined,
+            Colors.purple.shade700,
+          ),
         ],
       ),
     );
@@ -55,14 +75,22 @@ class NotificationKpiHeader extends StatelessWidget {
               const SizedBox(width: 4),
               Text(
                 value,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: color),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: color,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 2),
           Text(
             label.toUpperCase(),
-            style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.black54),
+            style: const TextStyle(
+              fontSize: 8,
+              fontWeight: FontWeight.bold,
+              color: Colors.black54,
+            ),
           ),
         ],
       ),
@@ -70,10 +98,6 @@ class NotificationKpiHeader extends StatelessWidget {
   }
 
   Widget _buildDivider() {
-    return Container(
-      height: 24,
-      width: 1,
-      color: Colors.grey.shade300,
-    );
+    return Container(height: 24, width: 1, color: Colors.grey.shade300);
   }
 }

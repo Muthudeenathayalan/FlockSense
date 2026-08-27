@@ -17,7 +17,9 @@ class CalendarViewModeNotifier extends Notifier<CalendarViewMode> {
 }
 
 final calendarViewModeProvider =
-    NotifierProvider<CalendarViewModeNotifier, CalendarViewMode>(CalendarViewModeNotifier.new);
+    NotifierProvider<CalendarViewModeNotifier, CalendarViewMode>(
+      CalendarViewModeNotifier.new,
+    );
 
 class CalendarSelectedDateNotifier extends Notifier<DateTime> {
   @override
@@ -26,7 +28,9 @@ class CalendarSelectedDateNotifier extends Notifier<DateTime> {
 }
 
 final calendarSelectedDateProvider =
-    NotifierProvider<CalendarSelectedDateNotifier, DateTime>(CalendarSelectedDateNotifier.new);
+    NotifierProvider<CalendarSelectedDateNotifier, DateTime>(
+      CalendarSelectedDateNotifier.new,
+    );
 
 class CalendarSearchQueryNotifier extends Notifier<String> {
   @override
@@ -35,7 +39,9 @@ class CalendarSearchQueryNotifier extends Notifier<String> {
 }
 
 final calendarSearchQueryProvider =
-    NotifierProvider<CalendarSearchQueryNotifier, String>(CalendarSearchQueryNotifier.new);
+    NotifierProvider<CalendarSearchQueryNotifier, String>(
+      CalendarSearchQueryNotifier.new,
+    );
 
 class CalendarEventFilterNotifier extends Notifier<String> {
   @override
@@ -44,7 +50,9 @@ class CalendarEventFilterNotifier extends Notifier<String> {
 }
 
 final calendarEventFilterProvider =
-    NotifierProvider<CalendarEventFilterNotifier, String>(CalendarEventFilterNotifier.new);
+    NotifierProvider<CalendarEventFilterNotifier, String>(
+      CalendarEventFilterNotifier.new,
+    );
 
 class CalendarSortNotifier extends Notifier<String> {
   @override
@@ -52,87 +60,103 @@ class CalendarSortNotifier extends Notifier<String> {
   void setSort(String sort) => state = sort;
 }
 
-final calendarSortProvider =
-    NotifierProvider<CalendarSortNotifier, String>(CalendarSortNotifier.new);
+final calendarSortProvider = NotifierProvider<CalendarSortNotifier, String>(
+  CalendarSortNotifier.new,
+);
 
-final calendarStreamProvider = StreamProvider.autoDispose<List<CalendarEventModel>>((ref) {
-  final authState = ref.watch(authStateProvider);
-  final activeFarmId = ref.watch(activeFarmIdProvider).value;
-  final service = ref.watch(calendarServiceProvider);
+final calendarStreamProvider =
+    StreamProvider.autoDispose<List<CalendarEventModel>>((ref) {
+      final authState = ref.watch(authStateProvider);
+      final activeFarmId = ref.watch(activeFarmIdProvider).value;
+      final service = ref.watch(calendarServiceProvider);
 
-  final uid = authState.value?.uid ?? 'guest_user';
-  return service.watchCalendarEvents(uid: uid, farmId: activeFarmId);
-});
+      final uid = authState.value?.uid ?? 'guest_user';
+      return service.watchCalendarEvents(uid: uid, farmId: activeFarmId);
+    });
 
-final filteredCalendarEventsProvider = Provider.autoDispose<List<CalendarEventModel>>((ref) {
-  final events = ref.watch(calendarStreamProvider).value ?? [];
-  final selectedDate = ref.watch(calendarSelectedDateProvider);
-  final query = ref.watch(calendarSearchQueryProvider).toLowerCase().trim();
-  final filter = ref.watch(calendarEventFilterProvider);
-  final sort = ref.watch(calendarSortProvider);
-  final viewMode = ref.watch(calendarViewModeProvider);
+final filteredCalendarEventsProvider =
+    Provider.autoDispose<List<CalendarEventModel>>((ref) {
+      final events = ref.watch(calendarStreamProvider).value ?? [];
+      final selectedDate = ref.watch(calendarSelectedDateProvider);
+      final query = ref.watch(calendarSearchQueryProvider).toLowerCase().trim();
+      final filter = ref.watch(calendarEventFilterProvider);
+      final sort = ref.watch(calendarSortProvider);
+      final viewMode = ref.watch(calendarViewModeProvider);
 
-  final now = DateTime.now();
-  final todayStart = DateTime(now.year, now.month, now.day);
-  final tomorrowStart = todayStart.add(const Duration(days: 1));
-  final weekEnd = todayStart.add(const Duration(days: 7));
+      final now = DateTime.now();
+      final todayStart = DateTime(now.year, now.month, now.day);
+      final tomorrowStart = todayStart.add(const Duration(days: 1));
+      final weekEnd = todayStart.add(const Duration(days: 7));
 
-  var result = events.where((e) {
-    // Search matching
-    final matchesQuery = query.isEmpty ||
-        e.title.toLowerCase().contains(query) ||
-        e.eventType.toLowerCase().contains(query) ||
-        (e.description?.toLowerCase().contains(query) ?? false);
+      var result = events.where((e) {
+        // Search matching
+        final matchesQuery =
+            query.isEmpty ||
+            e.title.toLowerCase().contains(query) ||
+            e.eventType.toLowerCase().contains(query) ||
+            (e.description?.toLowerCase().contains(query) ?? false);
 
-    if (!matchesQuery) return false;
+        if (!matchesQuery) return false;
 
-    // View mode date filtering
-    if (viewMode == CalendarViewMode.day) {
-      final isSameDay = e.eventDate.year == selectedDate.year &&
-          e.eventDate.month == selectedDate.month &&
-          e.eventDate.day == selectedDate.day;
-      if (!isSameDay) return false;
-    }
+        // View mode date filtering
+        if (viewMode == CalendarViewMode.day) {
+          final isSameDay =
+              e.eventDate.year == selectedDate.year &&
+              e.eventDate.month == selectedDate.month &&
+              e.eventDate.day == selectedDate.day;
+          if (!isSameDay) return false;
+        }
 
-    // Category / Date Filter matching
-    switch (filter) {
-      case 'Today':
-        return e.eventDate.year == todayStart.year &&
-            e.eventDate.month == todayStart.month &&
-            e.eventDate.day == todayStart.day;
-      case 'Tomorrow':
-        return e.eventDate.year == tomorrowStart.year &&
-            e.eventDate.month == tomorrowStart.month &&
-            e.eventDate.day == tomorrowStart.day;
-      case 'This Week':
-        return e.eventDate.isAfter(todayStart.subtract(const Duration(seconds: 1))) &&
-            e.eventDate.isBefore(weekEnd);
-      case 'This Month':
-        return e.eventDate.year == now.year && e.eventDate.month == now.month;
-      case 'Completed':
-        return e.isCompleted;
-      case 'All':
-        return true;
-      default:
-        return e.eventType.toLowerCase() == filter.toLowerCase();
-    }
-  }).toList();
+        // Category / Date Filter matching
+        switch (filter) {
+          case 'Today':
+            return e.eventDate.year == todayStart.year &&
+                e.eventDate.month == todayStart.month &&
+                e.eventDate.day == todayStart.day;
+          case 'Tomorrow':
+            return e.eventDate.year == tomorrowStart.year &&
+                e.eventDate.month == tomorrowStart.month &&
+                e.eventDate.day == tomorrowStart.day;
+          case 'This Week':
+            return e.eventDate.isAfter(
+                  todayStart.subtract(const Duration(seconds: 1)),
+                ) &&
+                e.eventDate.isBefore(weekEnd);
+          case 'This Month':
+            return e.eventDate.year == now.year &&
+                e.eventDate.month == now.month;
+          case 'Completed':
+            return e.isCompleted;
+          case 'All':
+            return true;
+          default:
+            return e.eventType.toLowerCase() == filter.toLowerCase();
+        }
+      }).toList();
 
-  // Sorting
-  switch (sort) {
-    case 'Priority':
-      final priorityWeight = {'urgent': 4, 'high': 3, 'medium': 2, 'low': 1};
-      result.sort((a, b) => (priorityWeight[b.priority.toLowerCase()] ?? 0)
-          .compareTo(priorityWeight[a.priority.toLowerCase()] ?? 0));
-      break;
-    case 'Date':
-    default:
-      result.sort((a, b) => a.eventDate.compareTo(b.eventDate));
-      break;
-  }
+      // Sorting
+      switch (sort) {
+        case 'Priority':
+          final priorityWeight = {
+            'urgent': 4,
+            'high': 3,
+            'medium': 2,
+            'low': 1,
+          };
+          result.sort(
+            (a, b) => (priorityWeight[b.priority.toLowerCase()] ?? 0).compareTo(
+              priorityWeight[a.priority.toLowerCase()] ?? 0,
+            ),
+          );
+          break;
+        case 'Date':
+        default:
+          result.sort((a, b) => a.eventDate.compareTo(b.eventDate));
+          break;
+      }
 
-  return result;
-});
+      return result;
+    });
 
 class CalendarStats {
   final int todaysEvents;

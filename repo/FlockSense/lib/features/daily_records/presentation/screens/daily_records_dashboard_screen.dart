@@ -16,14 +16,70 @@ import 'package:flock_sense/features/farms/domain/farm_model.dart';
 import 'package:flock_sense/features/home/presentation/providers/home_dashboard_provider.dart';
 
 enum LogRecordType {
-  feed('Feed Intake', '🌾', Icons.restaurant_outlined, Color(0xFFD97706), Color(0xFFFFFBEB), 'Track feed type, bags & total kg'),
-  water('Water Intake', '💧', Icons.water_drop_outlined, Color(0xFF2563EB), Color(0xFFEFF6FF), 'Log daily water usage (Liters)'),
-  mortality('Mortality', '☠️', Icons.sick_outlined, Color(0xFFDC2626), Color(0xFFFEF2F2), 'Record dead birds & causes'),
-  medicine('Medicine', '💊', Icons.medication_outlined, Color(0xFF7C3AED), Color(0xFFF5F3FF), 'Treatments & supplements'),
-  vaccine('Vaccination', '💉', Icons.vaccines_outlined, Color(0xFF0D9488), Color(0xFFF0FDFA), 'Track vaccine doses & batch #'),
-  weight('Body Weight', '⚖️', Icons.monitor_weight_outlined, Color(0xFF4F46E5), Color(0xFFEEF2FF), 'Sample weight & growth metrics'),
-  notes('Shed Notes', '📝', Icons.notes_outlined, Color(0xFF059669), Color(0xFFECFDF5), 'Observations & remarks'),
-  dg('DG Generator', '⚡', Icons.electric_bolt_outlined, Color(0xFFEA580C), Color(0xFFFFF7ED), 'Diesel level & running hours');
+  feed(
+    'Feed Intake',
+    '🌾',
+    Icons.restaurant_outlined,
+    Color(0xFFD97706),
+    Color(0xFFFFFBEB),
+    'Track feed type, bags & total kg',
+  ),
+  water(
+    'Water Intake',
+    '💧',
+    Icons.water_drop_outlined,
+    Color(0xFF2563EB),
+    Color(0xFFEFF6FF),
+    'Log daily water usage (Liters)',
+  ),
+  mortality(
+    'Mortality',
+    '☠️',
+    Icons.sick_outlined,
+    Color(0xFFDC2626),
+    Color(0xFFFEF2F2),
+    'Record dead birds & causes',
+  ),
+  medicine(
+    'Medicine',
+    '💊',
+    Icons.medication_outlined,
+    Color(0xFF7C3AED),
+    Color(0xFFF5F3FF),
+    'Treatments & supplements',
+  ),
+  vaccine(
+    'Vaccination',
+    '💉',
+    Icons.vaccines_outlined,
+    Color(0xFF0D9488),
+    Color(0xFFF0FDFA),
+    'Track vaccine doses & batch #',
+  ),
+  weight(
+    'Body Weight',
+    '⚖️',
+    Icons.monitor_weight_outlined,
+    Color(0xFF4F46E5),
+    Color(0xFFEEF2FF),
+    'Sample weight & growth metrics',
+  ),
+  notes(
+    'Shed Notes',
+    '📝',
+    Icons.notes_outlined,
+    Color(0xFF059669),
+    Color(0xFFECFDF5),
+    'Observations & remarks',
+  ),
+  dg(
+    'DG Generator',
+    '⚡',
+    Icons.electric_bolt_outlined,
+    Color(0xFFEA580C),
+    Color(0xFFFFF7ED),
+    'Diesel level & running hours',
+  );
 
   final String title;
   final String emoji;
@@ -170,10 +226,12 @@ class _DailyRecordsDashboardScreenState
     if (record.feedConsumedKg > 0 || record.feedType != null) {
       _isDailyOpsSelected = true;
       _feedTypeController.text = record.feedType ?? 'Broiler Starter';
-      _feedQuantityController.text =
-          record.feedConsumedKg > 0 ? record.feedConsumedKg.toString() : '';
-      _feedCostController.text =
-          record.feedCost != null ? record.feedCost.toString() : '';
+      _feedQuantityController.text = record.feedConsumedKg > 0
+          ? record.feedConsumedKg.toString()
+          : '';
+      _feedCostController.text = record.feedCost != null
+          ? record.feedCost.toString()
+          : '';
       _feedNotesController.text = record.notes ?? '';
     }
     if (record.waterConsumedLiters > 0 || record.waterSource != null) {
@@ -184,8 +242,9 @@ class _DailyRecordsDashboardScreenState
       _waterNotesController.text = record.notes ?? '';
     }
     if (record.mortalityCount > 0 || record.mortalityCause != null) {
-      _mortalityCountController.text =
-          record.mortalityCount > 0 ? record.mortalityCount.toString() : '';
+      _mortalityCountController.text = record.mortalityCount > 0
+          ? record.mortalityCount.toString()
+          : '';
       _mortalityReasonController.text = record.mortalityCause ?? '';
       _mortalityNotesController.text = record.notes ?? '';
     }
@@ -197,8 +256,9 @@ class _DailyRecordsDashboardScreenState
           ? record.medicineQuantity.toString()
           : '';
       _medicinePurposeController.text = record.medicineReason ?? '';
-      _medicineCostController.text =
-          record.medicineCost != null ? record.medicineCost.toString() : '';
+      _medicineCostController.text = record.medicineCost != null
+          ? record.medicineCost.toString()
+          : '';
       _medicineNotesController.text = record.notes ?? '';
     } else if (record.vaccineGiven || record.vaccineName != null) {
       _isDailyOpsSelected = false;
@@ -211,14 +271,17 @@ class _DailyRecordsDashboardScreenState
       _isDailyOpsSelected = false;
       _selectedOptionalType = LogRecordType.weight;
       _weightAvgGramsController.text = record.avgWeightGrams.toString();
-      _weightSampleCountController.text =
-          record.sampleBirds != null ? record.sampleBirds.toString() : '';
+      _weightSampleCountController.text = record.sampleBirds != null
+          ? record.sampleBirds.toString()
+          : '';
       _weightNotesController.text = record.notes ?? '';
     } else if (record.dgLevelLiters != null || record.dgName != null) {
-      _dgLevelController.text =
-          record.dgLevelLiters != null ? record.dgLevelLiters.toString() : '';
-      _dgAddedController.text =
-          record.dgAddedLiters != null ? record.dgAddedLiters.toString() : '';
+      _dgLevelController.text = record.dgLevelLiters != null
+          ? record.dgLevelLiters.toString()
+          : '';
+      _dgAddedController.text = record.dgAddedLiters != null
+          ? record.dgAddedLiters.toString()
+          : '';
       _dgHoursController.text = record.dgRunningHours != null
           ? record.dgRunningHours.toString()
           : '';
@@ -287,11 +350,17 @@ class _DailyRecordsDashboardScreenState
       }
       if (!mounted) return;
 
-      final activeFarmId = widget.initialFarmId ??
-          (lastFarmId != null && farms.any((f) => f.id == lastFarmId) ? lastFarmId : null) ??
+      final activeFarmId =
+          widget.initialFarmId ??
+          (lastFarmId != null && farms.any((f) => f.id == lastFarmId)
+              ? lastFarmId
+              : null) ??
           ref.read(activeFarmIdProvider).asData?.value ??
           farms.first.id;
-      final farm = farms.firstWhere((f) => f.id == activeFarmId, orElse: () => farms.first);
+      final farm = farms.firstWhere(
+        (f) => f.id == activeFarmId,
+        orElse: () => farms.first,
+      );
 
       _farms = farms;
       _selectedFarm = farm;
@@ -302,8 +371,11 @@ class _DailyRecordsDashboardScreenState
 
       // Auto-skip Step 1 if there's only 1 farm and 1 active batch
       if (mounted) {
-        final activeBatches = _batches.where((b) => b.status != 'archived').toList();
-        if (_farms.length == 1 && (activeBatches.length == 1 || _batches.length == 1)) {
+        final activeBatches = _batches
+            .where((b) => b.status != 'archived')
+            .toList();
+        if (_farms.length == 1 &&
+            (activeBatches.length == 1 || _batches.length == 1)) {
           _currentStep = 1;
         }
       }
@@ -320,12 +392,14 @@ class _DailyRecordsDashboardScreenState
     }
   }
 
-  Future<void> _loadBatchesForFarm(String farmId, {String? targetBatchId}) async {
+  Future<void> _loadBatchesForFarm(
+    String farmId, {
+    String? targetBatchId,
+  }) async {
     try {
-      var batches = await BatchService.getBatchesByFarmId(farmId).timeout(
-        const Duration(seconds: 3),
-        onTimeout: () => [_defaultBatch],
-      );
+      var batches = await BatchService.getBatchesByFarmId(
+        farmId,
+      ).timeout(const Duration(seconds: 3), onTimeout: () => [_defaultBatch]);
       if (batches.isEmpty) {
         batches = [_defaultBatch];
       }
@@ -333,7 +407,10 @@ class _DailyRecordsDashboardScreenState
       setState(() {
         _batches = batches;
         final selected = targetBatchId != null
-            ? batches.firstWhere((b) => b.id == targetBatchId, orElse: () => batches.first)
+            ? batches.firstWhere(
+                (b) => b.id == targetBatchId,
+                orElse: () => batches.first,
+              )
             : batches.first;
         _selectedBatch = selected;
         ref.read(dailyRecordBatchIdProvider.notifier).selectBatch(selected.id);
@@ -386,7 +463,8 @@ class _DailyRecordsDashboardScreenState
   // Validity checks for Path A (Daily Operations Log Bundle)
   bool get _isFeedValid => _feedQuantityController.text.trim().isNotEmpty;
   bool get _isWaterValid => _waterQuantityController.text.trim().isNotEmpty;
-  bool get _isMortalityValid => _mortalityCountController.text.trim().isNotEmpty;
+  bool get _isMortalityValid =>
+      _mortalityCountController.text.trim().isNotEmpty;
   bool get _isDgValid =>
       _dgLevelController.text.trim().isNotEmpty ||
       _dgAddedController.text.trim().isNotEmpty ||
@@ -444,44 +522,50 @@ class _DailyRecordsDashboardScreenState
     setState(() {
       if (_isDailyOpsSelected) {
         // Pre-fill Feed, Water, and Weight ONLY
-        _feedTypeController.text = yesterdayRecord!.feedType ?? 'Broiler Starter';
+        _feedTypeController.text =
+            yesterdayRecord!.feedType ?? 'Broiler Starter';
         _feedQuantityController.text = yesterdayRecord.feedConsumedKg > 0
             ? (yesterdayRecord.feedConsumedKg % 1 == 0
-                ? yesterdayRecord.feedConsumedKg.toInt().toString()
-                : yesterdayRecord.feedConsumedKg.toString())
+                  ? yesterdayRecord.feedConsumedKg.toInt().toString()
+                  : yesterdayRecord.feedConsumedKg.toString())
             : '';
         _feedCostController.text = yesterdayRecord.feedCost != null
             ? (yesterdayRecord.feedCost! % 1 == 0
-                ? yesterdayRecord.feedCost!.toInt().toString()
-                : yesterdayRecord.feedCost!.toString())
+                  ? yesterdayRecord.feedCost!.toInt().toString()
+                  : yesterdayRecord.feedCost!.toString())
             : '';
         _feedNotesController.text = yesterdayRecord.notes ?? '';
 
         _waterQuantityController.text = yesterdayRecord.waterConsumedLiters > 0
             ? (yesterdayRecord.waterConsumedLiters % 1 == 0
-                ? yesterdayRecord.waterConsumedLiters.toInt().toString()
-                : yesterdayRecord.waterConsumedLiters.toString())
+                  ? yesterdayRecord.waterConsumedLiters.toInt().toString()
+                  : yesterdayRecord.waterConsumedLiters.toString())
             : '';
-        _waterSourceController.text = yesterdayRecord.waterSource ?? 'Main Borewell';
+        _waterSourceController.text =
+            yesterdayRecord.waterSource ?? 'Main Borewell';
 
         if (yesterdayRecord.avgWeightGrams > 0) {
-          _weightAvgGramsController.text = yesterdayRecord.avgWeightGrams % 1 == 0
+          _weightAvgGramsController.text =
+              yesterdayRecord.avgWeightGrams % 1 == 0
               ? yesterdayRecord.avgWeightGrams.toInt().toString()
               : yesterdayRecord.avgWeightGrams.toString();
         }
         if (yesterdayRecord.sampleBirds != null) {
-          _weightSampleCountController.text = yesterdayRecord.sampleBirds.toString();
+          _weightSampleCountController.text = yesterdayRecord.sampleBirds
+              .toString();
         }
 
         // Deliberately do NOT copy Mortality or Medicine/Vaccine
       } else if (_selectedOptionalType == LogRecordType.weight) {
         if (yesterdayRecord!.avgWeightGrams > 0) {
-          _weightAvgGramsController.text = yesterdayRecord.avgWeightGrams % 1 == 0
+          _weightAvgGramsController.text =
+              yesterdayRecord.avgWeightGrams % 1 == 0
               ? yesterdayRecord.avgWeightGrams.toInt().toString()
               : yesterdayRecord.avgWeightGrams.toString();
         }
         if (yesterdayRecord.sampleBirds != null) {
-          _weightSampleCountController.text = yesterdayRecord.sampleBirds.toString();
+          _weightSampleCountController.text = yesterdayRecord.sampleBirds
+              .toString();
         }
       }
     });
@@ -517,18 +601,22 @@ class _DailyRecordsDashboardScreenState
 
       final currentBirds = _selectedBatch!.currentBirds;
       final opening = existingRecord?.openingBirds ?? currentBirds;
-      final ageDay = DateTime.now().difference(_selectedBatch!.placementDate).inDays + 1;
+      final ageDay =
+          DateTime.now().difference(_selectedBatch!.placementDate).inDays + 1;
       final prevMortality = existingRecord?.mortalityCount ?? 0;
       final prevClosing = existingRecord?.closingBirds ?? opening;
       int loggedMortality = 0;
 
       if (_isDailyOpsSelected) {
         // Path A: Write all 4 daily operations in one bundle action
-        final rawFeedQty = double.tryParse(_feedQuantityController.text.trim()) ?? 0.0;
+        final rawFeedQty =
+            double.tryParse(_feedQuantityController.text.trim()) ?? 0.0;
         final feedKg = _feedUnit == 'bags' ? rawFeedQty * 50.0 : rawFeedQty;
         final feedCost = double.tryParse(_feedCostController.text.trim());
-        final waterL = double.tryParse(_waterQuantityController.text.trim()) ?? 0.0;
-        final mortalityCount = int.tryParse(_mortalityCountController.text.trim()) ?? 0;
+        final waterL =
+            double.tryParse(_waterQuantityController.text.trim()) ?? 0.0;
+        final mortalityCount =
+            int.tryParse(_mortalityCountController.text.trim()) ?? 0;
         loggedMortality = mortalityCount;
         final dgLevel = double.tryParse(_dgLevelController.text.trim());
         final dgAdded = double.tryParse(_dgAddedController.text.trim());
@@ -602,8 +690,11 @@ class _DailyRecordsDashboardScreenState
             notes = _vaccineNotesController.text.trim();
             break;
           case LogRecordType.weight:
-            avgWeight = double.tryParse(_weightAvgGramsController.text.trim()) ?? 0.0;
-            sampleCount = int.tryParse(_weightSampleCountController.text.trim());
+            avgWeight =
+                double.tryParse(_weightAvgGramsController.text.trim()) ?? 0.0;
+            sampleCount = int.tryParse(
+              _weightSampleCountController.text.trim(),
+            );
             notes = _weightNotesController.text.trim();
             break;
           case LogRecordType.notes:
@@ -693,7 +784,10 @@ class _DailyRecordsDashboardScreenState
               children: [
                 Icon(Icons.check_circle_rounded, color: Colors.white),
                 SizedBox(width: 10),
-                Text('Record Saved Successfully', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  'Record Saved Successfully',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ],
             ),
             backgroundColor: AppColors.primary,
@@ -704,8 +798,12 @@ class _DailyRecordsDashboardScreenState
 
       // Reset form / step
       setState(() {
-        final activeBatches = _batches.where((b) => b.status != 'archived').toList();
-        final shouldAutoSkip = _farms.length == 1 && (activeBatches.length == 1 || _batches.length == 1);
+        final activeBatches = _batches
+            .where((b) => b.status != 'archived')
+            .toList();
+        final shouldAutoSkip =
+            _farms.length == 1 &&
+            (activeBatches.length == 1 || _batches.length == 1);
         _currentStep = shouldAutoSkip ? 1 : 0;
         _isDailyOpsSelected = true;
         _selectedOptionalType = null;
@@ -878,23 +976,33 @@ class _DailyRecordsDashboardScreenState
                         decoration: BoxDecoration(
                           color: isActive
                               ? AppColors.primary
-                              : (isCompleted ? const Color(0xFFEAF5EA) : const Color(0xFFF3F4F6)),
+                              : (isCompleted
+                                    ? const Color(0xFFEAF5EA)
+                                    : const Color(0xFFF3F4F6)),
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: isActive
                                 ? AppColors.primary
-                                : (isCompleted ? AppColors.primary : const Color(0xFFCBD5E1)),
+                                : (isCompleted
+                                      ? AppColors.primary
+                                      : const Color(0xFFCBD5E1)),
                             width: isActive ? 2 : 1,
                           ),
                         ),
                         child: isCompleted
-                            ? const Icon(Icons.check_rounded, size: 14, color: AppColors.primary)
+                            ? const Icon(
+                                Icons.check_rounded,
+                                size: 14,
+                                color: AppColors.primary,
+                              )
                             : Text(
                                 '${index + 1}',
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
-                                  color: isActive ? Colors.white : AppColors.textSecondary,
+                                  color: isActive
+                                      ? Colors.white
+                                      : AppColors.textSecondary,
                                 ),
                               ),
                       ),
@@ -903,8 +1011,14 @@ class _DailyRecordsDashboardScreenState
                         steps[index],
                         style: TextStyle(
                           fontSize: 13,
-                          fontWeight: isActive || isCompleted ? FontWeight.bold : FontWeight.w600,
-                          color: isActive ? AppColors.primary : (isCompleted ? AppColors.textPrimary : AppColors.textSecondary),
+                          fontWeight: isActive || isCompleted
+                              ? FontWeight.bold
+                              : FontWeight.w600,
+                          color: isActive
+                              ? AppColors.primary
+                              : (isCompleted
+                                    ? AppColors.textPrimary
+                                    : AppColors.textSecondary),
                         ),
                       ),
                       if (index < steps.length - 1) ...[
@@ -937,7 +1051,8 @@ class _DailyRecordsDashboardScreenState
     int ageDays = 1;
     if (_selectedBatch != null) {
       try {
-        final diff = DateTime.now().difference(_selectedBatch!.placementDate).inDays + 1;
+        final diff =
+            DateTime.now().difference(_selectedBatch!.placementDate).inDays + 1;
         if (diff > 0) ageDays = diff;
       } catch (_) {}
     }
@@ -946,7 +1061,9 @@ class _DailyRecordsDashboardScreenState
     final List<FarmModel> farmList = [];
     final Set<String> seenFarmIds = {};
     for (final f in _farms) {
-      final safeId = f.id.trim().isNotEmpty ? f.id.trim() : 'farm_${farmList.length}';
+      final safeId = f.id.trim().isNotEmpty
+          ? f.id.trim()
+          : 'farm_${farmList.length}';
       if (!seenFarmIds.contains(safeId)) {
         seenFarmIds.add(safeId);
         farmList.add(f.id == safeId ? f : f.copyWith(id: safeId));
@@ -961,7 +1078,9 @@ class _DailyRecordsDashboardScreenState
     final List<BatchModel> batchList = [];
     final Set<String> seenBatchIds = {};
     for (final b in _batches) {
-      final safeId = b.id.trim().isNotEmpty ? b.id.trim() : 'batch_${batchList.length}';
+      final safeId = b.id.trim().isNotEmpty
+          ? b.id.trim()
+          : 'batch_${batchList.length}';
       if (!seenBatchIds.contains(safeId)) {
         seenBatchIds.add(safeId);
         batchList.add(b.id == safeId ? b : b.copyWith(id: safeId));
@@ -969,7 +1088,8 @@ class _DailyRecordsDashboardScreenState
     }
     if (batchList.isEmpty) batchList.add(_defaultBatch);
 
-    final String selectedBatchId = batchList.any((b) => b.id == _selectedBatch?.id)
+    final String selectedBatchId =
+        batchList.any((b) => b.id == _selectedBatch?.id)
         ? _selectedBatch!.id
         : batchList.first.id;
 
@@ -1002,7 +1122,11 @@ class _DailyRecordsDashboardScreenState
           decoration: InputDecoration(
             labelText: 'Farm',
             labelStyle: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
-            prefixIcon: const Icon(Icons.agriculture_outlined, size: 20, color: Color(0xFF64748B)),
+            prefixIcon: const Icon(
+              Icons.agriculture_outlined,
+              size: 20,
+              color: Color(0xFF64748B),
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
@@ -1013,13 +1137,22 @@ class _DailyRecordsDashboardScreenState
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide: const BorderSide(
+                color: AppColors.primary,
+                width: 1.5,
+              ),
             ),
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
           ),
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: Color(0xFF64748B),
+          ),
           style: const TextStyle(
             fontSize: 16,
             color: Color(0xFF0F172A),
@@ -1030,7 +1163,9 @@ class _DailyRecordsDashboardScreenState
             return DropdownMenuItem<String>(
               value: farm.id,
               child: Text(
-                farm.farmName.trim().isNotEmpty ? farm.farmName : 'Farm (${farm.id})',
+                farm.farmName.trim().isNotEmpty
+                    ? farm.farmName
+                    : 'Farm (${farm.id})',
                 style: const TextStyle(
                   fontSize: 16,
                   color: Color(0xFF0F172A),
@@ -1041,7 +1176,10 @@ class _DailyRecordsDashboardScreenState
           }).toList(),
           onChanged: (farmId) {
             if (farmId == null) return;
-            final chosen = farmList.firstWhere((f) => f.id == farmId, orElse: () => farmList.first);
+            final chosen = farmList.firstWhere(
+              (f) => f.id == farmId,
+              orElse: () => farmList.first,
+            );
             setState(() => _selectedFarm = chosen);
             try {
               ref.read(dailyRecordFarmIdProvider.notifier).selectFarm(farmId);
@@ -1059,10 +1197,13 @@ class _DailyRecordsDashboardScreenState
           TextFormField(
             initialValue: _selectedBatch?.batchName.trim().isNotEmpty == true
                 ? _selectedBatch!.batchName
-                : (batchList.isNotEmpty && batchList.first.batchName.trim().isNotEmpty
-                    ? batchList.first.batchName
-                    : 'default_batch'),
-            key: ValueKey('batch_field_single_${_selectedBatch?.id}_${_selectedFarm?.id}'),
+                : (batchList.isNotEmpty &&
+                          batchList.first.batchName.trim().isNotEmpty
+                      ? batchList.first.batchName
+                      : 'default_batch'),
+            key: ValueKey(
+              'batch_field_single_${_selectedBatch?.id}_${_selectedFarm?.id}',
+            ),
             readOnly: true,
             enabled: false,
             style: const TextStyle(
@@ -1072,8 +1213,15 @@ class _DailyRecordsDashboardScreenState
             ),
             decoration: InputDecoration(
               labelText: 'Batch',
-              labelStyle: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
-              prefixIcon: const Icon(Icons.layers_outlined, size: 20, color: Color(0xFF94A3B8)),
+              labelStyle: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF94A3B8),
+              ),
+              prefixIcon: const Icon(
+                Icons.layers_outlined,
+                size: 20,
+                color: Color(0xFF94A3B8),
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
@@ -1084,7 +1232,10 @@ class _DailyRecordsDashboardScreenState
               ),
               filled: true,
               fillColor: const Color(0xFFF8FAFC),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 12,
+              ),
             ),
           )
         else
@@ -1093,8 +1244,15 @@ class _DailyRecordsDashboardScreenState
             initialValue: selectedBatchId,
             decoration: InputDecoration(
               labelText: 'Batch',
-              labelStyle: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
-              prefixIcon: const Icon(Icons.layers_outlined, size: 20, color: Color(0xFF64748B)),
+              labelStyle: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF64748B),
+              ),
+              prefixIcon: const Icon(
+                Icons.layers_outlined,
+                size: 20,
+                color: Color(0xFF64748B),
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
@@ -1105,13 +1263,22 @@ class _DailyRecordsDashboardScreenState
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 1.5,
+                ),
               ),
               filled: true,
               fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 12,
+              ),
             ),
-            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
+            icon: const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: Color(0xFF64748B),
+            ),
             style: const TextStyle(
               fontSize: 16,
               color: Color(0xFF0F172A),
@@ -1122,7 +1289,9 @@ class _DailyRecordsDashboardScreenState
               return DropdownMenuItem<String>(
                 value: batch.id,
                 child: Text(
-                  batch.batchName.trim().isNotEmpty ? batch.batchName : 'Batch (${batch.id})',
+                  batch.batchName.trim().isNotEmpty
+                      ? batch.batchName
+                      : 'Batch (${batch.id})',
                   style: const TextStyle(
                     fontSize: 16,
                     color: Color(0xFF0F172A),
@@ -1133,10 +1302,15 @@ class _DailyRecordsDashboardScreenState
             }).toList(),
             onChanged: (batchId) {
               if (batchId == null) return;
-              final chosen = batchList.firstWhere((b) => b.id == batchId, orElse: () => batchList.first);
+              final chosen = batchList.firstWhere(
+                (b) => b.id == batchId,
+                orElse: () => batchList.first,
+              );
               setState(() => _selectedBatch = chosen);
               try {
-                ref.read(dailyRecordBatchIdProvider.notifier).selectBatch(chosen.id);
+                ref
+                    .read(dailyRecordBatchIdProvider.notifier)
+                    .selectBatch(chosen.id);
               } catch (_) {}
               if (_selectedFarm != null) {
                 _saveLastSelection(_selectedFarm!.id, chosen.id);
@@ -1186,15 +1360,21 @@ class _DailyRecordsDashboardScreenState
             duration: const Duration(milliseconds: 180),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: _isDailyOpsSelected ? const Color(0xFFF0FDF4) : Colors.white,
+              color: _isDailyOpsSelected
+                  ? const Color(0xFFF0FDF4)
+                  : Colors.white,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: _isDailyOpsSelected ? AppColors.primary : const Color(0xFFE2E8F0),
+                color: _isDailyOpsSelected
+                    ? AppColors.primary
+                    : const Color(0xFFE2E8F0),
                 width: _isDailyOpsSelected ? 2 : 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: _isDailyOpsSelected ? AppColors.primary.withValues(alpha: 0.12) : const Color(0x06000000),
+                  color: _isDailyOpsSelected
+                      ? AppColors.primary.withValues(alpha: 0.12)
+                      : const Color(0x06000000),
                   blurRadius: _isDailyOpsSelected ? 10 : 4,
                   offset: const Offset(0, 3),
                 ),
@@ -1221,11 +1401,16 @@ class _DailyRecordsDashboardScreenState
                           const SizedBox(width: 8),
                           // Amber Pill (Deliberately amber/orange, not green)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFFFFBEB),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFFFDE68A)),
+                              border: Border.all(
+                                color: const Color(0xFFFDE68A),
+                              ),
                             ),
                             child: const Text(
                               'Required Today',
@@ -1240,8 +1425,12 @@ class _DailyRecordsDashboardScreenState
                       ),
                     ),
                     Icon(
-                      _isDailyOpsSelected ? Icons.check_circle_rounded : Icons.chevron_right_rounded,
-                      color: _isDailyOpsSelected ? AppColors.primary : const Color(0xFF94A3B8),
+                      _isDailyOpsSelected
+                          ? Icons.check_circle_rounded
+                          : Icons.chevron_right_rounded,
+                      color: _isDailyOpsSelected
+                          ? AppColors.primary
+                          : const Color(0xFF94A3B8),
                       size: 22,
                     ),
                   ],
@@ -1249,7 +1438,10 @@ class _DailyRecordsDashboardScreenState
                 const SizedBox(height: 4),
                 const Text(
                   'Feed, water, mortality, and power operations in one fast flow.',
-                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 14),
 
@@ -1282,7 +1474,8 @@ class _DailyRecordsDashboardScreenState
           itemCount: optionalCategories.length,
           itemBuilder: (context, index) {
             final type = optionalCategories[index];
-            final isSelected = !_isDailyOpsSelected && _selectedOptionalType == type;
+            final isSelected =
+                !_isDailyOpsSelected && _selectedOptionalType == type;
 
             return InkWell(
               onTap: () {
@@ -1299,12 +1492,16 @@ class _DailyRecordsDashboardScreenState
                   color: isSelected ? type.bgTint : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isSelected ? type.accentColor : const Color(0xFFE2E8F0),
+                    color: isSelected
+                        ? type.accentColor
+                        : const Color(0xFFE2E8F0),
                     width: isSelected ? 2 : 1,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: isSelected ? type.accentColor.withValues(alpha: 0.12) : const Color(0x04000000),
+                      color: isSelected
+                          ? type.accentColor.withValues(alpha: 0.12)
+                          : const Color(0x04000000),
                       blurRadius: isSelected ? 8 : 4,
                       offset: const Offset(0, 2),
                     ),
@@ -1323,12 +1520,23 @@ class _DailyRecordsDashboardScreenState
                             color: type.bgTint,
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Text(type.emoji, style: const TextStyle(fontSize: 18)),
+                          child: Text(
+                            type.emoji,
+                            style: const TextStyle(fontSize: 18),
+                          ),
                         ),
                         if (isSelected)
-                          Icon(Icons.check_circle_rounded, color: type.accentColor, size: 18)
+                          Icon(
+                            Icons.check_circle_rounded,
+                            color: type.accentColor,
+                            size: 18,
+                          )
                         else
-                          Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400, size: 16),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            color: Colors.grey.shade400,
+                            size: 16,
+                          ),
                       ],
                     ),
                     Column(
@@ -1339,7 +1547,9 @@ class _DailyRecordsDashboardScreenState
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
-                            color: isSelected ? type.accentColor : AppColors.textPrimary,
+                            color: isSelected
+                                ? type.accentColor
+                                : AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -1347,7 +1557,10 @@ class _DailyRecordsDashboardScreenState
                           type.subtitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ],
                     ),
@@ -1382,7 +1595,11 @@ class _DailyRecordsDashboardScreenState
         const SizedBox(height: 4),
         Text(
           type.title.split(' ').first,
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
         ),
       ],
     );
@@ -1409,7 +1626,11 @@ class _DailyRecordsDashboardScreenState
             children: [
               Row(
                 children: [
-                  const Icon(Icons.agriculture_rounded, size: 16, color: AppColors.primary),
+                  const Icon(
+                    Icons.agriculture_rounded,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
                   const SizedBox(width: 7),
                   Text(
                     '${_selectedFarm?.farmName ?? "Farm"} · ${_selectedBatch?.batchName ?? "Batch"}',
@@ -1425,12 +1646,20 @@ class _DailyRecordsDashboardScreenState
                 onTap: () => setState(() => _currentStep = 0),
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  constraints: const BoxConstraints(minHeight: 36, minWidth: 48),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  constraints: const BoxConstraints(
+                    minHeight: 36,
+                    minWidth: 48,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEAF5EA),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1444,7 +1673,11 @@ class _DailyRecordsDashboardScreenState
                         ),
                       ),
                       SizedBox(width: 3),
-                      Icon(Icons.chevron_left_rounded, size: 14, color: AppColors.primary),
+                      Icon(
+                        Icons.chevron_left_rounded,
+                        size: 14,
+                        color: AppColors.primary,
+                      ),
                     ],
                   ),
                 ),
@@ -1468,7 +1701,12 @@ class _DailyRecordsDashboardScreenState
     final bundleChips = [
       _BundleChipItem('Feed', LogRecordType.feed, _isFeedValid, 0),
       _BundleChipItem('Water', LogRecordType.water, _isWaterValid, 1),
-      _BundleChipItem('Mortality', LogRecordType.mortality, _isMortalityValid, 2),
+      _BundleChipItem(
+        'Mortality',
+        LogRecordType.mortality,
+        _isMortalityValid,
+        2,
+      ),
       _BundleChipItem('DG Gen', LogRecordType.dg, _isDgValid, 3),
     ];
 
@@ -1497,21 +1735,32 @@ class _DailyRecordsDashboardScreenState
                     SizedBox(height: 3),
                     Text(
                       'Fill in the 4 daily metrics below. Sections auto-advance.',
-                      style: TextStyle(fontSize: 13, height: 1.3, color: AppColors.textSecondary),
+                      style: TextStyle(
+                        fontSize: 13,
+                        height: 1.3,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEAF5EA),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
                   'Step 2 of 2',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
             ],
@@ -1523,16 +1772,29 @@ class _DailyRecordsDashboardScreenState
             alignment: Alignment.centerLeft,
             child: OutlinedButton.icon(
               onPressed: _copyYesterdayValues,
-              icon: const Icon(Icons.history_rounded, size: 17, color: AppColors.primary),
+              icon: const Icon(
+                Icons.history_rounded,
+                size: 17,
+                color: AppColors.primary,
+              ),
               label: const Text(
                 "Copy yesterday's values",
-                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold, color: AppColors.primary),
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
               ),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 minimumSize: const Size(0, 48),
                 side: const BorderSide(color: AppColors.primary, width: 1.2),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 backgroundColor: const Color(0xFFF0FDF4),
               ),
             ),
@@ -1548,11 +1810,15 @@ class _DailyRecordsDashboardScreenState
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: InkWell(
-                    onTap: () => setState(() => _expandedSectionIndex = chip.index),
+                    onTap: () =>
+                        setState(() => _expandedSectionIndex = chip.index),
                     borderRadius: BorderRadius.circular(20),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 160),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: chip.isValid
                             ? const Color(0xFFECFDF5)
@@ -1561,30 +1827,47 @@ class _DailyRecordsDashboardScreenState
                         border: Border.all(
                           color: chip.isValid
                               ? AppColors.primary
-                              : (isCurrent ? chip.type.accentColor : const Color(0xFFCBD5E1)),
+                              : (isCurrent
+                                    ? chip.type.accentColor
+                                    : const Color(0xFFCBD5E1)),
                           width: isCurrent || chip.isValid ? 1.5 : 1,
                         ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(chip.type.emoji, style: const TextStyle(fontSize: 14)),
+                          Text(
+                            chip.type.emoji,
+                            style: const TextStyle(fontSize: 14),
+                          ),
                           const SizedBox(width: 5),
                           Text(
                             chip.label,
                             style: TextStyle(
                               fontSize: 12,
-                              fontWeight: isCurrent || chip.isValid ? FontWeight.bold : FontWeight.w500,
+                              fontWeight: isCurrent || chip.isValid
+                                  ? FontWeight.bold
+                                  : FontWeight.w500,
                               color: chip.isValid
                                   ? AppColors.primary
-                                  : (isCurrent ? chip.type.accentColor : AppColors.textPrimary),
+                                  : (isCurrent
+                                        ? chip.type.accentColor
+                                        : AppColors.textPrimary),
                             ),
                           ),
                           const SizedBox(width: 4),
                           if (chip.isValid)
-                            const Icon(Icons.check_circle_rounded, size: 14, color: AppColors.primary)
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              size: 14,
+                              color: AppColors.primary,
+                            )
                           else
-                            const Icon(Icons.circle_outlined, size: 12, color: Color(0xFF94A3B8)),
+                            const Icon(
+                              Icons.circle_outlined,
+                              size: 12,
+                              color: Color(0xFF94A3B8),
+                            ),
                         ],
                       ),
                     ),
@@ -1656,7 +1939,9 @@ class _DailyRecordsDashboardScreenState
         ),
         boxShadow: [
           BoxShadow(
-            color: isExpanded ? type.accentColor.withValues(alpha: 0.08) : const Color(0x04000000),
+            color: isExpanded
+                ? type.accentColor.withValues(alpha: 0.08)
+                : const Color(0x04000000),
             blurRadius: isExpanded ? 8 : 4,
             offset: const Offset(0, 2),
           ),
@@ -1668,86 +1953,106 @@ class _DailyRecordsDashboardScreenState
           decoration: isExpanded
               ? BoxDecoration(
                   border: Border(
-                    left: BorderSide(
-                      color: type.accentColor,
-                      width: 4,
-                    ),
+                    left: BorderSide(color: type.accentColor, width: 4),
                   ),
                 )
               : null,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-          // Collapsed Header Row
-          InkWell(
-            onTap: () {
-              setState(() {
-                _expandedSectionIndex = isExpanded ? -1 : index;
-              });
-            },
-            borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+              // Collapsed Header Row
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    _expandedSectionIndex = isExpanded ? -1 : index;
+                  });
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(7),
-                        decoration: BoxDecoration(
-                          color: type.bgTint,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(type.emoji, style: const TextStyle(fontSize: 18)),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        type.title,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: isExpanded ? type.accentColor : AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      if (isValid)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFECFDF5),
-                            borderRadius: BorderRadius.circular(6),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(7),
+                            decoration: BoxDecoration(
+                              color: type.bgTint,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              type.emoji,
+                              style: const TextStyle(fontSize: 18),
+                            ),
                           ),
-                          child: const Text('Complete', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                          const SizedBox(width: 10),
+                          Text(
+                            type.title,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: isExpanded
+                                  ? type.accentColor
+                                  : AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          if (isValid)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFECFDF5),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'Complete',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      if (isValid && !isExpanded)
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          color: AppColors.primary,
+                          size: 20,
+                        )
+                      else
+                        Icon(
+                          isExpanded
+                              ? Icons.keyboard_arrow_up_rounded
+                              : Icons.keyboard_arrow_down_rounded,
+                          color: isExpanded
+                              ? type.accentColor
+                              : const Color(0xFF94A3B8),
                         ),
                     ],
                   ),
-                  if (isValid && !isExpanded)
-                    const Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 20)
-                  else
-                    Icon(
-                      isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                      color: isExpanded ? type.accentColor : const Color(0xFF94A3B8),
-                    ),
-                ],
+                ),
               ),
-            ),
-          ),
 
-          // Expanded Content
-          if (isExpanded) ...[
-            const Divider(height: 1, color: Color(0xFFE2E8F0)),
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: content,
-            ),
-          ],
-        ],
+              // Expanded Content
+              if (isExpanded) ...[
+                const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                Padding(padding: const EdgeInsets.all(14), child: content),
+              ],
+            ],
+          ),
+        ),
       ),
-    ),
-  ),
-);
-}
+    );
+  }
 
   // ----------------------------------------------------
   // Path B: Optional Category (Form + Review on one scrollable page)
@@ -1780,21 +2085,32 @@ class _DailyRecordsDashboardScreenState
                     const SizedBox(height: 3),
                     Text(
                       type.subtitle,
-                      style: const TextStyle(fontSize: 13, height: 1.3, color: AppColors.textSecondary),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        height: 1.3,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEAF5EA),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
                   'Step 2 of 2',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
             ],
@@ -1807,7 +2123,9 @@ class _DailyRecordsDashboardScreenState
             decoration: BoxDecoration(
               color: type.bgTint,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: type.accentColor.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: type.accentColor.withValues(alpha: 0.3),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1830,7 +2148,10 @@ class _DailyRecordsDashboardScreenState
                   onTap: _repeatPreviousDayRecord,
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
@@ -1839,7 +2160,11 @@ class _DailyRecordsDashboardScreenState
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.history_rounded, size: 14, color: type.accentColor),
+                        Icon(
+                          Icons.history_rounded,
+                          size: 14,
+                          color: type.accentColor,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           'Repeat Last',
@@ -1887,14 +2212,28 @@ class _DailyRecordsDashboardScreenState
           _feedQuantityController,
         ),
         DropdownButtonFormField<String>(
-          initialValue: _feedTypeController.text.isNotEmpty ? _feedTypeController.text : 'Broiler Starter',
+          initialValue: _feedTypeController.text.isNotEmpty
+              ? _feedTypeController.text
+              : 'Broiler Starter',
           decoration: _fieldDecoration('Feed Type', Icons.grass_outlined),
           items: const [
-            DropdownMenuItem(value: 'Broiler Starter', child: Text('Broiler Starter')),
-            DropdownMenuItem(value: 'Broiler Grower', child: Text('Broiler Grower')),
-            DropdownMenuItem(value: 'Broiler Finisher', child: Text('Broiler Finisher')),
+            DropdownMenuItem(
+              value: 'Broiler Starter',
+              child: Text('Broiler Starter'),
+            ),
+            DropdownMenuItem(
+              value: 'Broiler Grower',
+              child: Text('Broiler Grower'),
+            ),
+            DropdownMenuItem(
+              value: 'Broiler Finisher',
+              child: Text('Broiler Finisher'),
+            ),
             DropdownMenuItem(value: 'Pre-Starter', child: Text('Pre-Starter')),
-            DropdownMenuItem(value: 'Other Custom Feed', child: Text('Other Custom Feed')),
+            DropdownMenuItem(
+              value: 'Other Custom Feed',
+              child: Text('Other Custom Feed'),
+            ),
           ],
           onChanged: (val) {
             if (val != null) setState(() => _feedTypeController.text = val);
@@ -1907,10 +2246,16 @@ class _DailyRecordsDashboardScreenState
               flex: 3,
               child: TextFormField(
                 controller: _feedQuantityController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: _fieldDecoration('Quantity Consumed *', Icons.scale_outlined),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: _fieldDecoration(
+                  'Quantity Consumed *',
+                  Icons.scale_outlined,
+                ),
                 onChanged: (_) => setState(() {}),
-                validator: (val) => val == null || val.trim().isEmpty ? 'Required' : null,
+                validator: (val) =>
+                    val == null || val.trim().isEmpty ? 'Required' : null,
               ),
             ),
             const SizedBox(width: 8),
@@ -1929,7 +2274,10 @@ class _DailyRecordsDashboardScreenState
                     isExpanded: true,
                     items: const [
                       DropdownMenuItem(value: 'kg', child: Text('kg')),
-                      DropdownMenuItem(value: 'bags', child: Text('bags (50kg)')),
+                      DropdownMenuItem(
+                        value: 'bags',
+                        child: Text('bags (50kg)'),
+                      ),
                     ],
                     onChanged: (v) {
                       if (v != null) setState(() => _feedUnit = v);
@@ -1944,7 +2292,10 @@ class _DailyRecordsDashboardScreenState
         TextFormField(
           controller: _feedCostController,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: _fieldDecoration('Total Feed Cost (₹) Optional', Icons.currency_rupee_rounded),
+          decoration: _fieldDecoration(
+            'Total Feed Cost (₹) Optional',
+            Icons.currency_rupee_rounded,
+          ),
           onChanged: (_) => setState(() {}),
         ),
         if (isBundle) ...[
@@ -1977,14 +2328,21 @@ class _DailyRecordsDashboardScreenState
         TextFormField(
           controller: _waterQuantityController,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: _fieldDecoration('Water Consumed (Liters) *', Icons.water_drop_outlined),
+          decoration: _fieldDecoration(
+            'Water Consumed (Liters) *',
+            Icons.water_drop_outlined,
+          ),
           onChanged: (_) => setState(() {}),
-          validator: (val) => val == null || val.trim().isEmpty ? 'Required' : null,
+          validator: (val) =>
+              val == null || val.trim().isEmpty ? 'Required' : null,
         ),
         const SizedBox(height: 12),
         TextFormField(
           controller: _waterSourceController,
-          decoration: _fieldDecoration('Water Source (Borewell / Pipeline)', Icons.source_outlined),
+          decoration: _fieldDecoration(
+            'Water Source (Borewell / Pipeline)',
+            Icons.source_outlined,
+          ),
           onChanged: (_) => setState(() {}),
         ),
         if (isBundle) ...[
@@ -2028,7 +2386,10 @@ class _DailyRecordsDashboardScreenState
         const SizedBox(height: 12),
         TextFormField(
           controller: _mortalityReasonController,
-          decoration: _fieldDecoration('Cause of Mortality (Heat, Weak, Natural)', Icons.report_problem_outlined),
+          decoration: _fieldDecoration(
+            'Cause of Mortality (Heat, Weak, Natural)',
+            Icons.report_problem_outlined,
+          ),
           onChanged: (_) => setState(() {}),
         ),
         if (isBundle) ...[
@@ -2101,9 +2462,13 @@ class _DailyRecordsDashboardScreenState
       children: [
         TextFormField(
           controller: _medicineNameController,
-          decoration: _fieldDecoration('Medicine / Supplement Name *', Icons.medication_outlined),
+          decoration: _fieldDecoration(
+            'Medicine / Supplement Name *',
+            Icons.medication_outlined,
+          ),
           onChanged: (_) => setState(() {}),
-          validator: (val) => val == null || val.trim().isEmpty ? 'Required' : null,
+          validator: (val) =>
+              val == null || val.trim().isEmpty ? 'Required' : null,
         ),
         const SizedBox(height: 12),
         Row(
@@ -2111,18 +2476,29 @@ class _DailyRecordsDashboardScreenState
             Expanded(
               child: TextFormField(
                 controller: _medicineQuantityController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: _fieldDecoration('Quantity (ml/g) *', Icons.numbers_outlined),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: _fieldDecoration(
+                  'Quantity (ml/g) *',
+                  Icons.numbers_outlined,
+                ),
                 onChanged: (_) => setState(() {}),
-                validator: (val) => val == null || val.trim().isEmpty ? 'Required' : null,
+                validator: (val) =>
+                    val == null || val.trim().isEmpty ? 'Required' : null,
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: TextFormField(
                 controller: _medicineCostController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: _fieldDecoration('Cost (₹)', Icons.currency_rupee_rounded),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: _fieldDecoration(
+                  'Cost (₹)',
+                  Icons.currency_rupee_rounded,
+                ),
                 onChanged: (_) => setState(() {}),
               ),
             ),
@@ -2131,7 +2507,10 @@ class _DailyRecordsDashboardScreenState
         const SizedBox(height: 12),
         TextFormField(
           controller: _medicinePurposeController,
-          decoration: _fieldDecoration('Purpose / Symptoms (e.g. Coughing, Immunity)', Icons.healing_outlined),
+          decoration: _fieldDecoration(
+            'Purpose / Symptoms (e.g. Coughing, Immunity)',
+            Icons.healing_outlined,
+          ),
           onChanged: (_) => setState(() {}),
         ),
       ],
@@ -2144,20 +2523,30 @@ class _DailyRecordsDashboardScreenState
       children: [
         TextFormField(
           controller: _vaccineNameController,
-          decoration: _fieldDecoration('Vaccine Name * (e.g. Lasota / Gumboro)', Icons.vaccines_outlined),
+          decoration: _fieldDecoration(
+            'Vaccine Name * (e.g. Lasota / Gumboro)',
+            Icons.vaccines_outlined,
+          ),
           onChanged: (_) => setState(() {}),
-          validator: (val) => val == null || val.trim().isEmpty ? 'Required' : null,
+          validator: (val) =>
+              val == null || val.trim().isEmpty ? 'Required' : null,
         ),
         const SizedBox(height: 12),
         TextFormField(
           controller: _vaccineDoseController,
-          decoration: _fieldDecoration('Dose Route (Eye drop, Drinking water)', Icons.local_hospital_outlined),
+          decoration: _fieldDecoration(
+            'Dose Route (Eye drop, Drinking water)',
+            Icons.local_hospital_outlined,
+          ),
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 12),
         TextFormField(
           controller: _vaccineBatchNumController,
-          decoration: _fieldDecoration('Vaccine Batch # / Expiry Date', Icons.tag_outlined),
+          decoration: _fieldDecoration(
+            'Vaccine Batch # / Expiry Date',
+            Icons.tag_outlined,
+          ),
           onChanged: (_) => setState(() {}),
         ),
       ],
@@ -2173,10 +2562,16 @@ class _DailyRecordsDashboardScreenState
             Expanded(
               child: TextFormField(
                 controller: _weightAvgGramsController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: _fieldDecoration('Avg Weight (Grams) *', Icons.scale_outlined),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: _fieldDecoration(
+                  'Avg Weight (Grams) *',
+                  Icons.scale_outlined,
+                ),
                 onChanged: (_) => setState(() {}),
-                validator: (val) => val == null || val.trim().isEmpty ? 'Required' : null,
+                validator: (val) =>
+                    val == null || val.trim().isEmpty ? 'Required' : null,
               ),
             ),
             const SizedBox(width: 8),
@@ -2184,7 +2579,10 @@ class _DailyRecordsDashboardScreenState
               child: TextFormField(
                 controller: _weightSampleCountController,
                 keyboardType: TextInputType.number,
-                decoration: _fieldDecoration('Sample Birds Count', Icons.groups_outlined),
+                decoration: _fieldDecoration(
+                  'Sample Birds Count',
+                  Icons.groups_outlined,
+                ),
                 onChanged: (_) => setState(() {}),
               ),
             ),
@@ -2193,7 +2591,10 @@ class _DailyRecordsDashboardScreenState
         const SizedBox(height: 12),
         TextFormField(
           controller: _weightNotesController,
-          decoration: _fieldDecoration('Weight Notes / FCR Observations', Icons.notes_outlined),
+          decoration: _fieldDecoration(
+            'Weight Notes / FCR Observations',
+            Icons.notes_outlined,
+          ),
           onChanged: (_) => setState(() {}),
         ),
       ],
@@ -2206,16 +2607,23 @@ class _DailyRecordsDashboardScreenState
       children: [
         TextFormField(
           controller: _notesTitleController,
-          decoration: _fieldDecoration('Note Title (e.g. Shed Inspection)', Icons.title_outlined),
+          decoration: _fieldDecoration(
+            'Note Title (e.g. Shed Inspection)',
+            Icons.title_outlined,
+          ),
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 12),
         TextFormField(
           controller: _notesDescController,
           maxLines: 3,
-          decoration: _fieldDecoration('Detailed Observations / Issues *', Icons.description_outlined),
+          decoration: _fieldDecoration(
+            'Detailed Observations / Issues *',
+            Icons.description_outlined,
+          ),
           onChanged: (_) => setState(() {}),
-          validator: (val) => val == null || val.trim().isEmpty ? 'Required' : null,
+          validator: (val) =>
+              val == null || val.trim().isEmpty ? 'Required' : null,
         ),
       ],
     );
@@ -2255,18 +2663,38 @@ class _DailyRecordsDashboardScreenState
               SizedBox(width: 8),
               Text(
                 'Live Telemetry Review',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          _buildReviewRow('🌾 Feed Intake', feedQty.isNotEmpty ? '$feedQty $_feedUnit (${_feedTypeController.text})' : 'Pending...'),
+          _buildReviewRow(
+            '🌾 Feed Intake',
+            feedQty.isNotEmpty
+                ? '$feedQty $_feedUnit (${_feedTypeController.text})'
+                : 'Pending...',
+          ),
           const Divider(height: 12, color: Color(0xFFF1F5F9)),
-          _buildReviewRow('💧 Water Intake', waterQty.isNotEmpty ? '$waterQty Liters (${_waterSourceController.text})' : 'Pending...'),
+          _buildReviewRow(
+            '💧 Water Intake',
+            waterQty.isNotEmpty
+                ? '$waterQty Liters (${_waterSourceController.text})'
+                : 'Pending...',
+          ),
           const Divider(height: 12, color: Color(0xFFF1F5F9)),
-          _buildReviewRow('☠️ Mortality', mortQty.isNotEmpty ? '$mortQty birds' : 'Pending...'),
+          _buildReviewRow(
+            '☠️ Mortality',
+            mortQty.isNotEmpty ? '$mortQty birds' : 'Pending...',
+          ),
           const Divider(height: 12, color: Color(0xFFF1F5F9)),
-          _buildReviewRow('⚡ DG Generator', dgLevel.isNotEmpty ? '$dgLevel L level' : 'Pending...'),
+          _buildReviewRow(
+            '⚡ DG Generator',
+            dgLevel.isNotEmpty ? '$dgLevel L level' : 'Pending...',
+          ),
         ],
       ),
     );
@@ -2297,28 +2725,67 @@ class _DailyRecordsDashboardScreenState
               const SizedBox(width: 8),
               Text(
                 '${type.title} Summary Review',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: type.accentColor),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: type.accentColor,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 12),
           if (type == LogRecordType.medicine) ...[
-            _buildReviewRow('Medicine Name', _medicineNameController.text.isNotEmpty ? _medicineNameController.text : 'Pending...'),
+            _buildReviewRow(
+              'Medicine Name',
+              _medicineNameController.text.isNotEmpty
+                  ? _medicineNameController.text
+                  : 'Pending...',
+            ),
             const Divider(height: 12, color: Color(0xFFF1F5F9)),
-            _buildReviewRow('Quantity', _medicineQuantityController.text.isNotEmpty ? '${_medicineQuantityController.text} ml/g' : 'Pending...'),
+            _buildReviewRow(
+              'Quantity',
+              _medicineQuantityController.text.isNotEmpty
+                  ? '${_medicineQuantityController.text} ml/g'
+                  : 'Pending...',
+            ),
           ],
           if (type == LogRecordType.vaccine) ...[
-            _buildReviewRow('Vaccine Name', _vaccineNameController.text.isNotEmpty ? _vaccineNameController.text : 'Pending...'),
+            _buildReviewRow(
+              'Vaccine Name',
+              _vaccineNameController.text.isNotEmpty
+                  ? _vaccineNameController.text
+                  : 'Pending...',
+            ),
             const Divider(height: 12, color: Color(0xFFF1F5F9)),
-            _buildReviewRow('Dose', _vaccineDoseController.text.isNotEmpty ? _vaccineDoseController.text : 'Standard'),
+            _buildReviewRow(
+              'Dose',
+              _vaccineDoseController.text.isNotEmpty
+                  ? _vaccineDoseController.text
+                  : 'Standard',
+            ),
           ],
           if (type == LogRecordType.weight) ...[
-            _buildReviewRow('Avg Weight', _weightAvgGramsController.text.isNotEmpty ? '${_weightAvgGramsController.text} grams' : 'Pending...'),
+            _buildReviewRow(
+              'Avg Weight',
+              _weightAvgGramsController.text.isNotEmpty
+                  ? '${_weightAvgGramsController.text} grams'
+                  : 'Pending...',
+            ),
             const Divider(height: 12, color: Color(0xFFF1F5F9)),
-            _buildReviewRow('Sample Count', _weightSampleCountController.text.isNotEmpty ? '${_weightSampleCountController.text} birds' : 'All birds'),
+            _buildReviewRow(
+              'Sample Count',
+              _weightSampleCountController.text.isNotEmpty
+                  ? '${_weightSampleCountController.text} birds'
+                  : 'All birds',
+            ),
           ],
           if (type == LogRecordType.notes) ...[
-            _buildReviewRow('Observation', _notesDescController.text.isNotEmpty ? _notesDescController.text : 'Pending...'),
+            _buildReviewRow(
+              'Observation',
+              _notesDescController.text.isNotEmpty
+                  ? _notesDescController.text
+                  : 'Pending...',
+            ),
           ],
         ],
       ),
@@ -2329,13 +2796,20 @@ class _DailyRecordsDashboardScreenState
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+        ),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             value,
             textAlign: TextAlign.end,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
       ],
@@ -2356,11 +2830,19 @@ class _DailyRecordsDashboardScreenState
           children: [
             const Text(
               'RECENT TELEMETRY LOGS',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.textSecondary, letterSpacing: 1.1),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textSecondary,
+                letterSpacing: 1.1,
+              ),
             ),
             Text(
               '${records.length} records',
-              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -2370,11 +2852,18 @@ class _DailyRecordsDashboardScreenState
             padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
             child: Row(
               children: const [
-                Icon(Icons.history_rounded, size: 16, color: AppColors.textSecondary),
+                Icon(
+                  Icons.history_rounded,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
                 SizedBox(width: 6),
                 Text(
                   'No recent telemetry records logged yet',
-                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -2407,7 +2896,11 @@ class _DailyRecordsDashboardScreenState
                         color: Color(0xFFEAF5EA),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.assignment_outlined, size: 18, color: AppColors.primary),
+                      child: const Icon(
+                        Icons.assignment_outlined,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -2416,60 +2909,117 @@ class _DailyRecordsDashboardScreenState
                         children: [
                           Text(
                             dateStr,
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             'Day ${r.batchAgeDay} • ${r.closingBirds} Birds Remaining',
-                            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ],
                       ),
                     ),
                     if (r.feedConsumedKg > 0)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFFBEB),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text('🌾 ${r.feedConsumedKg} kg', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFD97706))),
+                        child: Text(
+                          '🌾 ${r.feedConsumedKg} kg',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFD97706),
+                          ),
+                        ),
                       )
                     else if (r.mortalityCount > 0)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFEF2F2),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text('☠️ ${r.mortalityCount} dead', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFDC2626))),
+                        child: Text(
+                          '☠️ ${r.mortalityCount} dead',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFFDC2626),
+                          ),
+                        ),
                       )
                     else if (r.waterConsumedLiters > 0)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFEFF6FF),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text('💧 ${r.waterConsumedLiters} L', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF2563EB))),
+                        child: Text(
+                          '💧 ${r.waterConsumedLiters} L',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2563EB),
+                          ),
+                        ),
                       )
                     else if (r.medicineGiven)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF5F3FF),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text('💊 Medicine', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF7C3AED))),
+                        child: const Text(
+                          '💊 Medicine',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF7C3AED),
+                          ),
+                        ),
                       )
                     else if (r.vaccineGiven)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF0FDFA),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text('💉 Vaccine', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF0D9488))),
+                        child: const Text(
+                          '💉 Vaccine',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0D9488),
+                          ),
+                        ),
                       ),
                   ],
                 ),
@@ -2506,13 +3056,29 @@ class _DailyRecordsDashboardScreenState
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(100, 50),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 side: const BorderSide(color: Color(0xFFCBD5E1)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               onPressed: _prevStep,
-              icon: const Icon(Icons.arrow_back_rounded, size: 18, color: AppColors.textPrimary),
-              label: const Text('Back', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+              icon: const Icon(
+                Icons.arrow_back_rounded,
+                size: 18,
+                color: AppColors.textPrimary,
+              ),
+              label: const Text(
+                'Back',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
             )
           else
             const SizedBox.shrink(),
@@ -2537,7 +3103,10 @@ class _DailyRecordsDashboardScreenState
                   onTap: _nextStep,
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 28,
+                      vertical: 14,
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: const [
@@ -2550,7 +3119,11 @@ class _DailyRecordsDashboardScreenState
                           ),
                         ),
                         SizedBox(width: 8),
-                        Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 18,
+                          color: Colors.white,
+                        ),
                       ],
                     ),
                   ),
@@ -2561,8 +3134,12 @@ class _DailyRecordsDashboardScreenState
             Container(
               decoration: BoxDecoration(
                 gradient: canSave && !_isSaving
-                    ? const LinearGradient(colors: [Color(0xFF059669), Color(0xFF047857)])
-                    : const LinearGradient(colors: [Color(0xFF94A3B8), Color(0xFF64748B)]),
+                    ? const LinearGradient(
+                        colors: [Color(0xFF059669), Color(0xFF047857)],
+                      )
+                    : const LinearGradient(
+                        colors: [Color(0xFF94A3B8), Color(0xFF64748B)],
+                      ),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: canSave
                     ? const [
@@ -2580,7 +3157,10 @@ class _DailyRecordsDashboardScreenState
                   onTap: canSave && !_isSaving ? _saveRecord : null,
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -2588,10 +3168,17 @@ class _DailyRecordsDashboardScreenState
                           const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         else
-                          const Icon(Icons.check_circle_rounded, size: 18, color: Colors.white),
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          ),
                         const SizedBox(width: 8),
                         const Text(
                           'Confirm & Save Entry',
@@ -2616,9 +3203,18 @@ class _DailyRecordsDashboardScreenState
     return InputDecoration(
       labelText: label,
       prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.primary, width: 2)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+      ),
       filled: true,
       fillColor: const Color(0xFFFAFAFA),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -2669,18 +3265,30 @@ class _DailyRecordsDashboardScreenState
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(13)),
+                    borderRadius: const BorderRadius.horizontal(
+                      left: Radius.circular(13),
+                    ),
                     onTap: () {
-                      final current = double.tryParse(controller.text.trim()) ?? 0.0;
-                      final updated = (current - step).clamp(min, double.infinity);
+                      final current =
+                          double.tryParse(controller.text.trim()) ?? 0.0;
+                      final updated = (current - step).clamp(
+                        min,
+                        double.infinity,
+                      );
                       setState(() {
                         controller.text = isDecimal
-                            ? (updated % 1 == 0 ? updated.toInt().toString() : updated.toStringAsFixed(1))
+                            ? (updated % 1 == 0
+                                  ? updated.toInt().toString()
+                                  : updated.toStringAsFixed(1))
                             : updated.toInt().toString();
                       });
                     },
                     child: const Center(
-                      child: Icon(Icons.remove_rounded, size: 20, color: AppColors.textPrimary),
+                      child: Icon(
+                        Icons.remove_rounded,
+                        size: 20,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                   ),
                 ),
@@ -2694,7 +3302,9 @@ class _DailyRecordsDashboardScreenState
                 child: TextFormField(
                   controller: controller,
                   textAlign: TextAlign.center,
-                  keyboardType: TextInputType.numberWithOptions(decimal: isDecimal),
+                  keyboardType: TextInputType.numberWithOptions(
+                    decimal: isDecimal,
+                  ),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -2703,14 +3313,25 @@ class _DailyRecordsDashboardScreenState
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     hintText: hintText ?? '0',
-                    hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontWeight: FontWeight.normal),
+                    hintStyle: const TextStyle(
+                      color: Color(0xFF94A3B8),
+                      fontWeight: FontWeight.normal,
+                    ),
                     suffixText: suffix,
-                    suffixStyle: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                    suffixStyle: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 12,
+                    ),
                   ),
                   onChanged: (_) => setState(() {}),
                   validator: isRequired
-                      ? (val) => val == null || val.trim().isEmpty ? 'Required' : null
+                      ? (val) => val == null || val.trim().isEmpty
+                            ? 'Required'
+                            : null
                       : null,
                 ),
               ),
@@ -2725,18 +3346,27 @@ class _DailyRecordsDashboardScreenState
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    borderRadius: const BorderRadius.horizontal(right: Radius.circular(13)),
+                    borderRadius: const BorderRadius.horizontal(
+                      right: Radius.circular(13),
+                    ),
                     onTap: () {
-                      final current = double.tryParse(controller.text.trim()) ?? 0.0;
+                      final current =
+                          double.tryParse(controller.text.trim()) ?? 0.0;
                       final updated = current + step;
                       setState(() {
                         controller.text = isDecimal
-                            ? (updated % 1 == 0 ? updated.toInt().toString() : updated.toStringAsFixed(1))
+                            ? (updated % 1 == 0
+                                  ? updated.toInt().toString()
+                                  : updated.toStringAsFixed(1))
                             : updated.toInt().toString();
                       });
                     },
                     child: const Center(
-                      child: Icon(Icons.add_rounded, size: 20, color: AppColors.primary),
+                      child: Icon(
+                        Icons.add_rounded,
+                        size: 20,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -2765,7 +3395,8 @@ class _DailyRecordsDashboardScreenState
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () {
-                    final current = double.tryParse(controller.text.trim()) ?? 0.0;
+                    final current =
+                        double.tryParse(controller.text.trim()) ?? 0.0;
                     final updated = current + values[i];
                     setState(() {
                       controller.text = updated % 1 == 0
@@ -2775,8 +3406,14 @@ class _DailyRecordsDashboardScreenState
                   },
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    constraints: const BoxConstraints(
+                      minHeight: 48,
+                      minWidth: 48,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(16),
@@ -2786,11 +3423,19 @@ class _DailyRecordsDashboardScreenState
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.add_rounded, size: 15, color: AppColors.primary),
+                          const Icon(
+                            Icons.add_rounded,
+                            size: 15,
+                            color: AppColors.primary,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             labels[i],
-                            style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
                           ),
                         ],
                       ),

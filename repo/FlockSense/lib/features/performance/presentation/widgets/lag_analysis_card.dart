@@ -44,7 +44,9 @@ class LagAnalysisCard extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(22),
+              ),
             ),
             child: Row(
               children: [
@@ -97,15 +99,24 @@ class LagAnalysisCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: lags.isEmpty
                         ? const Color(0xFF10B981)
-                        : (lags.any((l) => l.isCritical) ? AppColors.danger : const Color(0xFFE49B25)),
+                        : (lags.any((l) => l.isCritical)
+                              ? AppColors.danger
+                              : const Color(0xFFE49B25)),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    lags.isEmpty ? 'HEALTHY' : (lags.any((l) => l.isCritical) ? 'ATTENTION' : 'WARNING'),
+                    lags.isEmpty
+                        ? 'HEALTHY'
+                        : (lags.any((l) => l.isCritical)
+                              ? 'ATTENTION'
+                              : 'WARNING'),
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
@@ -125,11 +136,19 @@ class LagAnalysisCard extends StatelessWidget {
             child: lags.isEmpty
                 ? const Row(
                     children: [
-                      Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 20),
+                      Icon(
+                        Icons.check_circle_rounded,
+                        color: Color(0xFF10B981),
+                        size: 20,
+                      ),
                       SizedBox(width: 10),
                       Text(
                         'Flock performance meets or exceeds target benchmarks.',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                     ],
                   )
@@ -153,7 +172,8 @@ class LagAnalysisCard extends StatelessWidget {
           title: 'Feed Conversion Ratio (FCR) Lagging',
           metric: 'FCR ${data.fcr.toStringAsFixed(2)}',
           target: 'Target: 1.50',
-          description: 'Current FCR is $fcrDiff% higher than target. Check feed waste, water availability, or feed formula energy level.',
+          description:
+              'Current FCR is $fcrDiff% higher than target. Check feed waste, water availability, or feed formula energy level.',
           isCritical: data.fcr > 1.70,
           icon: Icons.rice_bowl_rounded,
         ),
@@ -164,13 +184,15 @@ class LagAnalysisCard extends StatelessWidget {
     if (data.averageWeightGrams > 0) {
       const targetWeightGrams = 2000.0;
       if (data.averageWeightGrams < 1850) {
-        final gapGrams = (targetWeightGrams - data.averageWeightGrams).toStringAsFixed(0);
+        final gapGrams = (targetWeightGrams - data.averageWeightGrams)
+            .toStringAsFixed(0);
         list.add(
           _LagMetric(
             title: 'Body Weight Growth Deficit',
             metric: '${data.averageWeightGrams.toStringAsFixed(0)}g',
             target: 'Target: ${targetWeightGrams.toInt()}g',
-            description: 'Flock average weight is lagging by ${gapGrams}g. Inspect brooding temperatures and feed intake per bird.',
+            description:
+                'Flock average weight is lagging by ${gapGrams}g. Inspect brooding temperatures and feed intake per bird.',
             isCritical: data.averageWeightGrams < 1700,
             icon: Icons.monitor_weight_rounded,
           ),
@@ -199,7 +221,9 @@ class LagAnalysisCard extends StatelessWidget {
 
     // 4. Mortality Rate Check (Target Livability > 97.0%)
     final livability = data.totalInitialBirds > 0
-        ? ((data.totalInitialBirds - data.totalMortality) / data.totalInitialBirds * 100)
+        ? ((data.totalInitialBirds - data.totalMortality) /
+              data.totalInitialBirds *
+              100)
         : 100.0;
 
     if (livability < 96.5) {
@@ -209,7 +233,8 @@ class LagAnalysisCard extends StatelessWidget {
           title: 'Mortality Threshold Exceeded',
           metric: '$mortalityRate% Mortality (${data.totalMortality} birds)',
           target: 'Livability Target: 97.0%+',
-          description: 'Cumulative mortality rate is elevated. Review biosecurity, ventilation airflow, and vaccination history.',
+          description:
+              'Cumulative mortality rate is elevated. Review biosecurity, ventilation airflow, and vaccination history.',
           isCritical: livability < 95.0,
           icon: Icons.warning_amber_rounded,
         ),

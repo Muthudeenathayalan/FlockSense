@@ -1,20 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
 
-enum AppButtonVariant {
-  primary,
-  secondary,
-  outlined,
-  text,
-  gradient,
-  danger,
-}
+enum AppButtonVariant { primary, secondary, outlined, text, gradient, danger }
 
-enum AppButtonSize {
-  small,
-  medium,
-  large,
-}
+enum AppButtonSize { small, medium, large }
 
 class AppButton extends StatelessWidget {
   const AppButton({
@@ -80,8 +69,7 @@ class AppButton extends StatelessWidget {
     final effectiveOnPressed = (isLoading || isDisabled) ? null : onPressed;
 
     if (variant == AppButtonVariant.gradient || gradient != null) {
-      final effectiveGradient =
-          gradient ?? AppColors.primaryGradient;
+      final effectiveGradient = gradient ?? AppColors.primaryGradient;
 
       Widget buttonWidget = Material(
         color: Colors.transparent,
@@ -246,10 +234,7 @@ class AppButton extends StatelessWidget {
         ],
         Text(
           label,
-          style: TextStyle(
-            fontSize: _fontSize,
-            fontWeight: FontWeight.w700,
-          ),
+          style: TextStyle(fontSize: _fontSize, fontWeight: FontWeight.w700),
         ),
         if (trailingIcon != null) ...[
           const SizedBox(width: 8),

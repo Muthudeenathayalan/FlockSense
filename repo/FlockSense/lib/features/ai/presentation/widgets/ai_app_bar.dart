@@ -33,7 +33,11 @@ class AiAppBar extends StatelessWidget implements PreferredSizeWidget {
             children: [
               const Text(
                 'FlockSense AI',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(width: 8),
               Container(
@@ -45,9 +49,23 @@ class AiAppBar extends StatelessWidget implements PreferredSizeWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                     const SizedBox(width: 4),
-                    const Text('ONLINE', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.green)),
+                    const Text(
+                      'ONLINE',
+                      style: TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -62,7 +80,10 @@ class AiAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.add_comment_outlined, color: Color(0xFF1B5E20)),
+          icon: const Icon(
+            Icons.add_comment_outlined,
+            color: Color(0xFF1B5E20),
+          ),
           tooltip: 'New Conversation',
           onPressed: onNewChat,
         ),

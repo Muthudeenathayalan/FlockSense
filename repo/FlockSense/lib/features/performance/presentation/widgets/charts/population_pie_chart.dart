@@ -16,7 +16,12 @@ class PopulationPieChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final total = currentBirds + deadBirds;
     if (total == 0) {
-      return const Center(child: Text('No bird data available', style: TextStyle(color: AppColors.textSecondary)));
+      return const Center(
+        child: Text(
+          'No bird data available',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+      );
     }
 
     final livePct = ((currentBirds / total) * 100).toStringAsFixed(1);
@@ -36,14 +41,22 @@ class PopulationPieChart extends StatelessWidget {
                   value: currentBirds.toDouble(),
                   title: '$livePct%',
                   radius: 50,
-                  titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                  titleStyle: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
                 PieChartSectionData(
                   color: AppColors.danger,
                   value: deadBirds > 0 ? deadBirds.toDouble() : 0.001,
                   title: '$deadPct%',
                   radius: 46,
-                  titleStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                  titleStyle: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ],
             ),
@@ -55,9 +68,17 @@ class PopulationPieChart extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _legendItem(color: AppColors.primary, label: 'Live Birds', count: currentBirds),
+              _legendItem(
+                color: AppColors.primary,
+                label: 'Live Birds',
+                count: currentBirds,
+              ),
               const SizedBox(height: 12),
-              _legendItem(color: AppColors.danger, label: 'Dead Birds', count: deadBirds),
+              _legendItem(
+                color: AppColors.danger,
+                label: 'Dead Birds',
+                count: deadBirds,
+              ),
             ],
           ),
         ),
@@ -65,7 +86,11 @@ class PopulationPieChart extends StatelessWidget {
     );
   }
 
-  Widget _legendItem({required Color color, required String label, required int count}) {
+  Widget _legendItem({
+    required Color color,
+    required String label,
+    required int count,
+  }) {
     return Row(
       children: [
         Container(
@@ -77,8 +102,17 @@ class PopulationPieChart extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-            Text('$count birds', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            Text(
+              '$count birds',
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
       ],

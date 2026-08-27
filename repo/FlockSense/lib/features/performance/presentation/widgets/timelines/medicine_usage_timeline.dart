@@ -16,7 +16,11 @@ class MedicineUsageTimeline extends StatelessWidget {
         alignment: Alignment.center,
         child: const Column(
           children: [
-            Icon(Icons.medication_outlined, size: 36, color: AppColors.textHint),
+            Icon(
+              Icons.medication_outlined,
+              size: 36,
+              color: AppColors.textHint,
+            ),
             SizedBox(height: 8),
             Text(
               'No medicine logs recorded',
@@ -33,22 +37,37 @@ class MedicineUsageTimeline extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: medicines.length,
-      separatorBuilder: (_, index) => const Divider(height: 1, color: AppColors.border),
+      separatorBuilder: (_, index) =>
+          const Divider(height: 1, color: AppColors.border),
       itemBuilder: (context, index) {
         final item = medicines[index];
         return ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 4,
+            vertical: 4,
+          ),
           leading: CircleAvatar(
             backgroundColor: const Color(0xFF6A1B9A).withValues(alpha: 0.12),
-            child: const Icon(Icons.medication, color: Color(0xFF6A1B9A), size: 20),
+            child: const Icon(
+              Icons.medication,
+              color: Color(0xFF6A1B9A),
+              size: 20,
+            ),
           ),
           title: Text(
             item.medicineName,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
           ),
           subtitle: Text(
             '${dateFormat.format(item.date)} • Day ${item.batchAgeDay}',
-            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+            ),
           ),
           trailing: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -56,12 +75,19 @@ class MedicineUsageTimeline extends StatelessWidget {
             children: [
               Text(
                 '${item.quantity} ${item.unit}',
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary),
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
               ),
               if (item.valueRs != null && item.valueRs! > 0)
                 Text(
                   '₹${item.valueRs!.toStringAsFixed(0)}',
-                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
             ],
           ),

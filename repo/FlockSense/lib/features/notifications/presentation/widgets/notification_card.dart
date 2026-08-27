@@ -62,12 +62,16 @@ class NotificationCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: isUnread ? Colors.green.shade50.withAlpha((0.5 * 255).toInt()) : Colors.white,
+        color: isUnread
+            ? Colors.green.shade50.withAlpha((0.5 * 255).toInt())
+            : Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isPinned
               ? const Color(0xFF1B5E20)
-              : (notification.priority == NotificationPriority.critical ? Colors.red.shade300 : Colors.grey.shade200),
+              : (notification.priority == NotificationPriority.critical
+                    ? Colors.red.shade300
+                    : Colors.grey.shade200),
           width: isPinned ? 2 : 1,
         ),
       ),
@@ -105,7 +109,11 @@ class NotificationCard extends StatelessWidget {
               ),
               child: Text(
                 notification.priority.name.toUpperCase(),
-                style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: priorityColor),
+                style: TextStyle(
+                  fontSize: 8,
+                  fontWeight: FontWeight.bold,
+                  color: priorityColor,
+                ),
               ),
             ),
           ],
@@ -138,18 +146,31 @@ class NotificationCard extends StatelessWidget {
                 await NotificationFirestoreService.togglePin(notification.id);
                 break;
               case 'archive':
-                await NotificationFirestoreService.archiveNotification(notification.id);
+                await NotificationFirestoreService.archiveNotification(
+                  notification.id,
+                );
                 break;
               case 'delete':
-                await NotificationFirestoreService.deleteNotification(notification.id);
+                await NotificationFirestoreService.deleteNotification(
+                  notification.id,
+                );
                 break;
             }
           },
           itemBuilder: (ctx) => [
-            PopupMenuItem(value: 'read', child: Text(isUnread ? 'Mark as Read' : 'Mark as Unread')),
-            PopupMenuItem(value: 'pin', child: Text(isPinned ? 'Unpin Alert' : 'Pin to Top')),
+            PopupMenuItem(
+              value: 'read',
+              child: Text(isUnread ? 'Mark as Read' : 'Mark as Unread'),
+            ),
+            PopupMenuItem(
+              value: 'pin',
+              child: Text(isPinned ? 'Unpin Alert' : 'Pin to Top'),
+            ),
             const PopupMenuItem(value: 'archive', child: Text('Archive Alert')),
-            const PopupMenuItem(value: 'delete', child: Text('Delete Alert', style: TextStyle(color: Colors.red))),
+            const PopupMenuItem(
+              value: 'delete',
+              child: Text('Delete Alert', style: TextStyle(color: Colors.red)),
+            ),
           ],
         ),
       ),

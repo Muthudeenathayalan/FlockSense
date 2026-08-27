@@ -6,7 +6,8 @@ class NotificationFilterState {
   final String searchQuery;
   final NotificationType? typeFilter;
   final NotificationPriority? priorityFilter;
-  final String statusFilter; // 'all', 'unread', 'read', 'critical', 'reminder', 'ai'
+  final String
+  statusFilter; // 'all', 'unread', 'read', 'critical', 'reminder', 'ai'
   final String? selectedFarmId;
   final String? selectedBatchId;
 
@@ -32,7 +33,9 @@ class NotificationFilterState {
     return NotificationFilterState(
       searchQuery: searchQuery ?? this.searchQuery,
       typeFilter: clearType ? null : (typeFilter ?? this.typeFilter),
-      priorityFilter: clearPriority ? null : (priorityFilter ?? this.priorityFilter),
+      priorityFilter: clearPriority
+          ? null
+          : (priorityFilter ?? this.priorityFilter),
       statusFilter: statusFilter ?? this.statusFilter,
       selectedFarmId: selectedFarmId ?? this.selectedFarmId,
       selectedBatchId: selectedBatchId ?? this.selectedBatchId,
@@ -53,7 +56,10 @@ class NotificationFilterNotifier extends Notifier<NotificationFilterState> {
   }
 
   void setPriorityFilter(NotificationPriority? priority) {
-    state = state.copyWith(priorityFilter: priority, clearPriority: priority == null);
+    state = state.copyWith(
+      priorityFilter: priority,
+      clearPriority: priority == null,
+    );
   }
 
   void setStatusFilter(String status) {
@@ -67,21 +73,22 @@ class NotificationFilterNotifier extends Notifier<NotificationFilterState> {
 
 final notificationFilterProvider =
     NotifierProvider<NotificationFilterNotifier, NotificationFilterState>(
-  NotificationFilterNotifier.new,
-);
+      NotificationFilterNotifier.new,
+    );
 
-final notificationsStreamProvider =
-    StreamProvider<List<NotificationModel>>((ref) {
+final notificationsStreamProvider = StreamProvider<List<NotificationModel>>((
+  ref,
+) {
   return NotificationFirestoreService.streamNotifications();
 });
 
-final remindersStreamProvider =
-    StreamProvider<List<ReminderModel>>((ref) {
+final remindersStreamProvider = StreamProvider<List<ReminderModel>>((ref) {
   return NotificationFirestoreService.streamReminders();
 });
 
-final notificationSettingsProvider =
-    StreamProvider<NotificationSettingsModel>((ref) {
+final notificationSettingsProvider = StreamProvider<NotificationSettingsModel>((
+  ref,
+) {
   return NotificationFirestoreService.streamSettings();
 });
 
@@ -108,12 +115,20 @@ final notificationStatsProvider = Provider<NotificationStatsResult>((ref) {
 
   final now = DateTime.now();
 
-  final unreadCount = notifications.where((n) => n.status == NotificationStatus.unread).length;
-  final todayAlertsCount = notifications.where((n) =>
-      n.createdAt.year == now.year &&
-      n.createdAt.month == now.month &&
-      n.createdAt.day == now.day).length;
-  final criticalAlertsCount = notifications.where((n) => n.priority == NotificationPriority.critical).length;
+  final unreadCount = notifications
+      .where((n) => n.status == NotificationStatus.unread)
+      .length;
+  final todayAlertsCount = notifications
+      .where(
+        (n) =>
+            n.createdAt.year == now.year &&
+            n.createdAt.month == now.month &&
+            n.createdAt.day == now.day,
+      )
+      .length;
+  final criticalAlertsCount = notifications
+      .where((n) => n.priority == NotificationPriority.critical)
+      .length;
   final completedRemindersCount = reminders.where((r) => r.isCompleted).length;
 
   return NotificationStatsResult(

@@ -11,12 +11,18 @@ class EpefGaugeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final ageDays = data.batchAgeDays > 0 ? data.batchAgeDays : 35;
     final livability = data.totalInitialBirds > 0
-        ? ((data.totalInitialBirds - data.totalMortality) / data.totalInitialBirds * 100)
+        ? ((data.totalInitialBirds - data.totalMortality) /
+              data.totalInitialBirds *
+              100)
         : 97.0;
-    final avgWeightKg = data.averageWeightGrams > 0 ? (data.averageWeightGrams / 1000.0) : 2.0;
+    final avgWeightKg = data.averageWeightGrams > 0
+        ? (data.averageWeightGrams / 1000.0)
+        : 2.0;
     final fcr = data.fcr > 0 ? data.fcr : 1.55;
 
-    final epef = (ageDays * fcr) > 0 ? ((livability * avgWeightKg) / (ageDays * fcr) * 100) : 0.0;
+    final epef = (ageDays * fcr) > 0
+        ? ((livability * avgWeightKg) / (ageDays * fcr) * 100)
+        : 0.0;
 
     String tierLabel;
     Color tierColor;
@@ -56,7 +62,11 @@ class EpefGaugeCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 const Text(
                   'EPEF Performance Score',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -117,9 +127,19 @@ class EpefGaugeCard extends StatelessWidget {
   Widget _metricCell(String label, String val) {
     return Column(
       children: [
-        Text(val, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+        Text(
+          val,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: AppColors.textPrimary,
+          ),
+        ),
         const SizedBox(height: 2),
-        Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+        ),
       ],
     );
   }

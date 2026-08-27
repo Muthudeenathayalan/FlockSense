@@ -29,8 +29,8 @@ class AppEmptyState extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final effectiveIconColor = iconColor ??
-        (isDark ? AppColors.primaryLight : AppColors.primary);
+    final effectiveIconColor =
+        iconColor ?? (isDark ? AppColors.primaryLight : AppColors.primary);
 
     return Center(
       child: SingleChildScrollView(
@@ -45,11 +45,7 @@ class AppEmptyState extends StatelessWidget {
                 color: effectiveIconColor.withOpacity(0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: 52,
-                color: effectiveIconColor,
-              ),
+              child: Icon(icon, size: 52, color: effectiveIconColor),
             ),
             const SizedBox(height: 24),
             Text(
@@ -65,7 +61,9 @@ class AppEmptyState extends StatelessWidget {
               message,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.textSecondary,
                 height: 1.45,
               ),
             ),
@@ -78,7 +76,8 @@ class AppEmptyState extends StatelessWidget {
                 size: AppButtonSize.medium,
               ),
             ],
-            if (secondaryButtonLabel != null && onSecondaryButtonPressed != null) ...[
+            if (secondaryButtonLabel != null &&
+                onSecondaryButtonPressed != null) ...[
               const SizedBox(height: 12),
               AppButton(
                 label: secondaryButtonLabel!,

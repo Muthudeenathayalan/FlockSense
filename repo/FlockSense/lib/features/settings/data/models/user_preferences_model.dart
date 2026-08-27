@@ -110,8 +110,8 @@ class UserPreferencesModel {
     this.autoLogoutMinutes = 30,
     this.developerMode = false,
     this.exportLogsEnabled = false,
-  })  : accountCreatedDate = accountCreatedDate ?? DateTime(2025, 1, 15),
-        lastLoginDate = lastLoginDate ?? DateTime(2026, 8, 16);
+  }) : accountCreatedDate = accountCreatedDate ?? DateTime(2025, 1, 15),
+       lastLoginDate = lastLoginDate ?? DateTime(2026, 8, 16);
 
   Map<String, dynamic> toJson() {
     return {
@@ -152,7 +152,9 @@ class UserPreferencesModel {
       'cacheSizeMb': cacheSizeMb,
       'storageUsedMb': storageUsedMb,
       'autoBackupEnabled': autoBackupEnabled,
-      'lastBackupTime': lastBackupTime != null ? Timestamp.fromDate(lastBackupTime!) : null,
+      'lastBackupTime': lastBackupTime != null
+          ? Timestamp.fromDate(lastBackupTime!)
+          : null,
       'cloudSyncStatus': cloudSyncStatus,
       'biometricLogin': biometricLogin,
       'pinLock': pinLock,
@@ -207,7 +209,9 @@ class UserPreferencesModel {
       cacheSizeMb: (json['cacheSizeMb'] as num?)?.toDouble() ?? 42.5,
       storageUsedMb: (json['storageUsedMb'] as num?)?.toDouble() ?? 128.4,
       autoBackupEnabled: json['autoBackupEnabled'] as bool? ?? true,
-      lastBackupTime: json['lastBackupTime'] != null ? parseDate(json['lastBackupTime']) : null,
+      lastBackupTime: json['lastBackupTime'] != null
+          ? parseDate(json['lastBackupTime'])
+          : null,
       cloudSyncStatus: json['cloudSyncStatus'] as String? ?? 'Synced',
       biometricLogin: json['biometricLogin'] as bool? ?? false,
       pinLock: json['pinLock'] as bool? ?? false,
@@ -284,7 +288,8 @@ class UserPreferencesModel {
       aiNotifsEnabled: aiNotifsEnabled ?? this.aiNotifsEnabled,
       dailySummaryEnabled: dailySummaryEnabled ?? this.dailySummaryEnabled,
       vaccineAlertsEnabled: vaccineAlertsEnabled ?? this.vaccineAlertsEnabled,
-      inventoryAlertsEnabled: inventoryAlertsEnabled ?? this.inventoryAlertsEnabled,
+      inventoryAlertsEnabled:
+          inventoryAlertsEnabled ?? this.inventoryAlertsEnabled,
       financeAlertsEnabled: financeAlertsEnabled ?? this.financeAlertsEnabled,
       quietHoursStart: quietHoursStart ?? this.quietHoursStart,
       quietHoursEnd: quietHoursEnd ?? this.quietHoursEnd,

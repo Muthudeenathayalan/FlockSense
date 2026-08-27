@@ -11,7 +11,7 @@ class GrowthAnalyticsService {
   final FirebaseFirestore _firestore;
 
   GrowthAnalyticsService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   GrowthAnalyticsData getFallbackData({GrowthAnalyticsFilterState? filter}) {
     return _processAnalytics(
@@ -91,9 +91,15 @@ class GrowthAnalyticsService {
               .where('ownerId', isEqualTo: uid);
 
           if (selectedBatch != null && selectedBatch.id.isNotEmpty) {
-            recordsQuery = recordsQuery.where('batchId', isEqualTo: selectedBatch.id);
+            recordsQuery = recordsQuery.where(
+              'batchId',
+              isEqualTo: selectedBatch.id,
+            );
           } else if (farmIdFilter != null && farmIdFilter.isNotEmpty) {
-            recordsQuery = recordsQuery.where('farmId', isEqualTo: farmIdFilter);
+            recordsQuery = recordsQuery.where(
+              'farmId',
+              isEqualTo: farmIdFilter,
+            );
           }
 
           final recordsSnap = await recordsQuery.get();
@@ -175,7 +181,8 @@ class GrowthAnalyticsService {
     }
 
     final filteredRecordsRaw = rawRecords.where((r) {
-      final isDateValid = r.recordDate.isAfter(cutoffDate) ||
+      final isDateValid =
+          r.recordDate.isAfter(cutoffDate) ||
           r.recordDate.isAtSameMomentAs(cutoffDate);
       final isBatchValid = activeBatch == null || r.batchId == activeBatch.id;
       final isFarmValid = activeFarm == null || r.farmId == activeFarm.id;
@@ -186,30 +193,39 @@ class GrowthAnalyticsService {
 
     final filteredRecords = filteredRecordsRaw.isNotEmpty
         ? filteredRecordsRaw
-        : _generateSampleRecords(activeFarm?.id ?? 'farm_1', activeBatch?.id ?? 'batch_1');
+        : _generateSampleRecords(
+            activeFarm?.id ?? 'farm_1',
+            activeBatch?.id ?? 'batch_1',
+          );
 
     final filteredMedicine = rawMedicine.where((m) {
-      final isDateValid = m.date.isAfter(cutoffDate) || m.date.isAtSameMomentAs(cutoffDate);
+      final isDateValid =
+          m.date.isAfter(cutoffDate) || m.date.isAtSameMomentAs(cutoffDate);
       final isBatchValid = activeBatch == null || m.batchId == activeBatch.id;
       return isDateValid && isBatchValid;
     }).toList();
     filteredMedicine.sort((a, b) => a.date.compareTo(b.date));
 
     final filteredVaccine = rawVaccine.where((v) {
-      final isDateValid = v.date.isAfter(cutoffDate) || v.date.isAtSameMomentAs(cutoffDate);
+      final isDateValid =
+          v.date.isAfter(cutoffDate) || v.date.isAtSameMomentAs(cutoffDate);
       final isBatchValid = activeBatch == null || v.batchId == activeBatch.id;
       return isDateValid && isBatchValid;
     }).toList();
     filteredVaccine.sort((a, b) => a.date.compareTo(b.date));
 
     final filteredSales = rawSales.where((s) {
-      final isDateValid = s.date.isAfter(cutoffDate) || s.date.isAtSameMomentAs(cutoffDate);
+      final isDateValid =
+          s.date.isAfter(cutoffDate) || s.date.isAtSameMomentAs(cutoffDate);
       final isBatchValid = activeBatch == null || s.batchId == activeBatch.id;
       return isDateValid && isBatchValid;
     }).toList();
 
-    final initialBirds = activeBatch?.totalBirds ??
-        (filteredRecords.isNotEmpty ? filteredRecords.first.openingBirds : 1000);
+    final initialBirds =
+        activeBatch?.totalBirds ??
+        (filteredRecords.isNotEmpty
+            ? filteredRecords.first.openingBirds
+            : 1000);
 
     int totalMortality = 0;
     double totalFeedKg = 0;
@@ -229,9 +245,13 @@ class GrowthAnalyticsService {
 
     final currentBirds = activeBatch != null
         ? (activeBatch.currentBirds > 0
-            ? activeBatch.currentBirds
-            : (initialBirds - totalMortality > 0 ? initialBirds - totalMortality : 0))
-        : (initialBirds - totalMortality > 0 ? initialBirds - totalMortality : 0);
+              ? activeBatch.currentBirds
+              : (initialBirds - totalMortality > 0
+                    ? initialBirds - totalMortality
+                    : 0))
+        : (initialBirds - totalMortality > 0
+              ? initialBirds - totalMortality
+              : 0);
 
     final mortalityPct = initialBirds > 0
         ? (totalMortality / initialBirds) * 100
@@ -239,17 +259,23 @@ class GrowthAnalyticsService {
 
     final avgWeightKg = latestWeightGrams / 1000.0;
 
-    final placementDate = activeBatch?.placementDate ??
+    final placementDate =
+        activeBatch?.placementDate ??
         (filteredRecords.isNotEmpty ? filteredRecords.first.recordDate : now);
     final ageDays = now.difference(placementDate).inDays.clamp(1, 365);
 
     final chickWeightGrams = activeBatch?.chickAvgWeight != null
         ? (activeBatch!.chickAvgWeight! * 1000)
         : 40.0;
-    final adgGrams = ((latestWeightGrams - chickWeightGrams) / ageDays).clamp(0.0, 200.0);
+    final adgGrams = ((latestWeightGrams - chickWeightGrams) / ageDays).clamp(
+      0.0,
+      200.0,
+    );
 
     final totalLiveWeightKg = currentBirds * avgWeightKg;
-    final fcr = totalLiveWeightKg > 0 ? (totalFeedKg / totalLiveWeightKg) : 1.52;
+    final fcr = totalLiveWeightKg > 0
+        ? (totalFeedKg / totalLiveWeightKg)
+        : 1.52;
 
     double medicineCost = 0.0;
     for (final m in filteredMedicine) {
@@ -259,13 +285,17 @@ class GrowthAnalyticsService {
     final expectedHarvestDate = placementDate.add(const Duration(days: 42));
 
     // Expenses breakdown
-    final feedExpense = totalFeedKg * 42.0; // standard feed cost estimate per kg
+    final feedExpense =
+        totalFeedKg * 42.0; // standard feed cost estimate per kg
     final medicineExpense = medicineCost > 0 ? medicineCost : 1200.0;
-    final vaccineExpense = filteredVaccine.isNotEmpty ? filteredVaccine.length * 250.0 : 850.0;
+    final vaccineExpense = filteredVaccine.isNotEmpty
+        ? filteredVaccine.length * 250.0
+        : 850.0;
     final labourExpense = ageDays * 350.0;
     final electricityExpense = ageDays * 120.0;
     final transportExpense = ageDays * 150.0;
-    final totalExpenses = feedExpense +
+    final totalExpenses =
+        feedExpense +
         medicineExpense +
         vaccineExpense +
         labourExpense +
@@ -295,81 +325,133 @@ class GrowthAnalyticsService {
       final r = filteredRecords[i];
       final dateStr = '${r.recordDate.month}/${r.recordDate.day}';
 
-      weightGrowthPoints.add(ChartPointData(
-        date: r.recordDate,
-        value: r.avgWeightGrams / 1000.0,
-        label: dateStr,
-      ));
+      weightGrowthPoints.add(
+        ChartPointData(
+          date: r.recordDate,
+          value: r.avgWeightGrams / 1000.0,
+          label: dateStr,
+        ),
+      );
 
-      feedConsumptionBars.add(ChartPointData(
-        date: r.recordDate,
-        value: r.feedConsumedKg,
-        label: dateStr,
-      ));
+      feedConsumptionBars.add(
+        ChartPointData(
+          date: r.recordDate,
+          value: r.feedConsumedKg,
+          label: dateStr,
+        ),
+      );
 
-      waterConsumptionPoints.add(ChartPointData(
-        date: r.recordDate,
-        value: r.waterConsumedLiters,
-        label: dateStr,
-      ));
+      waterConsumptionPoints.add(
+        ChartPointData(
+          date: r.recordDate,
+          value: r.waterConsumedLiters,
+          label: dateStr,
+        ),
+      );
 
-      mortalityBars.add(ChartPointData(
-        date: r.recordDate,
-        value: r.mortalityCount.toDouble(),
-        label: dateStr,
-      ));
+      mortalityBars.add(
+        ChartPointData(
+          date: r.recordDate,
+          value: r.mortalityCount.toDouble(),
+          label: dateStr,
+        ),
+      );
 
       runningExpense += (r.feedConsumedKg * 42.0) + 500.0;
-      runningRevenue += (r.closingBirds * (r.avgWeightGrams / 1000.0) * 140.0) / (filteredRecords.length.clamp(1, 365));
+      runningRevenue +=
+          (r.closingBirds * (r.avgWeightGrams / 1000.0) * 140.0) /
+          (filteredRecords.length.clamp(1, 365));
 
-      profitTrendPoints.add(MultiLinePointData(
-        date: r.recordDate,
-        revenue: runningRevenue,
-        expense: runningExpense,
-        profit: runningRevenue - runningExpense,
-      ));
+      profitTrendPoints.add(
+        MultiLinePointData(
+          date: r.recordDate,
+          revenue: runningRevenue,
+          expense: runningExpense,
+          profit: runningRevenue - runningExpense,
+        ),
+      );
     }
 
     final expenseBreakdown = [
       ExpenseCategoryData(category: 'Feed', amount: feedExpense, label: 'Feed'),
-      ExpenseCategoryData(category: 'Medicine', amount: medicineExpense, label: 'Med'),
-      ExpenseCategoryData(category: 'Vaccine', amount: vaccineExpense, label: 'Vac'),
-      ExpenseCategoryData(category: 'Labour', amount: labourExpense, label: 'Lab'),
-      ExpenseCategoryData(category: 'Electricity', amount: electricityExpense, label: 'Elec'),
-      ExpenseCategoryData(category: 'Transport', amount: transportExpense, label: 'Trans'),
+      ExpenseCategoryData(
+        category: 'Medicine',
+        amount: medicineExpense,
+        label: 'Med',
+      ),
+      ExpenseCategoryData(
+        category: 'Vaccine',
+        amount: vaccineExpense,
+        label: 'Vac',
+      ),
+      ExpenseCategoryData(
+        category: 'Labour',
+        amount: labourExpense,
+        label: 'Lab',
+      ),
+      ExpenseCategoryData(
+        category: 'Electricity',
+        amount: electricityExpense,
+        label: 'Elec',
+      ),
+      ExpenseCategoryData(
+        category: 'Transport',
+        amount: transportExpense,
+        label: 'Trans',
+      ),
     ];
 
     // Generate AI Insights
     final insights = <String>[];
     if (adgGrams > 50.0) {
-      insights.add('🚀 Excellent Growth: Average Daily Gain is ${adgGrams.toStringAsFixed(1)}g/day (above standard 48g target).');
+      insights.add(
+        '🚀 Excellent Growth: Average Daily Gain is ${adgGrams.toStringAsFixed(1)}g/day (above standard 48g target).',
+      );
     } else if (adgGrams > 0) {
-      insights.add('📈 Moderate Growth: Average Daily Gain is ${adgGrams.toStringAsFixed(1)}g/day.');
+      insights.add(
+        '📈 Moderate Growth: Average Daily Gain is ${adgGrams.toStringAsFixed(1)}g/day.',
+      );
     }
 
     if (fcr > 0 && fcr <= 1.6) {
-      insights.add('🏆 Optimal FCR: Feed conversion ratio of ${fcr.toStringAsFixed(2)} indicates highly efficient feed utilization.');
+      insights.add(
+        '🏆 Optimal FCR: Feed conversion ratio of ${fcr.toStringAsFixed(2)} indicates highly efficient feed utilization.',
+      );
     } else if (fcr > 1.8) {
-      insights.add('⚠️ FCR Warning: FCR is ${fcr.toStringAsFixed(2)}. Check feed wastage or drinker heights.');
+      insights.add(
+        '⚠️ FCR Warning: FCR is ${fcr.toStringAsFixed(2)}. Check feed wastage or drinker heights.',
+      );
     }
 
     if (mortalityPct <= 2.0) {
-      insights.add('✅ Low Mortality: Cumulative mortality is ${mortalityPct.toStringAsFixed(1)}%, well within safe 2.0% threshold.');
+      insights.add(
+        '✅ Low Mortality: Cumulative mortality is ${mortalityPct.toStringAsFixed(1)}%, well within safe 2.0% threshold.',
+      );
     } else {
-      insights.add('⚠️ High Mortality Alert: Mortality reached ${mortalityPct.toStringAsFixed(1)}%. Review health logs.');
+      insights.add(
+        '⚠️ High Mortality Alert: Mortality reached ${mortalityPct.toStringAsFixed(1)}%. Review health logs.',
+      );
     }
 
     final daysToHarvest = expectedHarvestDate.difference(now).inDays;
     if (daysToHarvest > 0) {
-      insights.add('⏳ Harvest Estimate: Estimated harvest date is in $daysToHarvest days (${expectedHarvestDate.day}/${expectedHarvestDate.month}).');
+      insights.add(
+        '⏳ Harvest Estimate: Estimated harvest date is in $daysToHarvest days (${expectedHarvestDate.day}/${expectedHarvestDate.month}).',
+      );
     } else {
-      insights.add('🎉 Ready for Harvest: Batch has reached target maturity age ($ageDays days).');
+      insights.add(
+        '🎉 Ready for Harvest: Batch has reached target maturity age ($ageDays days).',
+      );
     }
 
     if (filteredVaccine.isEmpty && ageDays >= 7) {
-      insights.add('💉 Vaccination Schedule: Early NDV/IBD vaccination check recommended.');
+      insights.add(
+        '💉 Vaccination Schedule: Early NDV/IBD vaccination check recommended.',
+      );
     } else {
-      insights.add('💉 Vaccination Status: ${filteredVaccine.length} vaccine records logged.');
+      insights.add(
+        '💉 Vaccination Status: ${filteredVaccine.length} vaccine records logged.',
+      );
     }
 
     return GrowthAnalyticsData(
@@ -421,10 +503,10 @@ class GrowthAnalyticsService {
       final date = now.subtract(Duration(days: 28 - day));
       final mortality = (day % 7 == 0) ? 2 : (day % 4 == 0 ? 1 : 0);
       currentBirds -= mortality;
-      
+
       final dailyGain = 30.0 + (day * 1.2); // Growth progression g/day
       currentWeight += dailyGain;
-      
+
       final feedKg = (currentBirds * (20 + (day * 3.5))) / 1000.0;
       final waterL = feedKg * 1.9;
 
@@ -446,7 +528,9 @@ class GrowthAnalyticsService {
           medicineGiven: day % 10 == 0,
           medicineName: day % 10 == 0 ? 'Enrofloxacin' : null,
           vaccineGiven: day == 7 || day == 14,
-          vaccineName: day == 7 ? 'LaSota ND' : (day == 14 ? 'IBD Georgia' : null),
+          vaccineName: day == 7
+              ? 'LaSota ND'
+              : (day == 14 ? 'IBD Georgia' : null),
           ownerId: 'sample_owner',
           createdAt: date,
           updatedAt: date,

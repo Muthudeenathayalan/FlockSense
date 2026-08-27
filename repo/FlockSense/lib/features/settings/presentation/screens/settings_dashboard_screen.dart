@@ -11,10 +11,12 @@ class SettingsDashboardScreen extends ConsumerStatefulWidget {
   const SettingsDashboardScreen({super.key});
 
   @override
-  ConsumerState<SettingsDashboardScreen> createState() => _SettingsDashboardScreenState();
+  ConsumerState<SettingsDashboardScreen> createState() =>
+      _SettingsDashboardScreenState();
 }
 
-class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScreen> {
+class _SettingsDashboardScreenState
+    extends ConsumerState<SettingsDashboardScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String _selectedCategory = 'All';
@@ -43,7 +45,8 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
   void _openEditProfile(String name, String phone) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (ctx) => EditProfileDialog(currentName: name, currentPhone: phone),
+      builder: (ctx) =>
+          EditProfileDialog(currentName: name, currentPhone: phone),
     );
     if (result == true) {
       ref.invalidate(settingsNotifierProvider);
@@ -58,10 +61,14 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
   }
 
   bool _matchesCategory(String sectionTitle, String searchKeywords) {
-    if (_selectedCategory != 'All' && !_selectedCategory.toLowerCase().contains(sectionTitle.toLowerCase()) && !sectionTitle.toLowerCase().contains(_selectedCategory.toLowerCase())) {
+    if (_selectedCategory != 'All' &&
+        !_selectedCategory.toLowerCase().contains(sectionTitle.toLowerCase()) &&
+        !sectionTitle.toLowerCase().contains(_selectedCategory.toLowerCase())) {
       return false;
     }
-    if (_searchQuery.isNotEmpty && !searchKeywords.toLowerCase().contains(_searchQuery) && !sectionTitle.toLowerCase().contains(_searchQuery)) {
+    if (_searchQuery.isNotEmpty &&
+        !searchKeywords.toLowerCase().contains(_searchQuery) &&
+        !sectionTitle.toLowerCase().contains(_searchQuery)) {
       return false;
     }
     return true;
@@ -84,9 +91,7 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: Column(
-          children: children,
-        ),
+        child: Column(children: children),
       ),
     );
   }
@@ -110,7 +115,11 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
         surfaceTintColor: Colors.transparent,
         title: const Text(
           'Settings & Preferences',
-          style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.bold, fontSize: 18),
+          style: TextStyle(
+            color: Color(0xFF0F172A),
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
         ),
         actions: [
           IconButton(
@@ -121,11 +130,19 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                 context: context,
                 builder: (ctx) => AlertDialog(
                   title: const Text('Reset All Settings'),
-                  content: const Text('This will reset all application preferences to factory defaults. Continue?'),
+                  content: const Text(
+                    'This will reset all application preferences to factory defaults. Continue?',
+                  ),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('Cancel'),
+                    ),
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                      ),
                       onPressed: () => Navigator.pop(ctx, true),
                       child: const Text('Reset'),
                     ),
@@ -137,7 +154,9 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                 await notifier.resetSettings();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Settings reset to factory defaults.')),
+                    const SnackBar(
+                      content: Text('Settings reset to factory defaults.'),
+                    ),
                   );
                 }
               }
@@ -155,7 +174,11 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF0F3811), Color(0xFF1B5E20), Color(0xFF2E7D32)],
+                  colors: [
+                    Color(0xFF0F3811),
+                    Color(0xFF1B5E20),
+                    Color(0xFF2E7D32),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -176,14 +199,21 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                         padding: const EdgeInsets.all(3),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.amber.shade400, width: 2),
+                          border: Border.all(
+                            color: Colors.amber.shade400,
+                            width: 2,
+                          ),
                         ),
                         child: CircleAvatar(
                           radius: 28,
                           backgroundColor: Colors.white.withOpacity(0.2),
                           child: Text(
                             name.isNotEmpty ? name[0].toUpperCase() : 'F',
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 24,
+                            ),
                           ),
                         ),
                       ),
@@ -194,23 +224,37 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                           children: [
                             Text(
                               name,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.white),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 17,
+                                color: Colors.white,
+                              ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               email,
-                              style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.85)),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white.withOpacity(0.85),
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white.withOpacity(0.18),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 '${prefs.role} • ${prefs.phone}',
-                                style: const TextStyle(fontSize: 10.5, color: Colors.white, fontWeight: FontWeight.w500),
+                                style: const TextStyle(
+                                  fontSize: 10.5,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ),
                           ],
@@ -228,10 +272,18 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                             foregroundColor: Colors.white,
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(vertical: 8),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                           icon: const Icon(Icons.edit_outlined, size: 15),
-                          label: const Text('Edit Profile', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
+                          label: const Text(
+                            'Edit Profile',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           onPressed: () => _openEditProfile(name, prefs.phone),
                         ),
                       ),
@@ -243,10 +295,18 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                             foregroundColor: const Color(0xFF1B5E20),
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(vertical: 8),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                           icon: const Icon(Icons.lock_outline, size: 15),
-                          label: const Text('Change Password', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold)),
+                          label: const Text(
+                            'Change Password',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           onPressed: _openChangePassword,
                         ),
                       ),
@@ -260,12 +320,20 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
             // SEARCH BAR
             TextField(
               controller: _searchController,
-              onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
+              onChanged: (val) =>
+                  setState(() => _searchQuery = val.toLowerCase()),
               decoration: InputDecoration(
                 hintText: 'Search preferences...',
                 hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
-                prefixIcon: const Icon(Icons.search, size: 18, color: Color(0xFF64748B)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  size: 18,
+                  color: Color(0xFF64748B),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 filled: true,
                 fillColor: Colors.white,
                 enabledBorder: OutlineInputBorder(
@@ -274,7 +342,10 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Color(0xFF1B5E20), width: 1.5),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF1B5E20),
+                    width: 1.5,
+                  ),
                 ),
               ),
             ),
@@ -295,14 +366,22 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                       cat,
                       style: TextStyle(
                         fontSize: 11.5,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                        color: isSelected ? Colors.white : const Color(0xFF475569),
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.w500,
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFF475569),
                       ),
                     ),
                     selected: isSelected,
                     selectedColor: const Color(0xFF1B5E20),
                     backgroundColor: Colors.white,
-                    side: BorderSide(color: isSelected ? const Color(0xFF1B5E20) : Colors.grey.shade300),
+                    side: BorderSide(
+                      color: isSelected
+                          ? const Color(0xFF1B5E20)
+                          : Colors.grey.shade300,
+                    ),
                     onSelected: (val) {
                       if (val) setState(() => _selectedCategory = cat);
                     },
@@ -313,30 +392,52 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
             const SizedBox(height: 16),
 
             // SECTION 1: ACCOUNT
-            if (_matchesCategory('Account', 'account profile name email phone role')) ...[
-              const SettingsSectionHeader(title: 'Account & Verification', icon: Icons.person_outline),
+            if (_matchesCategory(
+              'Account',
+              'account profile name email phone role',
+            )) ...[
+              const SettingsSectionHeader(
+                title: 'Account & Verification',
+                icon: Icons.person_outline,
+              ),
               _buildSectionCard(
                 children: [
                   SettingsTile(
                     icon: Icons.account_circle_outlined,
                     title: 'Account Created',
-                    subtitle: DateFormat('dd MMMM yyyy').format(prefs.accountCreatedDate),
+                    subtitle: DateFormat(
+                      'dd MMMM yyyy',
+                    ).format(prefs.accountCreatedDate),
                   ),
                   SettingsTile(
                     icon: Icons.access_time_outlined,
                     title: 'Last Login',
-                    subtitle: DateFormat('dd MMM yyyy, hh:mm a').format(prefs.lastLoginDate),
+                    subtitle: DateFormat(
+                      'dd MMM yyyy, hh:mm a',
+                    ).format(prefs.lastLoginDate),
                   ),
                   SettingsTile(
                     icon: Icons.verified_user_outlined,
                     title: 'Email Verification',
-                    subtitle: user?.emailVerified == true ? 'Email Verified ✓' : 'Unverified • Tap to send link',
+                    subtitle: user?.emailVerified == true
+                        ? 'Email Verified ✓'
+                        : 'Unverified • Tap to send link',
                     trailing: user?.emailVerified == true
-                        ? const Icon(Icons.check_circle, color: Colors.green, size: 18)
+                        ? const Icon(
+                            Icons.check_circle,
+                            color: Colors.green,
+                            size: 18,
+                          )
                         : OutlinedButton(
-                            style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
-                            onPressed: () => SettingsService.sendEmailVerification(),
-                            child: const Text('Verify', style: TextStyle(fontSize: 11)),
+                            style: OutlinedButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            onPressed: () =>
+                                SettingsService.sendEmailVerification(),
+                            child: const Text(
+                              'Verify',
+                              style: TextStyle(fontSize: 11),
+                            ),
                           ),
                     showDivider: false,
                   ),
@@ -345,8 +446,14 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
             ],
 
             // SECTION 2: APP APPEARANCE
-            if (_matchesCategory('Appearance', 'appearance theme mode font dynamic color')) ...[
-              const SettingsSectionHeader(title: 'App Appearance', icon: Icons.palette_outlined),
+            if (_matchesCategory(
+              'Appearance',
+              'appearance theme mode font dynamic color',
+            )) ...[
+              const SettingsSectionHeader(
+                title: 'App Appearance',
+                icon: Icons.palette_outlined,
+              ),
               _buildSectionCard(
                 children: [
                   SettingsTile(
@@ -357,9 +464,24 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                       child: DropdownButton<String>(
                         value: prefs.themeMode,
                         items: const [
-                          DropdownMenuItem(value: 'system', child: Text('System', style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: 'light', child: Text('Light', style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: 'dark', child: Text('Dark', style: TextStyle(fontSize: 12))),
+                          DropdownMenuItem(
+                            value: 'system',
+                            child: Text(
+                              'System',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'light',
+                            child: Text(
+                              'Light',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'dark',
+                            child: Text('Dark', style: TextStyle(fontSize: 12)),
+                          ),
                         ],
                         onChanged: (val) => notifier.updateThemeMode(val!),
                       ),
@@ -373,11 +495,31 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                       child: DropdownButton<String>(
                         value: prefs.fontSize,
                         items: const [
-                          DropdownMenuItem(value: 'Small', child: Text('Small', style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: 'Medium', child: Text('Medium', style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: 'Large', child: Text('Large', style: TextStyle(fontSize: 12))),
+                          DropdownMenuItem(
+                            value: 'Small',
+                            child: Text(
+                              'Small',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Medium',
+                            child: Text(
+                              'Medium',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Large',
+                            child: Text(
+                              'Large',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
                         ],
-                        onChanged: (val) => notifier.updateSettings(prefs.copyWith(fontSize: val!)),
+                        onChanged: (val) => notifier.updateSettings(
+                          prefs.copyWith(fontSize: val!),
+                        ),
                       ),
                     ),
                   ),
@@ -388,7 +530,9 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                     trailing: Switch(
                       value: prefs.enableDynamicColors,
                       activeColor: const Color(0xFF1B5E20),
-                      onChanged: (val) => notifier.updateSettings(prefs.copyWith(enableDynamicColors: val)),
+                      onChanged: (val) => notifier.updateSettings(
+                        prefs.copyWith(enableDynamicColors: val),
+                      ),
                     ),
                     showDivider: false,
                   ),
@@ -398,19 +542,36 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
 
             // SECTION 3: LANGUAGE
             if (_matchesCategory('Language', 'language english tamil')) ...[
-              const SettingsSectionHeader(title: 'Language & Locale', icon: Icons.translate),
+              const SettingsSectionHeader(
+                title: 'Language & Locale',
+                icon: Icons.translate,
+              ),
               _buildSectionCard(
                 children: [
                   SettingsTile(
                     icon: Icons.language,
                     title: 'Application Language',
-                    subtitle: prefs.languageCode == 'en' ? 'English (US)' : 'Tamil (தமிழ்)',
+                    subtitle: prefs.languageCode == 'en'
+                        ? 'English (US)'
+                        : 'Tamil (தமிழ்)',
                     trailing: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
                         value: prefs.languageCode,
                         items: const [
-                          DropdownMenuItem(value: 'en', child: Text('English', style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: 'ta', child: Text('Tamil (தமிழ்)', style: TextStyle(fontSize: 12))),
+                          DropdownMenuItem(
+                            value: 'en',
+                            child: Text(
+                              'English',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'ta',
+                            child: Text(
+                              'Tamil (தமிழ்)',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
                         ],
                         onChanged: (val) => notifier.updateLanguage(val!),
                       ),
@@ -422,8 +583,14 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
             ],
 
             // SECTION 4: UNITS & CURRENCY
-            if (_matchesCategory('Units', 'units weight temperature currency distance')) ...[
-              const SettingsSectionHeader(title: 'Units & Measurements', icon: Icons.straighten),
+            if (_matchesCategory(
+              'Units',
+              'units weight temperature currency distance',
+            )) ...[
+              const SettingsSectionHeader(
+                title: 'Units & Measurements',
+                icon: Icons.straighten,
+              ),
               _buildSectionCard(
                 children: [
                   SettingsTile(
@@ -434,10 +601,23 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                       child: DropdownButton<String>(
                         value: prefs.weightUnit,
                         items: const [
-                          DropdownMenuItem(value: 'kg', child: Text('Kilograms (kg)', style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: 'g', child: Text('Grams (g)', style: TextStyle(fontSize: 12))),
+                          DropdownMenuItem(
+                            value: 'kg',
+                            child: Text(
+                              'Kilograms (kg)',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'g',
+                            child: Text(
+                              'Grams (g)',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
                         ],
-                        onChanged: (val) => notifier.updateUnits(weightUnit: val!),
+                        onChanged: (val) =>
+                            notifier.updateUnits(weightUnit: val!),
                       ),
                     ),
                   ),
@@ -449,10 +629,23 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                       child: DropdownButton<String>(
                         value: prefs.temperatureUnit,
                         items: const [
-                          DropdownMenuItem(value: '°C', child: Text('Celsius (°C)', style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: '°F', child: Text('Fahrenheit (°F)', style: TextStyle(fontSize: 12))),
+                          DropdownMenuItem(
+                            value: '°C',
+                            child: Text(
+                              'Celsius (°C)',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: '°F',
+                            child: Text(
+                              'Fahrenheit (°F)',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
                         ],
-                        onChanged: (val) => notifier.updateUnits(temperatureUnit: val!),
+                        onChanged: (val) =>
+                            notifier.updateUnits(temperatureUnit: val!),
                       ),
                     ),
                   ),
@@ -464,11 +657,30 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                       child: DropdownButton<String>(
                         value: prefs.currency,
                         items: const [
-                          DropdownMenuItem(value: 'INR (₹)', child: Text('INR (₹)', style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: 'USD (\$)', child: Text('USD (\$)', style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: 'EUR (€)', child: Text('EUR (€)', style: TextStyle(fontSize: 12))),
+                          DropdownMenuItem(
+                            value: 'INR (₹)',
+                            child: Text(
+                              'INR (₹)',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'USD (\$)',
+                            child: Text(
+                              'USD (\$)',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'EUR (€)',
+                            child: Text(
+                              'EUR (€)',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
                         ],
-                        onChanged: (val) => notifier.updateUnits(currency: val!),
+                        onChanged: (val) =>
+                            notifier.updateUnits(currency: val!),
                       ),
                     ),
                     showDivider: false,
@@ -478,8 +690,14 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
             ],
 
             // SECTION 5: NOTIFICATIONS
-            if (_matchesCategory('Notifications', 'notifications push ai alerts quiet hours vibration')) ...[
-              const SettingsSectionHeader(title: 'Notifications & Alerts', icon: Icons.notifications_active_outlined),
+            if (_matchesCategory(
+              'Notifications',
+              'notifications push ai alerts quiet hours vibration',
+            )) ...[
+              const SettingsSectionHeader(
+                title: 'Notifications & Alerts',
+                icon: Icons.notifications_active_outlined,
+              ),
               _buildSectionCard(
                 children: [
                   SettingsTile(
@@ -489,7 +707,8 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                     trailing: Switch(
                       value: prefs.pushEnabled,
                       activeColor: const Color(0xFF1B5E20),
-                      onChanged: (val) => notifier.updateNotificationToggles(pushEnabled: val),
+                      onChanged: (val) =>
+                          notifier.updateNotificationToggles(pushEnabled: val),
                     ),
                   ),
                   SettingsTile(
@@ -499,7 +718,9 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                     trailing: Switch(
                       value: prefs.aiNotifsEnabled,
                       activeColor: const Color(0xFF1B5E20),
-                      onChanged: (val) => notifier.updateNotificationToggles(aiNotifsEnabled: val),
+                      onChanged: (val) => notifier.updateNotificationToggles(
+                        aiNotifsEnabled: val,
+                      ),
                     ),
                   ),
                   SettingsTile(
@@ -509,7 +730,8 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                     trailing: Switch(
                       value: prefs.vibration,
                       activeColor: const Color(0xFF1B5E20),
-                      onChanged: (val) => notifier.updateNotificationToggles(vibration: val),
+                      onChanged: (val) =>
+                          notifier.updateNotificationToggles(vibration: val),
                     ),
                     showDivider: false,
                   ),
@@ -518,8 +740,14 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
             ],
 
             // SECTION 6: AI SETTINGS
-            if (_matchesCategory('AI', 'ai model gemini memory context telemetry')) ...[
-              const SettingsSectionHeader(title: 'AI Advisor & Intelligence', icon: Icons.smart_toy_outlined),
+            if (_matchesCategory(
+              'AI',
+              'ai model gemini memory context telemetry',
+            )) ...[
+              const SettingsSectionHeader(
+                title: 'AI Advisor & Intelligence',
+                icon: Icons.smart_toy_outlined,
+              ),
               _buildSectionCard(
                 children: [
                   SettingsTile(
@@ -530,10 +758,23 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                       child: DropdownButton<String>(
                         value: prefs.aiModel,
                         items: const [
-                          DropdownMenuItem(value: 'Gemini 1.5 Flash', child: Text('Gemini 1.5 Flash', style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: 'Gemini 1.5 Pro', child: Text('Gemini 1.5 Pro', style: TextStyle(fontSize: 12))),
+                          DropdownMenuItem(
+                            value: 'Gemini 1.5 Flash',
+                            child: Text(
+                              'Gemini 1.5 Flash',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Gemini 1.5 Pro',
+                            child: Text(
+                              'Gemini 1.5 Pro',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
                         ],
-                        onChanged: (val) => notifier.updateAiSettings(aiModel: val!),
+                        onChanged: (val) =>
+                            notifier.updateAiSettings(aiModel: val!),
                       ),
                     ),
                   ),
@@ -545,11 +786,30 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                       child: DropdownButton<String>(
                         value: prefs.responseStyle,
                         items: const [
-                          DropdownMenuItem(value: 'Brief', child: Text('Brief', style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: 'Balanced', child: Text('Balanced', style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: 'Detailed', child: Text('Detailed', style: TextStyle(fontSize: 12))),
+                          DropdownMenuItem(
+                            value: 'Brief',
+                            child: Text(
+                              'Brief',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Balanced',
+                            child: Text(
+                              'Balanced',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Detailed',
+                            child: Text(
+                              'Detailed',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
                         ],
-                        onChanged: (val) => notifier.updateAiSettings(responseStyle: val!),
+                        onChanged: (val) =>
+                            notifier.updateAiSettings(responseStyle: val!),
                       ),
                     ),
                   ),
@@ -560,7 +820,8 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                     trailing: Switch(
                       value: prefs.aiMemoryEnabled,
                       activeColor: const Color(0xFF1B5E20),
-                      onChanged: (val) => notifier.updateAiSettings(aiMemoryEnabled: val),
+                      onChanged: (val) =>
+                          notifier.updateAiSettings(aiMemoryEnabled: val),
                     ),
                   ),
                   SettingsTile(
@@ -570,7 +831,8 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                     trailing: Switch(
                       value: prefs.useFarmContext,
                       activeColor: const Color(0xFF1B5E20),
-                      onChanged: (val) => notifier.updateAiSettings(useFarmContext: val),
+                      onChanged: (val) =>
+                          notifier.updateAiSettings(useFarmContext: val),
                     ),
                     showDivider: false,
                   ),
@@ -580,13 +842,17 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
 
             // SECTION 7: DATA & STORAGE
             if (_matchesCategory('Data', 'data storage cache clear size')) ...[
-              const SettingsSectionHeader(title: 'Data & Local Storage', icon: Icons.storage_outlined),
+              const SettingsSectionHeader(
+                title: 'Data & Local Storage',
+                icon: Icons.storage_outlined,
+              ),
               _buildSectionCard(
                 children: [
                   SettingsTile(
                     icon: Icons.sd_storage_outlined,
                     title: 'Cache Size',
-                    subtitle: '${prefs.cacheSizeMb.toStringAsFixed(1)} MB occupied',
+                    subtitle:
+                        '${prefs.cacheSizeMb.toStringAsFixed(1)} MB occupied',
                     trailing: SizedBox(
                       height: 30,
                       child: OutlinedButton(
@@ -597,17 +863,28 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                         onPressed: () async {
                           await notifier.clearCache();
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cache cleared successfully!')));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Cache cleared successfully!'),
+                              ),
+                            );
                           }
                         },
-                        child: const Text('Clear', style: TextStyle(fontSize: 11, color: Color(0xFF1B5E20))),
+                        child: const Text(
+                          'Clear',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF1B5E20),
+                          ),
+                        ),
                       ),
                     ),
                   ),
                   SettingsTile(
                     icon: Icons.cloud_download_outlined,
                     title: 'Storage Occupied',
-                    subtitle: '${prefs.storageUsedMb.toStringAsFixed(1)} MB (Local & Firestore sync)',
+                    subtitle:
+                        '${prefs.storageUsedMb.toStringAsFixed(1)} MB (Local & Firestore sync)',
                     showDivider: false,
                   ),
                 ],
@@ -616,7 +893,10 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
 
             // SECTION 8: BACKUP & SYNC
             if (_matchesCategory('Backup', 'backup sync cloud restore')) ...[
-              const SettingsSectionHeader(title: 'Cloud Backup & Sync', icon: Icons.cloud_sync_outlined),
+              const SettingsSectionHeader(
+                title: 'Cloud Backup & Sync',
+                icon: Icons.cloud_sync_outlined,
+              ),
               _buildSectionCard(
                 children: [
                   SettingsTile(
@@ -626,16 +906,28 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                     trailing: Switch(
                       value: prefs.autoBackupEnabled,
                       activeColor: const Color(0xFF1B5E20),
-                      onChanged: (val) => notifier.updateSettings(prefs.copyWith(autoBackupEnabled: val)),
+                      onChanged: (val) => notifier.updateSettings(
+                        prefs.copyWith(autoBackupEnabled: val),
+                      ),
                     ),
                   ),
                   SettingsTile(
                     icon: Icons.backup_outlined,
                     title: 'Backup Now',
-                    subtitle: 'Last Backup: ${prefs.lastBackupTime != null ? DateFormat('dd MMM yyyy, hh:mm a').format(prefs.lastBackupTime!) : "Never"}',
+                    subtitle:
+                        'Last Backup: ${prefs.lastBackupTime != null ? DateFormat('dd MMM yyyy, hh:mm a').format(prefs.lastBackupTime!) : "Never"}',
                     onTap: () {
-                      notifier.updateSettings(prefs.copyWith(lastBackupTime: DateTime.now(), cloudSyncStatus: 'Synced'));
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cloud backup created successfully!')));
+                      notifier.updateSettings(
+                        prefs.copyWith(
+                          lastBackupTime: DateTime.now(),
+                          cloudSyncStatus: 'Synced',
+                        ),
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Cloud backup created successfully!'),
+                        ),
+                      );
                     },
                     showDivider: false,
                   ),
@@ -644,8 +936,14 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
             ],
 
             // SECTION 9: PRIVACY & SECURITY
-            if (_matchesCategory('Privacy', 'privacy security biometric pin lock auto logout')) ...[
-              const SettingsSectionHeader(title: 'Privacy & App Security', icon: Icons.security_outlined),
+            if (_matchesCategory(
+              'Privacy',
+              'privacy security biometric pin lock auto logout',
+            )) ...[
+              const SettingsSectionHeader(
+                title: 'Privacy & App Security',
+                icon: Icons.security_outlined,
+              ),
               _buildSectionCard(
                 children: [
                   SettingsTile(
@@ -655,7 +953,9 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                     trailing: Switch(
                       value: prefs.biometricLogin,
                       activeColor: const Color(0xFF1B5E20),
-                      onChanged: (val) => notifier.updateSettings(prefs.copyWith(biometricLogin: val)),
+                      onChanged: (val) => notifier.updateSettings(
+                        prefs.copyWith(biometricLogin: val),
+                      ),
                     ),
                   ),
                   SettingsTile(
@@ -665,7 +965,8 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                     trailing: Switch(
                       value: prefs.pinLock,
                       activeColor: const Color(0xFF1B5E20),
-                      onChanged: (val) => notifier.updateSettings(prefs.copyWith(pinLock: val)),
+                      onChanged: (val) =>
+                          notifier.updateSettings(prefs.copyWith(pinLock: val)),
                     ),
                   ),
                   SettingsTile(
@@ -679,8 +980,14 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
             ],
 
             // SECTION 10: ABOUT
-            if (_matchesCategory('About', 'about version build licenses developer')) ...[
-              const SettingsSectionHeader(title: 'About Application', icon: Icons.info_outline),
+            if (_matchesCategory(
+              'About',
+              'about version build licenses developer',
+            )) ...[
+              const SettingsSectionHeader(
+                title: 'About Application',
+                icon: Icons.info_outline,
+              ),
               _buildSectionCard(
                 children: const [
                   SettingsTile(
@@ -691,7 +998,8 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                   SettingsTile(
                     icon: Icons.code,
                     title: 'Developer Information',
-                    subtitle: 'Built with Flutter & Firebase by FlockSense Engineering',
+                    subtitle:
+                        'Built with Flutter & Firebase by FlockSense Engineering',
                   ),
                   SettingsTile(
                     icon: Icons.policy_outlined,
@@ -704,8 +1012,14 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
             ],
 
             // SECTION 11: SUPPORT
-            if (_matchesCategory('Support', 'support help faqs bug report rate share')) ...[
-              const SettingsSectionHeader(title: 'Support & Help', icon: Icons.help_outline),
+            if (_matchesCategory(
+              'Support',
+              'support help faqs bug report rate share',
+            )) ...[
+              const SettingsSectionHeader(
+                title: 'Support & Help',
+                icon: Icons.help_outline,
+              ),
               _buildSectionCard(
                 children: [
                   SettingsTile(
@@ -713,7 +1027,9 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                     title: 'Help Center & FAQs',
                     subtitle: 'Browse flock management user guides',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening Help Center...')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Opening Help Center...')),
+                      );
                     },
                   ),
                   SettingsTile(
@@ -721,7 +1037,11 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                     title: 'Report a Bug / Issue',
                     subtitle: 'Send feedback to engineering team',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Opening Bug Reporter...')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Opening Bug Reporter...'),
+                        ),
+                      );
                     },
                     showDivider: false,
                   ),
@@ -730,8 +1050,14 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
             ],
 
             // SECTION 12: ADVANCED
-            if (_matchesCategory('Advanced', 'advanced developer mode logs reset factory')) ...[
-              const SettingsSectionHeader(title: 'Advanced Diagnostics', icon: Icons.developer_mode),
+            if (_matchesCategory(
+              'Advanced',
+              'advanced developer mode logs reset factory',
+            )) ...[
+              const SettingsSectionHeader(
+                title: 'Advanced Diagnostics',
+                icon: Icons.developer_mode,
+              ),
               _buildSectionCard(
                 children: [
                   SettingsTile(
@@ -741,7 +1067,9 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                     trailing: Switch(
                       value: prefs.developerMode,
                       activeColor: const Color(0xFF1B5E20),
-                      onChanged: (val) => notifier.updateSettings(prefs.copyWith(developerMode: val)),
+                      onChanged: (val) => notifier.updateSettings(
+                        prefs.copyWith(developerMode: val),
+                      ),
                     ),
                   ),
                   SettingsTile(
@@ -752,7 +1080,11 @@ class _SettingsDashboardScreenState extends ConsumerState<SettingsDashboardScree
                     onTap: () async {
                       await notifier.resetSettings();
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Factory reset complete.')));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Factory reset complete.'),
+                          ),
+                        );
                       }
                     },
                     showDivider: false,

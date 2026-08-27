@@ -7,7 +7,8 @@ final growthAnalyticsServiceProvider = Provider<GrowthAnalyticsService>((ref) {
   return GrowthAnalyticsService();
 });
 
-class GrowthAnalyticsFilterNotifier extends Notifier<GrowthAnalyticsFilterState> {
+class GrowthAnalyticsFilterNotifier
+    extends Notifier<GrowthAnalyticsFilterState> {
   @override
   GrowthAnalyticsFilterState build() => const GrowthAnalyticsFilterState();
 
@@ -37,21 +38,23 @@ class GrowthAnalyticsFilterNotifier extends Notifier<GrowthAnalyticsFilterState>
 
 final growthAnalyticsFilterProvider =
     NotifierProvider<GrowthAnalyticsFilterNotifier, GrowthAnalyticsFilterState>(
-  GrowthAnalyticsFilterNotifier.new,
-);
+      GrowthAnalyticsFilterNotifier.new,
+    );
 
 final growthAnalyticsStreamProvider =
     StreamProvider.autoDispose<GrowthAnalyticsData>((ref) {
-  final authState = ref.watch(authStateProvider);
-  final filter = ref.watch(growthAnalyticsFilterProvider);
-  final service = ref.watch(growthAnalyticsServiceProvider);
+      final authState = ref.watch(authStateProvider);
+      final filter = ref.watch(growthAnalyticsFilterProvider);
+      final service = ref.watch(growthAnalyticsServiceProvider);
 
-  return authState.when(
-    data: (user) {
-      if (user == null) return Stream.value(service.getFallbackData(filter: filter));
-      return service.watchAnalytics(uid: user.uid, filter: filter);
-    },
-    loading: () => Stream.value(service.getFallbackData(filter: filter)),
-    error: (err, stack) => Stream.value(service.getFallbackData(filter: filter)),
-  );
-});
+      return authState.when(
+        data: (user) {
+          if (user == null)
+            return Stream.value(service.getFallbackData(filter: filter));
+          return service.watchAnalytics(uid: user.uid, filter: filter);
+        },
+        loading: () => Stream.value(service.getFallbackData(filter: filter)),
+        error: (err, stack) =>
+            Stream.value(service.getFallbackData(filter: filter)),
+      );
+    });

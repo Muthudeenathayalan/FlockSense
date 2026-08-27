@@ -35,10 +35,16 @@ class TodaysSummaryCard extends StatelessWidget {
           _card(
             title: 'Overdue Alert',
             value: '${stats.overdueEvents}',
-            subtitle: stats.overdueEvents > 0 ? 'Requires immediate action' : 'No overdue events',
+            subtitle: stats.overdueEvents > 0
+                ? 'Requires immediate action'
+                : 'No overdue events',
             icon: Icons.warning_amber_rounded,
-            startColor: stats.overdueEvents > 0 ? const Color(0xFFE53935) : const Color(0xFF10B981),
-            endColor: stats.overdueEvents > 0 ? const Color(0xFFC62828) : const Color(0xFF059669),
+            startColor: stats.overdueEvents > 0
+                ? const Color(0xFFE53935)
+                : const Color(0xFF10B981),
+            endColor: stats.overdueEvents > 0
+                ? const Color(0xFFC62828)
+                : const Color(0xFF059669),
           ),
           const SizedBox(width: 10),
           _card(
@@ -133,7 +139,9 @@ class TodaysSummaryCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
-              color: startColor == const Color(0xFFE53935) ? const Color(0xFFE53935) : AppColors.textPrimary,
+              color: startColor == const Color(0xFFE53935)
+                  ? const Color(0xFFE53935)
+                  : AppColors.textPrimary,
               height: 1.0,
             ),
           ),
@@ -143,7 +151,9 @@ class TodaysSummaryCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w500,
-              color: startColor == const Color(0xFFE53935) && stats.overdueEvents > 0
+              color:
+                  startColor == const Color(0xFFE53935) &&
+                      stats.overdueEvents > 0
                   ? const Color(0xFFE53935)
                   : AppColors.textSecondary,
             ),

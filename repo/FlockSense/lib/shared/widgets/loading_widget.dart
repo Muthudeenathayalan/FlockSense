@@ -9,4 +9,3 @@ class LoadingWidget extends StatelessWidget {
     return const AppLoadingIndicator();
   }
 }
-

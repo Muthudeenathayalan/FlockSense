@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
 
-enum AppCardVariant {
-  surface,
-  flat,
-  outlined,
-  gradient,
-}
+enum AppCardVariant { surface, flat, outlined, gradient }
 
 class AppCard extends StatelessWidget {
   const AppCard({
@@ -47,9 +42,12 @@ class AppCard extends StatelessWidget {
 
     switch (variant) {
       case AppCardVariant.surface:
-        bg = backgroundColor ?? (isDark ? AppColors.darkSurface : AppColors.surface);
+        bg =
+            backgroundColor ??
+            (isDark ? AppColors.darkSurface : AppColors.surface);
         borderSide = BorderSide(
-          color: borderColor ?? (isDark ? AppColors.darkBorder : AppColors.border),
+          color:
+              borderColor ?? (isDark ? AppColors.darkBorder : AppColors.border),
           width: 0.8,
         );
         shadows = elevation > 0 || !isDark
@@ -64,7 +62,9 @@ class AppCard extends StatelessWidget {
         break;
 
       case AppCardVariant.flat:
-        bg = backgroundColor ?? (isDark ? AppColors.darkSurfaceSoft : AppColors.surfaceSoft);
+        bg =
+            backgroundColor ??
+            (isDark ? AppColors.darkSurfaceSoft : AppColors.surfaceSoft);
         borderSide = BorderSide.none;
         shadows = null;
         break;
@@ -72,7 +72,8 @@ class AppCard extends StatelessWidget {
       case AppCardVariant.outlined:
         bg = backgroundColor ?? Colors.transparent;
         borderSide = BorderSide(
-          color: borderColor ?? (isDark ? AppColors.darkBorder : AppColors.border),
+          color:
+              borderColor ?? (isDark ? AppColors.darkBorder : AppColors.border),
           width: 1.2,
         );
         shadows = null;
@@ -93,17 +94,19 @@ class AppCard extends StatelessWidget {
         break;
     }
 
-    final effectiveGradient =
-        variant == AppCardVariant.gradient ? (gradient ?? AppColors.cardGradient) : null;
+    final effectiveGradient = variant == AppCardVariant.gradient
+        ? (gradient ?? AppColors.cardGradient)
+        : null;
 
     final cardDecoration = BoxDecoration(
       color: effectiveGradient == null ? bg : null,
       gradient: effectiveGradient,
       borderRadius: BorderRadius.circular(borderRadius),
-      border: borderSide != BorderSide.none ? Border.fromBorderSide(borderSide) : null,
+      border: borderSide != BorderSide.none
+          ? Border.fromBorderSide(borderSide)
+          : null,
       boxShadow: shadows,
     );
-
 
     if (onTap == null && onLongPress == null) {
       return Container(
@@ -129,4 +132,3 @@ class AppCard extends StatelessWidget {
     );
   }
 }
-

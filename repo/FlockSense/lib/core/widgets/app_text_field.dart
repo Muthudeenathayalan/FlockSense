@@ -138,17 +138,11 @@ class _AppTextFieldState extends State<AppTextField> {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: AppColors.danger,
-            width: 1.2,
-          ),
+          borderSide: const BorderSide(color: AppColors.danger, width: 1.2),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: AppColors.danger,
-            width: 1.8,
-          ),
+          borderSide: const BorderSide(color: AppColors.danger, width: 1.8),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,

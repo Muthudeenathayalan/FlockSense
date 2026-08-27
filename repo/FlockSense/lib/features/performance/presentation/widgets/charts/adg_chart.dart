@@ -14,7 +14,10 @@ class AdgChart extends StatelessWidget {
       return const SizedBox(
         height: 180,
         child: Center(
-          child: Text('No daily weight telemetry available', style: TextStyle(color: AppColors.textSecondary)),
+          child: Text(
+            'No daily weight telemetry available',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
         ),
       );
     }
@@ -49,7 +52,9 @@ class AdgChart extends StatelessWidget {
               toY: gain,
               color: barColor,
               width: 10,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(4),
+              ),
             ),
           ],
         ),
@@ -101,7 +106,10 @@ class AdgChart extends StatelessWidget {
                       reservedSize: 32,
                       getTitlesWidget: (val, meta) => Text(
                         '${val.toInt()}g',
-                        style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
                   ),
@@ -112,14 +120,24 @@ class AdgChart extends StatelessWidget {
                       getTitlesWidget: (val, meta) {
                         final idx = val.toInt();
                         if (idx >= 0 && idx < records.length) {
-                          return Text('D${idx + 1}', style: const TextStyle(fontSize: 10, color: AppColors.textSecondary));
+                          return Text(
+                            'D${idx + 1}',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: AppColors.textSecondary,
+                            ),
+                          );
                         }
                         return const SizedBox.shrink();
                       },
                     ),
                   ),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
                 borderData: FlBorderData(show: false),
                 barGroups: groups,
@@ -134,9 +152,20 @@ class AdgChart extends StatelessWidget {
   Widget _legendDot(Color color, String label) {
     return Row(
       children: [
-        Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textSecondary,
+          ),
+        ),
       ],
     );
   }

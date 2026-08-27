@@ -14,7 +14,10 @@ class ThiChart extends StatelessWidget {
       return const SizedBox(
         height: 180,
         child: Center(
-          child: Text('No environmental THI telemetry available', style: TextStyle(color: AppColors.textSecondary)),
+          child: Text(
+            'No environmental THI telemetry available',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
         ),
       );
     }
@@ -67,7 +70,10 @@ class ThiChart extends StatelessWidget {
                       reservedSize: 32,
                       getTitlesWidget: (val, meta) => Text(
                         '${val.toInt()}°',
-                        style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
                   ),
@@ -78,14 +84,24 @@ class ThiChart extends StatelessWidget {
                       getTitlesWidget: (val, meta) {
                         final idx = val.toInt();
                         if (idx >= 0 && idx < records.length) {
-                          return Text('D${idx + 1}', style: const TextStyle(fontSize: 10, color: AppColors.textSecondary));
+                          return Text(
+                            'D${idx + 1}',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: AppColors.textSecondary,
+                            ),
+                          );
                         }
                         return const SizedBox.shrink();
                       },
                     ),
                   ),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
@@ -119,9 +135,20 @@ class ThiChart extends StatelessWidget {
   Widget _legendDot(Color color, String label) {
     return Row(
       children: [
-        Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
         const SizedBox(width: 6),
-        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textSecondary,
+          ),
+        ),
       ],
     );
   }

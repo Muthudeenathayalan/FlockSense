@@ -43,13 +43,19 @@ class _AiHistoryDrawerState extends ConsumerState<AiHistoryDrawer> {
                     children: [
                       const Text(
                         'AI Chat History',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
                       ),
                       IconButton(
                         icon: const Icon(Icons.add, color: Colors.white),
                         tooltip: 'New Chat',
                         onPressed: () {
-                          ref.read(activeConversationProvider.notifier).setConversation(null);
+                          ref
+                              .read(activeConversationProvider.notifier)
+                              .setConversation(null);
                           Navigator.pop(context);
                         },
                       ),
@@ -62,12 +68,25 @@ class _AiHistoryDrawerState extends ConsumerState<AiHistoryDrawer> {
                     style: const TextStyle(fontSize: 12, color: Colors.white),
                     decoration: InputDecoration(
                       hintText: 'Search conversations...',
-                      hintStyle: const TextStyle(color: Colors.white70, fontSize: 12),
-                      prefixIcon: const Icon(Icons.search, size: 16, color: Colors.white70),
+                      hintStyle: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        size: 16,
+                        color: Colors.white70,
+                      ),
                       filled: true,
                       fillColor: Colors.white.withAlpha((0.15 * 255).toInt()),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
                 ],
@@ -81,12 +100,18 @@ class _AiHistoryDrawerState extends ConsumerState<AiHistoryDrawer> {
                   final filtered = conversations.where((c) {
                     if (searchQuery.isEmpty) return true;
                     return c.title.toLowerCase().contains(searchQuery) ||
-                        (c.lastMessagePreview?.toLowerCase().contains(searchQuery) ?? false);
+                        (c.lastMessagePreview?.toLowerCase().contains(
+                              searchQuery,
+                            ) ??
+                            false);
                   }).toList();
 
                   if (filtered.isEmpty) {
                     return const Center(
-                      child: Text('No matching conversations.', style: TextStyle(color: Colors.grey)),
+                      child: Text(
+                        'No matching conversations.',
+                        style: TextStyle(color: Colors.grey),
+                      ),
                     );
                   }
 
@@ -100,9 +125,13 @@ class _AiHistoryDrawerState extends ConsumerState<AiHistoryDrawer> {
                         selected: isSelected,
                         selectedTileColor: Colors.green.shade50,
                         leading: Icon(
-                          item.isPinned ? Icons.push_pin : Icons.chat_bubble_outline,
+                          item.isPinned
+                              ? Icons.push_pin
+                              : Icons.chat_bubble_outline,
                           size: 18,
-                          color: item.isPinned ? Colors.orange.shade800 : const Color(0xFF1B5E20),
+                          color: item.isPinned
+                              ? Colors.orange.shade800
+                              : const Color(0xFF1B5E20),
                         ),
                         title: Text(
                           item.title,
@@ -110,37 +139,70 @@ class _AiHistoryDrawerState extends ConsumerState<AiHistoryDrawer> {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 13,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                         ),
                         subtitle: Text(
-                          item.lastMessagePreview ?? DateFormat('dd MMM, HH:mm').format(item.updatedAt),
+                          item.lastMessagePreview ??
+                              DateFormat(
+                                'dd MMM, HH:mm',
+                              ).format(item.updatedAt),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 10, color: Colors.grey),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey,
+                          ),
                         ),
                         trailing: PopupMenuButton<String>(
-                          icon: const Icon(Icons.more_vert, size: 16, color: Colors.grey),
+                          icon: const Icon(
+                            Icons.more_vert,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
                           onSelected: (val) async {
                             if (val == 'pin') {
-                              await AiChatFirestoreService.togglePinConversation(item.id, !item.isPinned);
+                              await AiChatFirestoreService.togglePinConversation(
+                                item.id,
+                                !item.isPinned,
+                              );
                             } else if (val == 'rename') {
                               _showRenameDialog(context, item);
                             } else if (val == 'delete') {
-                              await AiChatFirestoreService.deleteConversation(item.id);
+                              await AiChatFirestoreService.deleteConversation(
+                                item.id,
+                              );
                               if (activeConv?.id == item.id) {
-                                ref.read(activeConversationProvider.notifier).setConversation(null);
+                                ref
+                                    .read(activeConversationProvider.notifier)
+                                    .setConversation(null);
                               }
                             }
                           },
                           itemBuilder: (ctx) => [
-                            PopupMenuItem(value: 'pin', child: Text(item.isPinned ? 'Unpin' : 'Pin')),
-                            const PopupMenuItem(value: 'rename', child: Text('Rename')),
-                            const PopupMenuItem(value: 'delete', child: Text('Delete', style: TextStyle(color: Colors.red))),
+                            PopupMenuItem(
+                              value: 'pin',
+                              child: Text(item.isPinned ? 'Unpin' : 'Pin'),
+                            ),
+                            const PopupMenuItem(
+                              value: 'rename',
+                              child: Text('Rename'),
+                            ),
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Text(
+                                'Delete',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
                           ],
                         ),
                         onTap: () {
-                          ref.read(activeConversationProvider.notifier).setConversation(item);
+                          ref
+                              .read(activeConversationProvider.notifier)
+                              .setConversation(item);
                           Navigator.pop(context);
                         },
                       );
@@ -168,11 +230,17 @@ class _AiHistoryDrawerState extends ConsumerState<AiHistoryDrawer> {
           decoration: const InputDecoration(labelText: 'Title'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () async {
               if (controller.text.trim().isNotEmpty) {
-                await AiChatFirestoreService.renameConversation(item.id, controller.text.trim());
+                await AiChatFirestoreService.renameConversation(
+                  item.id,
+                  controller.text.trim(),
+                );
               }
               if (mounted) Navigator.pop(ctx);
             },

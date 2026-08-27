@@ -73,13 +73,14 @@ class SettingsTile extends StatelessWidget {
                   ),
                   if (trailing != null) ...[
                     const SizedBox(width: 8),
-                    Flexible(
-                      fit: FlexFit.loose,
-                      child: trailing!,
-                    ),
+                    Flexible(fit: FlexFit.loose, child: trailing!),
                   ] else if (onTap != null) ...[
                     const SizedBox(width: 8),
-                    Icon(Icons.chevron_right, size: 18, color: Colors.grey.shade400),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 18,
+                      color: Colors.grey.shade400,
+                    ),
                   ],
                 ],
               ),

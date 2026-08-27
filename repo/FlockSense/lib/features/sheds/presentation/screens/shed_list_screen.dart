@@ -46,14 +46,16 @@ class ShedListScreen extends ConsumerWidget {
                 title: 'Unable to load sheds',
                 message: '$e',
                 buttonLabel: 'Retry',
-                onButtonPressed: () => ref.invalidate(shedListProvider(farm.id)),
+                onButtonPressed: () =>
+                    ref.invalidate(shedListProvider(farm.id)),
               ),
               data: (sheds) {
                 if (sheds.isEmpty) {
                   return AppEmptyState(
                     icon: Icons.home_work_outlined,
                     title: 'No sheds yet',
-                    message: 'Add a shed to start tracking batches inside this farm.',
+                    message:
+                        'Add a shed to start tracking batches inside this farm.',
                     buttonLabel: 'Add Shed',
                     onButtonPressed: () => _openForm(context, farm.id),
                   );
@@ -127,7 +129,9 @@ class _ShedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final statusColor = shed.status == 'active' ? AppColors.emerald : AppColors.warning;
+    final statusColor = shed.status == 'active'
+        ? AppColors.emerald
+        : AppColors.warning;
 
     return AppCard(
       padding: const EdgeInsets.all(16),
@@ -167,7 +171,10 @@ class _ShedCard extends StatelessWidget {
               const PopupMenuItem(value: 'edit', child: Text('Edit')),
               const PopupMenuItem(
                 value: 'delete',
-                child: Text('Delete', style: TextStyle(color: AppColors.danger)),
+                child: Text(
+                  'Delete',
+                  style: TextStyle(color: AppColors.danger),
+                ),
               ),
             ],
           ),
@@ -176,4 +183,3 @@ class _ShedCard extends StatelessWidget {
     );
   }
 }
-

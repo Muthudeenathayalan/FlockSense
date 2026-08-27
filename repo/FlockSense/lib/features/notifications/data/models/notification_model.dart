@@ -16,27 +16,11 @@ enum NotificationType {
   dg,
 }
 
-enum NotificationPriority {
-  low,
-  normal,
-  high,
-  critical,
-}
+enum NotificationPriority { low, normal, high, critical }
 
-enum NotificationStatus {
-  unread,
-  read,
-  archived,
-  pinned,
-}
+enum NotificationStatus { unread, read, archived, pinned }
 
-enum ReminderRepeat {
-  once,
-  daily,
-  weekly,
-  monthly,
-  custom,
-}
+enum ReminderRepeat { once, daily, weekly, monthly, custom }
 
 class NotificationModel {
   final String id;
@@ -95,7 +79,9 @@ class NotificationModel {
     }
 
     return NotificationModel(
-      id: json['id'] as String? ?? 'notif_${DateTime.now().millisecondsSinceEpoch}',
+      id:
+          json['id'] as String? ??
+          'notif_${DateTime.now().millisecondsSinceEpoch}',
       title: json['title'] as String? ?? 'Notification',
       body: json['body'] as String? ?? '',
       type: NotificationType.values.firstWhere(
@@ -209,7 +195,9 @@ class ReminderModel {
     }
 
     return ReminderModel(
-      id: json['id'] as String? ?? 'rem_${DateTime.now().millisecondsSinceEpoch}',
+      id:
+          json['id'] as String? ??
+          'rem_${DateTime.now().millisecondsSinceEpoch}',
       title: json['title'] as String? ?? 'Reminder',
       description: json['description'] as String? ?? '',
       date: parseDate(json['date']),

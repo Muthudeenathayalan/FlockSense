@@ -67,14 +67,16 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
             AppTextField(
               controller: _nameController,
               labelText: 'Full Name',
-              validator: (v) => v == null || v.trim().isEmpty ? 'Enter full name' : null,
+              validator: (v) =>
+                  v == null || v.trim().isEmpty ? 'Enter full name' : null,
             ),
             const SizedBox(height: 14),
             AppTextField(
               controller: _phoneController,
               labelText: 'Phone Number',
               keyboardType: TextInputType.phone,
-              validator: (v) => v == null || v.trim().isEmpty ? 'Enter phone number' : null,
+              validator: (v) =>
+                  v == null || v.trim().isEmpty ? 'Enter phone number' : null,
             ),
           ],
         ),
@@ -98,4 +100,3 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     );
   }
 }
-

@@ -37,21 +37,26 @@ class AiChatFirestoreService {
             .snapshots();
 
         await for (final snap in stream) {
-          final conversations =
-              snap.docs.map((doc) => AiConversationModel.fromJson(doc.data())).toList();
+          final conversations = snap.docs
+              .map((doc) => AiConversationModel.fromJson(doc.data()))
+              .toList();
           _localConversations.clear();
           _localConversations.addAll(conversations);
           yield List.unmodifiable(_localConversations);
         }
       } catch (err) {
-        debugPrint('[AiChatFirestoreService] Error streaming conversations: $err');
+        debugPrint(
+          '[AiChatFirestoreService] Error streaming conversations: $err',
+        );
         yield List.unmodifiable(_localConversations);
       }
     }
   }
 
   /// Stream messages for a specific conversation with instant local yield & broadcast updates
-  static Stream<List<AiMessageModel>> streamMessages(String conversationId) async* {
+  static Stream<List<AiMessageModel>> streamMessages(
+    String conversationId,
+  ) async* {
     if (conversationId.isEmpty) {
       yield const [];
       return;
@@ -72,17 +77,21 @@ class AiChatFirestoreService {
           .orderBy('timestamp', descending: false)
           .snapshots()
           .listen(
-        (snap) {
-          final messages = snap.docs.map((doc) => AiMessageModel.fromJson(doc.data())).toList();
-          if (messages.isNotEmpty) {
-            _localMessages[conversationId] = List.from(messages);
-            _messagesStreamController.add(_localMessages);
-          }
-        },
-        onError: (err) {
-          debugPrint('[AiChatFirestoreService] Error listening to messages: $err');
-        },
-      );
+            (snap) {
+              final messages = snap.docs
+                  .map((doc) => AiMessageModel.fromJson(doc.data()))
+                  .toList();
+              if (messages.isNotEmpty) {
+                _localMessages[conversationId] = List.from(messages);
+                _messagesStreamController.add(_localMessages);
+              }
+            },
+            onError: (err) {
+              debugPrint(
+                '[AiChatFirestoreService] Error listening to messages: $err',
+              );
+            },
+          );
     }
 
     // 3. Listen to local broadcast stream
@@ -159,23 +168,33 @@ class AiChatFirestoreService {
             .collection('ai_conversations')
             .doc(convId);
 
-        await convRef.collection('messages').doc(message.id).set(message.toJson());
+        await convRef
+            .collection('messages')
+            .doc(message.id)
+            .set(message.toJson());
 
         await convRef.update({
           'lastMessagePreview': message.content,
           'updatedAt': DateTime.now().toIso8601String(),
         });
       } catch (e) {
-        debugPrint('[AiChatFirestoreService] Firestore save message failed: $e');
+        debugPrint(
+          '[AiChatFirestoreService] Firestore save message failed: $e',
+        );
       }
     }
   }
 
-  static Future<void> togglePinConversation(String conversationId, bool isPinned) async {
+  static Future<void> togglePinConversation(
+    String conversationId,
+    bool isPinned,
+  ) async {
     final user = _auth.currentUser;
     final index = _localConversations.indexWhere((c) => c.id == conversationId);
     if (index != -1) {
-      _localConversations[index] = _localConversations[index].copyWith(isPinned: isPinned);
+      _localConversations[index] = _localConversations[index].copyWith(
+        isPinned: isPinned,
+      );
     }
 
     if (user != null) {
@@ -192,11 +211,16 @@ class AiChatFirestoreService {
     }
   }
 
-  static Future<void> renameConversation(String conversationId, String newTitle) async {
+  static Future<void> renameConversation(
+    String conversationId,
+    String newTitle,
+  ) async {
     final user = _auth.currentUser;
     final index = _localConversations.indexWhere((c) => c.id == conversationId);
     if (index != -1) {
-      _localConversations[index] = _localConversations[index].copyWith(title: newTitle);
+      _localConversations[index] = _localConversations[index].copyWith(
+        title: newTitle,
+      );
     }
 
     if (user != null) {

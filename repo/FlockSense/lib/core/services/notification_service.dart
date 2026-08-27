@@ -90,7 +90,9 @@ class NotificationService {
         await prefs.setBool('fcm_permission_requested', true);
       }
 
-      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      FirebaseMessaging.onBackgroundMessage(
+        _firebaseMessagingBackgroundHandler,
+      );
 
       FirebaseMessaging.onMessage.listen((message) async {
         if (message.notification == null) return;
@@ -106,7 +108,8 @@ class NotificationService {
         await _handleNotificationTap(message.data['route']);
       });
 
-      final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+      final initialMessage = await FirebaseMessaging.instance
+          .getInitialMessage();
       if (initialMessage != null) {
         await _handleNotificationTap(initialMessage.data['route']);
       }
@@ -204,13 +207,17 @@ class NotificationService {
   static Future<void> _requestPermissions() async {
     await _fcm.requestPermission(alert: true, badge: true, sound: true);
 
-if (Platform.isIOS) {
+    if (Platform.isIOS) {
       await _local
-          .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(alert: true, badge: true, sound: true);
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >()
+          ?.requestPermissions(alert: true, badge: true, sound: true);
     } else if (Platform.isMacOS) {
       await _local
-          .resolvePlatformSpecificImplementation<MacOSFlutterLocalNotificationsPlugin>()
+          .resolvePlatformSpecificImplementation<
+            MacOSFlutterLocalNotificationsPlugin
+          >()
           ?.requestPermissions(alert: true, badge: true, sound: true);
     }
   }

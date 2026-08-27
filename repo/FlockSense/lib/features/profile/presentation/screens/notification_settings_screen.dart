@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flock_sense/core/services/notification_service.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
 
@@ -10,7 +10,8 @@ class NotificationSettingsScreen extends StatefulWidget {
       _NotificationSettingsScreenState();
 }
 
-class _NotificationSettingsScreenState extends State<NotificationSettingsScreen> {
+class _NotificationSettingsScreenState
+    extends State<NotificationSettingsScreen> {
   bool _daily = true;
   bool _mortality = true;
   bool _vaccine = true;

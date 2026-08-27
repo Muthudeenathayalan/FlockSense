@@ -59,7 +59,10 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
         foregroundColor: Colors.white,
         elevation: 4,
         icon: const Icon(Icons.post_add),
-        label: const Text('Add Records', style: TextStyle(fontWeight: FontWeight.bold)),
+        label: const Text(
+          'Add Records',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: NavigationBar(
@@ -104,11 +107,9 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
 
     try {
       if (!mounted) return;
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => DailyRecordsDashboardScreen(),
-        ),
-      );
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => DailyRecordsDashboardScreen()));
     } catch (e) {
       debugPrint('[MainShell] Error launching records wizard: $e');
     } finally {

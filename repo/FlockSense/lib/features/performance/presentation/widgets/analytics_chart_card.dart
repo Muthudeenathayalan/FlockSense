@@ -39,8 +39,14 @@ class AnalyticsChartCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: AppColors.surfaceSoft.withValues(alpha: 0.5),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
-              border: Border(bottom: BorderSide(color: AppColors.border.withValues(alpha: 0.5))),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(22),
+              ),
+              border: Border(
+                bottom: BorderSide(
+                  color: AppColors.border.withValues(alpha: 0.5),
+                ),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -93,10 +99,7 @@ class AnalyticsChartCard extends StatelessWidget {
           ),
 
           // Chart Body
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: child,
-          ),
+          Padding(padding: const EdgeInsets.all(16), child: child),
         ],
       ),
     );

@@ -294,7 +294,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => const DailyRecordsDashboardScreen(),
+                                  builder: (_) =>
+                                      const DailyRecordsDashboardScreen(),
                                 ),
                               ),
                             ),
@@ -305,7 +306,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => const ReportsDashboardScreen(),
+                                  builder: (_) =>
+                                      const ReportsDashboardScreen(),
                                 ),
                               ),
                             ),

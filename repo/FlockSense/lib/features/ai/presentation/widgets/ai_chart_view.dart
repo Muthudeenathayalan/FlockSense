@@ -34,7 +34,11 @@ class AiChartView extends StatelessWidget {
             children: [
               Text(
                 _getChartTitle(type),
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF1B5E20)),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                  color: Color(0xFF1B5E20),
+                ),
               ),
               const Icon(Icons.analytics, size: 16, color: Color(0xFF1B5E20)),
             ],
@@ -71,14 +75,20 @@ class AiChartView extends StatelessWidget {
             gridData: const FlGridData(show: true),
             titlesData: const FlTitlesData(
               topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles: AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
             ),
             borderData: FlBorderData(show: false),
             lineBarsData: [
               LineChartBarData(
                 spots: const [
-                  FlSpot(1, 56), FlSpot(7, 185), FlSpot(14, 500),
-                  FlSpot(21, 913), FlSpot(28, 1475), FlSpot(35, 2115),
+                  FlSpot(1, 56),
+                  FlSpot(7, 185),
+                  FlSpot(14, 500),
+                  FlSpot(21, 913),
+                  FlSpot(28, 1475),
+                  FlSpot(35, 2115),
                 ],
                 isCurved: true,
                 color: const Color(0xFF1B5E20),
@@ -94,15 +104,32 @@ class AiChartView extends StatelessWidget {
             gridData: const FlGridData(show: false),
             titlesData: const FlTitlesData(
               topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles: AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
             ),
             borderData: FlBorderData(show: false),
             barGroups: [
-              BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: 2, color: Colors.red.shade400)]),
-              BarChartGroupData(x: 2, barRods: [BarChartRodData(toY: 1, color: Colors.red.shade400)]),
-              BarChartGroupData(x: 3, barRods: [BarChartRodData(toY: 4, color: Colors.red.shade600)]),
-              BarChartGroupData(x: 4, barRods: [BarChartRodData(toY: 2, color: Colors.red.shade400)]),
-              BarChartGroupData(x: 5, barRods: [BarChartRodData(toY: 3, color: Colors.red.shade400)]),
+              BarChartGroupData(
+                x: 1,
+                barRods: [BarChartRodData(toY: 2, color: Colors.red.shade400)],
+              ),
+              BarChartGroupData(
+                x: 2,
+                barRods: [BarChartRodData(toY: 1, color: Colors.red.shade400)],
+              ),
+              BarChartGroupData(
+                x: 3,
+                barRods: [BarChartRodData(toY: 4, color: Colors.red.shade600)],
+              ),
+              BarChartGroupData(
+                x: 4,
+                barRods: [BarChartRodData(toY: 2, color: Colors.red.shade400)],
+              ),
+              BarChartGroupData(
+                x: 5,
+                barRods: [BarChartRodData(toY: 3, color: Colors.red.shade400)],
+              ),
             ],
           ),
         );
@@ -112,15 +139,42 @@ class AiChartView extends StatelessWidget {
             gridData: const FlGridData(show: false),
             titlesData: const FlTitlesData(
               topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles: AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
             ),
             borderData: FlBorderData(show: false),
             barGroups: [
-              BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: 120, color: const Color(0xFF00838F))]),
-              BarChartGroupData(x: 2, barRods: [BarChartRodData(toY: 180, color: const Color(0xFF00838F))]),
-              BarChartGroupData(x: 3, barRods: [BarChartRodData(toY: 240, color: const Color(0xFF00838F))]),
-              BarChartGroupData(x: 4, barRods: [BarChartRodData(toY: 310, color: const Color(0xFF00838F))]),
-              BarChartGroupData(x: 5, barRods: [BarChartRodData(toY: 380, color: const Color(0xFF00838F))]),
+              BarChartGroupData(
+                x: 1,
+                barRods: [
+                  BarChartRodData(toY: 120, color: const Color(0xFF00838F)),
+                ],
+              ),
+              BarChartGroupData(
+                x: 2,
+                barRods: [
+                  BarChartRodData(toY: 180, color: const Color(0xFF00838F)),
+                ],
+              ),
+              BarChartGroupData(
+                x: 3,
+                barRods: [
+                  BarChartRodData(toY: 240, color: const Color(0xFF00838F)),
+                ],
+              ),
+              BarChartGroupData(
+                x: 4,
+                barRods: [
+                  BarChartRodData(toY: 310, color: const Color(0xFF00838F)),
+                ],
+              ),
+              BarChartGroupData(
+                x: 5,
+                barRods: [
+                  BarChartRodData(toY: 380, color: const Color(0xFF00838F)),
+                ],
+              ),
             ],
           ),
         );
@@ -131,13 +185,19 @@ class AiChartView extends StatelessWidget {
             gridData: const FlGridData(show: true),
             titlesData: const FlTitlesData(
               topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles: AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
             ),
             borderData: FlBorderData(show: false),
             lineBarsData: [
               LineChartBarData(
                 spots: const [
-                  FlSpot(1, 10), FlSpot(2, 25), FlSpot(3, 45), FlSpot(4, 70), FlSpot(5, 110),
+                  FlSpot(1, 10),
+                  FlSpot(2, 25),
+                  FlSpot(3, 45),
+                  FlSpot(4, 70),
+                  FlSpot(5, 110),
                 ],
                 isCurved: true,
                 color: Colors.amber.shade700,

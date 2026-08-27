@@ -74,8 +74,11 @@ class AppDialog extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final effectiveIconColor = iconColor ??
-        (isDanger ? AppColors.danger : (isDark ? AppColors.primaryLight : AppColors.primary));
+    final effectiveIconColor =
+        iconColor ??
+        (isDanger
+            ? AppColors.danger
+            : (isDark ? AppColors.primaryLight : AppColors.primary));
 
     return Dialog(
       backgroundColor: isDark ? AppColors.darkSurface : AppColors.surface,
@@ -116,7 +119,9 @@ class AppDialog extends StatelessWidget {
                 subtitle!,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.textSecondary,
                   height: 1.4,
                 ),
               ),
@@ -127,10 +132,7 @@ class AppDialog extends StatelessWidget {
             ],
             const SizedBox(height: 24),
             if (actions != null)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: actions!,
-              )
+              Row(mainAxisAlignment: MainAxisAlignment.end, children: actions!)
             else
               Row(
                 children: [

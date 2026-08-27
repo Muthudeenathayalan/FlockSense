@@ -14,10 +14,13 @@ class NotificationCenterScreen extends ConsumerStatefulWidget {
   const NotificationCenterScreen({super.key});
 
   @override
-  ConsumerState<NotificationCenterScreen> createState() => _NotificationCenterScreenState();
+  ConsumerState<NotificationCenterScreen> createState() =>
+      _NotificationCenterScreenState();
 }
 
-class _NotificationCenterScreenState extends ConsumerState<NotificationCenterScreen> with SingleTickerProviderStateMixin {
+class _NotificationCenterScreenState
+    extends ConsumerState<NotificationCenterScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
 
@@ -50,7 +53,8 @@ class _NotificationCenterScreenState extends ConsumerState<NotificationCenterScr
 
   void _openSettingsDialog() async {
     final settingsAsync = ref.read(notificationSettingsProvider);
-    final settings = settingsAsync.asData?.value ?? const NotificationSettingsModel();
+    final settings =
+        settingsAsync.asData?.value ?? const NotificationSettingsModel();
 
     final result = await showDialog<bool>(
       context: context,
@@ -76,10 +80,15 @@ class _NotificationCenterScreenState extends ConsumerState<NotificationCenterScr
 
     // Filter Notifications
     final filteredNotifs = notifications.where((n) {
-      if (filter.statusFilter == 'unread' && n.status != NotificationStatus.unread) return false;
-      if (filter.statusFilter == 'critical' && n.priority != NotificationPriority.critical) return false;
+      if (filter.statusFilter == 'unread' &&
+          n.status != NotificationStatus.unread)
+        return false;
+      if (filter.statusFilter == 'critical' &&
+          n.priority != NotificationPriority.critical)
+        return false;
       if (filter.statusFilter == 'ai' && !n.isAiAlert) return false;
-      if (filter.typeFilter != null && n.type != filter.typeFilter) return false;
+      if (filter.typeFilter != null && n.type != filter.typeFilter)
+        return false;
 
       if (searchQuery.isNotEmpty) {
         final matchesTitle = n.title.toLowerCase().contains(searchQuery);
@@ -152,10 +161,16 @@ class _NotificationCenterScreenState extends ConsumerState<NotificationCenterScr
                         decoration: InputDecoration(
                           hintText: 'Search alerts & reminders...',
                           prefixIcon: const Icon(Icons.search, size: 18),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           filled: true,
                           fillColor: Colors.white,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
                         ),
                       ),
                     ),
@@ -170,7 +185,9 @@ class _NotificationCenterScreenState extends ConsumerState<NotificationCenterScr
                     children: [
                       FilterChip(
                         label: const Text('All'),
-                        selected: filter.statusFilter == 'all' && filter.typeFilter == null,
+                        selected:
+                            filter.statusFilter == 'all' &&
+                            filter.typeFilter == null,
                         onSelected: (_) {
                           filterNotifier.setStatusFilter('all');
                           filterNotifier.setTypeFilter(null);
@@ -180,13 +197,15 @@ class _NotificationCenterScreenState extends ConsumerState<NotificationCenterScr
                       FilterChip(
                         label: const Text('Unread'),
                         selected: filter.statusFilter == 'unread',
-                        onSelected: (_) => filterNotifier.setStatusFilter('unread'),
+                        onSelected: (_) =>
+                            filterNotifier.setStatusFilter('unread'),
                       ),
                       const SizedBox(width: 4),
                       FilterChip(
                         label: const Text('Critical'),
                         selected: filter.statusFilter == 'critical',
-                        onSelected: (_) => filterNotifier.setStatusFilter('critical'),
+                        onSelected: (_) =>
+                            filterNotifier.setStatusFilter('critical'),
                       ),
                       const SizedBox(width: 4),
                       FilterChip(
@@ -198,19 +217,25 @@ class _NotificationCenterScreenState extends ConsumerState<NotificationCenterScr
                       FilterChip(
                         label: const Text('Feed'),
                         selected: filter.typeFilter == NotificationType.feed,
-                        onSelected: (_) => filterNotifier.setTypeFilter(NotificationType.feed),
+                        onSelected: (_) =>
+                            filterNotifier.setTypeFilter(NotificationType.feed),
                       ),
                       const SizedBox(width: 4),
                       FilterChip(
                         label: const Text('Medicine'),
-                        selected: filter.typeFilter == NotificationType.medicine,
-                        onSelected: (_) => filterNotifier.setTypeFilter(NotificationType.medicine),
+                        selected:
+                            filter.typeFilter == NotificationType.medicine,
+                        onSelected: (_) => filterNotifier.setTypeFilter(
+                          NotificationType.medicine,
+                        ),
                       ),
                       const SizedBox(width: 4),
                       FilterChip(
                         label: const Text('Finance'),
                         selected: filter.typeFilter == NotificationType.finance,
-                        onSelected: (_) => filterNotifier.setTypeFilter(NotificationType.finance),
+                        onSelected: (_) => filterNotifier.setTypeFilter(
+                          NotificationType.finance,
+                        ),
                       ),
                     ],
                   ),
@@ -231,19 +256,26 @@ class _NotificationCenterScreenState extends ConsumerState<NotificationCenterScr
                     ref.invalidate(notificationsStreamProvider);
                   },
                   child: filteredNotifs.isEmpty
-                      ? const Center(child: Text('No active alerts matching filter.'))
+                      ? const Center(
+                          child: Text('No active alerts matching filter.'),
+                        )
                       : ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           itemCount: filteredNotifs.length,
-                          itemBuilder: (ctx, index) => NotificationCard(notification: filteredNotifs[index]),
+                          itemBuilder: (ctx, index) => NotificationCard(
+                            notification: filteredNotifs[index],
+                          ),
                         ),
                 ),
 
                 // Tab 2: Reminders
                 RefreshIndicator(
-                  onRefresh: () async => ref.invalidate(remindersStreamProvider),
+                  onRefresh: () async =>
+                      ref.invalidate(remindersStreamProvider),
                   child: reminders.isEmpty
-                      ? const Center(child: Text('No custom reminders scheduled.'))
+                      ? const Center(
+                          child: Text('No custom reminders scheduled.'),
+                        )
                       : ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           itemCount: reminders.length,
@@ -253,17 +285,36 @@ class _NotificationCenterScreenState extends ConsumerState<NotificationCenterScr
                               margin: const EdgeInsets.only(bottom: 8),
                               child: CheckboxListTile(
                                 value: r.isCompleted,
-                                title: Text(r.title, style: TextStyle(fontWeight: FontWeight.bold, decoration: r.isCompleted ? TextDecoration.lineThrough : null)),
-                                subtitle: Text('${r.description}\nDue: ${DateFormat('dd MMM yyyy').format(r.date)} at ${r.time} • Repeat: ${r.repeat.name.toUpperCase()}', style: const TextStyle(fontSize: 10)),
+                                title: Text(
+                                  r.title,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    decoration: r.isCompleted
+                                        ? TextDecoration.lineThrough
+                                        : null,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  '${r.description}\nDue: ${DateFormat('dd MMM yyyy').format(r.date)} at ${r.time} • Repeat: ${r.repeat.name.toUpperCase()}',
+                                  style: const TextStyle(fontSize: 10),
+                                ),
                                 secondary: IconButton(
-                                  icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    color: Colors.red,
+                                    size: 20,
+                                  ),
                                   onPressed: () async {
-                                    await NotificationFirestoreService.deleteReminder(r.id);
+                                    await NotificationFirestoreService.deleteReminder(
+                                      r.id,
+                                    );
                                     ref.invalidate(remindersStreamProvider);
                                   },
                                 ),
                                 onChanged: (_) async {
-                                  await NotificationFirestoreService.toggleReminderCompletion(r.id);
+                                  await NotificationFirestoreService.toggleReminderCompletion(
+                                    r.id,
+                                  );
                                   ref.invalidate(remindersStreamProvider);
                                 },
                               ),
@@ -276,13 +327,27 @@ class _NotificationCenterScreenState extends ConsumerState<NotificationCenterScr
                 ListView(
                   padding: const EdgeInsets.all(12),
                   children: [
-                    const Text('ARCHIVED ALERTS HISTORY', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF1B5E20))),
+                    const Text(
+                      'ARCHIVED ALERTS HISTORY',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                        color: Color(0xFF1B5E20),
+                      ),
+                    ),
                     const SizedBox(height: 8),
-                    ...notifications.where((n) => n.status == NotificationStatus.archived).map((n) => NotificationCard(notification: n)),
-                    if (!notifications.any((n) => n.status == NotificationStatus.archived))
+                    ...notifications
+                        .where((n) => n.status == NotificationStatus.archived)
+                        .map((n) => NotificationCard(notification: n)),
+                    if (!notifications.any(
+                      (n) => n.status == NotificationStatus.archived,
+                    ))
                       const Padding(
                         padding: EdgeInsets.all(16),
-                        child: Text('No archived notification history.', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                        child: Text(
+                          'No archived notification history.',
+                          style: TextStyle(fontSize: 11, color: Colors.grey),
+                        ),
                       ),
                   ],
                 ),

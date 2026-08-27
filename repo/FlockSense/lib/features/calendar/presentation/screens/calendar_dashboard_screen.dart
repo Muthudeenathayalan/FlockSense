@@ -66,9 +66,7 @@ class CalendarDashboardScreen extends ConsumerWidget {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const CalendarEventFormScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const CalendarEventFormScreen()),
           );
         },
         icon: const Icon(Icons.add_alert_rounded),
@@ -141,9 +139,24 @@ class CalendarDashboardScreen extends ConsumerWidget {
                           ),
                           child: Row(
                             children: [
-                              _viewModeBtn(ref, 'Month', CalendarViewMode.month, viewMode),
-                              _viewModeBtn(ref, 'Week', CalendarViewMode.week, viewMode),
-                              _viewModeBtn(ref, 'Day', CalendarViewMode.day, viewMode),
+                              _viewModeBtn(
+                                ref,
+                                'Month',
+                                CalendarViewMode.month,
+                                viewMode,
+                              ),
+                              _viewModeBtn(
+                                ref,
+                                'Week',
+                                CalendarViewMode.week,
+                                viewMode,
+                              ),
+                              _viewModeBtn(
+                                ref,
+                                'Day',
+                                CalendarViewMode.day,
+                                viewMode,
+                              ),
                             ],
                           ),
                         ),
@@ -155,17 +168,25 @@ class CalendarDashboardScreen extends ConsumerWidget {
                         onTap: () => _syncTelemetryReminders(context, ref),
                         borderRadius: BorderRadius.circular(14),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 9,
+                          ),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [AppColors.primary, AppColors.primaryDark],
+                              colors: [
+                                AppColors.primary,
+                                AppColors.primaryDark,
+                              ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(14),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.25),
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.25,
+                                ),
                                 blurRadius: 6,
                                 offset: const Offset(0, 3),
                               ),
@@ -173,7 +194,11 @@ class CalendarDashboardScreen extends ConsumerWidget {
                           ),
                           child: const Row(
                             children: [
-                              Icon(Icons.smart_toy_rounded, size: 16, color: Colors.white),
+                              Icon(
+                                Icons.smart_toy_rounded,
+                                size: 16,
+                                color: Colors.white,
+                              ),
                               SizedBox(width: 6),
                               Text(
                                 'Auto Sync',
@@ -194,17 +219,32 @@ class CalendarDashboardScreen extends ConsumerWidget {
                   // Search Field
                   TextField(
                     onChanged: (val) {
-                      ref.read(calendarSearchQueryProvider.notifier).setQuery(val);
+                      ref
+                          .read(calendarSearchQueryProvider.notifier)
+                          .setQuery(val);
                     },
                     decoration: InputDecoration(
                       hintText: 'Search events, vaccines, harvest...',
-                      hintStyle: const TextStyle(fontSize: 13, color: AppColors.textHint),
-                      prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 20),
+                      hintStyle: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textHint,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
                       suffixIcon: searchQuery.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(Icons.cancel_rounded, size: 18, color: AppColors.textHint),
+                              icon: const Icon(
+                                Icons.cancel_rounded,
+                                size: 18,
+                                color: AppColors.textHint,
+                              ),
                               onPressed: () {
-                                ref.read(calendarSearchQueryProvider.notifier).setQuery('');
+                                ref
+                                    .read(calendarSearchQueryProvider.notifier)
+                                    .setQuery('');
                               },
                             )
                           : null,
@@ -215,11 +255,16 @@ class CalendarDashboardScreen extends ConsumerWidget {
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.8)),
+                        borderSide: BorderSide(
+                          color: AppColors.border.withValues(alpha: 0.8),
+                        ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                        borderSide: const BorderSide(
+                          color: AppColors.primary,
+                          width: 1.5,
+                        ),
                       ),
                       filled: true,
                       fillColor: AppColors.surfaceSoft.withValues(alpha: 0.5),
@@ -244,11 +289,23 @@ class CalendarDashboardScreen extends ConsumerWidget {
                     const SizedBox(width: 6),
                     _filterChip(ref, 'Tomorrow', selectedFilter == 'Tomorrow'),
                     const SizedBox(width: 6),
-                    _filterChip(ref, 'This Week', selectedFilter == 'This Week'),
+                    _filterChip(
+                      ref,
+                      'This Week',
+                      selectedFilter == 'This Week',
+                    ),
                     const SizedBox(width: 6),
-                    _filterChip(ref, 'This Month', selectedFilter == 'This Month'),
+                    _filterChip(
+                      ref,
+                      'This Month',
+                      selectedFilter == 'This Month',
+                    ),
                     const SizedBox(width: 6),
-                    _filterChip(ref, 'Vaccination', selectedFilter == 'Vaccination'),
+                    _filterChip(
+                      ref,
+                      'Vaccination',
+                      selectedFilter == 'Vaccination',
+                    ),
                     const SizedBox(width: 6),
                     _filterChip(ref, 'Medicine', selectedFilter == 'Medicine'),
                     const SizedBox(width: 6),
@@ -256,9 +313,17 @@ class CalendarDashboardScreen extends ConsumerWidget {
                     const SizedBox(width: 6),
                     _filterChip(ref, 'Cleaning', selectedFilter == 'Cleaning'),
                     const SizedBox(width: 6),
-                    _filterChip(ref, 'Inventory', selectedFilter == 'Inventory'),
+                    _filterChip(
+                      ref,
+                      'Inventory',
+                      selectedFilter == 'Inventory',
+                    ),
                     const SizedBox(width: 6),
-                    _filterChip(ref, 'Completed', selectedFilter == 'Completed'),
+                    _filterChip(
+                      ref,
+                      'Completed',
+                      selectedFilter == 'Completed',
+                    ),
                   ],
                 ),
               ),
@@ -274,7 +339,12 @@ class CalendarDashboardScreen extends ConsumerWidget {
                 },
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.only(left: 16, right: 16, top: 14, bottom: 85),
+                  padding: const EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    top: 14,
+                    bottom: 85,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -308,7 +378,10 @@ class CalendarDashboardScreen extends ConsumerWidget {
                             ],
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.primary.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(10),
@@ -342,11 +415,14 @@ class CalendarDashboardScreen extends ConsumerWidget {
                                   context: context,
                                   isScrollControlled: true,
                                   backgroundColor: Colors.transparent,
-                                  builder: (_) => EventDetailsSheet(event: event),
+                                  builder: (_) =>
+                                      EventDetailsSheet(event: event),
                                 );
                               },
                               onToggleComplete: (val) async {
-                                final service = ref.read(calendarServiceProvider);
+                                final service = ref.read(
+                                  calendarServiceProvider,
+                                );
                                 await service.markCompleted(
                                   uid: event.ownerId,
                                   farmId: event.farmId,
@@ -368,7 +444,12 @@ class CalendarDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _viewModeBtn(WidgetRef ref, String label, CalendarViewMode mode, CalendarViewMode currentMode) {
+  Widget _viewModeBtn(
+    WidgetRef ref,
+    String label,
+    CalendarViewMode mode,
+    CalendarViewMode currentMode,
+  ) {
     final selected = mode == currentMode;
     return Expanded(
       child: GestureDetector(
@@ -429,7 +510,10 @@ class CalendarDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _syncTelemetryReminders(BuildContext context, WidgetRef ref) async {
+  Future<void> _syncTelemetryReminders(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     try {
       final user = ref.read(authStateProvider).value;
       final activeFarmId = ref.read(activeFarmIdProvider).value;
@@ -452,7 +536,9 @@ class CalendarDashboardScreen extends ConsumerWidget {
             ),
             backgroundColor: AppColors.primary,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -463,7 +549,9 @@ class CalendarDashboardScreen extends ConsumerWidget {
             content: Text('Failed to sync telemetry reminders: $e'),
             backgroundColor: AppColors.danger,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -526,16 +614,23 @@ class CalendarDashboardScreen extends ConsumerWidget {
               foregroundColor: Colors.white,
               elevation: 3,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const CalendarEventFormScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const CalendarEventFormScreen(),
+                ),
               );
             },
             icon: const Icon(Icons.add_alert_rounded, size: 18),
-            label: const Text('Create First Reminder', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+            label: const Text(
+              'Create First Reminder',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+            ),
           ),
         ],
       ),
@@ -555,12 +650,20 @@ class CalendarDashboardScreen extends ConsumerWidget {
                 color: AppColors.danger.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.wifi_off_rounded, size: 48, color: AppColors.danger),
+              child: const Icon(
+                Icons.wifi_off_rounded,
+                size: 48,
+                color: AppColors.danger,
+              ),
             ),
             const SizedBox(height: 18),
             const Text(
               'Unable to load calendar',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -568,14 +671,19 @@ class CalendarDashboardScreen extends ConsumerWidget {
                   ? 'Permission denied. Check Firestore security rules.'
                   : 'Please check your internet connection and try again.',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 22),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               onPressed: () {
                 _syncTelemetryReminders(context, ref);

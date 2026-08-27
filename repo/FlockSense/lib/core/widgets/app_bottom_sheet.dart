@@ -87,7 +87,9 @@ class AppBottomSheet extends StatelessWidget {
                           Text(
                             subtitle!,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -99,7 +101,9 @@ class AppBottomSheet extends StatelessWidget {
                       icon: const Icon(Icons.close),
                       onPressed: () => Navigator.of(context).pop(),
                       style: IconButton.styleFrom(
-                        backgroundColor: isDark ? AppColors.darkSurfaceSoft : AppColors.surfaceSoft,
+                        backgroundColor: isDark
+                            ? AppColors.darkSurfaceSoft
+                            : AppColors.surfaceSoft,
                       ),
                     ),
                 ],
@@ -116,10 +120,7 @@ class AppBottomSheet extends StatelessWidget {
             ),
             if (actions != null) ...[
               const Divider(height: 1),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: actions!,
-              ),
+              Padding(padding: const EdgeInsets.all(16), child: actions!),
             ],
           ],
         ),

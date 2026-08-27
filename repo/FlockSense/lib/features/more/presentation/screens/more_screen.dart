@@ -149,7 +149,9 @@ class _MoreCard extends StatelessWidget {
           case 'Inventory':
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const InventoryDashboardScreen()),
+              MaterialPageRoute(
+                builder: (_) => const InventoryDashboardScreen(),
+              ),
             );
             return;
           case 'Finance':
@@ -191,13 +193,17 @@ class _MoreCard extends StatelessWidget {
           case 'Calendar':
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const CalendarDashboardScreen()),
+              MaterialPageRoute(
+                builder: (_) => const CalendarDashboardScreen(),
+              ),
             );
             return;
           case 'Notifications':
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const NotificationCenterScreen()),
+              MaterialPageRoute(
+                builder: (_) => const NotificationCenterScreen(),
+              ),
             );
             return;
           case 'Dashboard':
@@ -206,7 +212,9 @@ class _MoreCard extends StatelessWidget {
           case 'Settings':
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const SettingsDashboardScreen()),
+              MaterialPageRoute(
+                builder: (_) => const SettingsDashboardScreen(),
+              ),
             );
             return;
           default:

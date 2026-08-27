@@ -30,8 +30,8 @@ class ActiveConversationNotifier extends Notifier<AiConversationModel?> {
 
 final activeConversationProvider =
     NotifierProvider<ActiveConversationNotifier, AiConversationModel?>(
-  ActiveConversationNotifier.new,
-);
+      ActiveConversationNotifier.new,
+    );
 
 class AiSendingNotifier extends Notifier<bool> {
   @override
@@ -42,8 +42,9 @@ class AiSendingNotifier extends Notifier<bool> {
   }
 }
 
-final aiSendingStateProvider =
-    NotifierProvider<AiSendingNotifier, bool>(AiSendingNotifier.new);
+final aiSendingStateProvider = NotifierProvider<AiSendingNotifier, bool>(
+  AiSendingNotifier.new,
+);
 
 class ActiveAttachmentsNotifier extends Notifier<List<AiAttachmentModel>> {
   @override
@@ -68,8 +69,8 @@ class ActiveAttachmentsNotifier extends Notifier<List<AiAttachmentModel>> {
 
 final activeAttachmentsProvider =
     NotifierProvider<ActiveAttachmentsNotifier, List<AiAttachmentModel>>(
-  ActiveAttachmentsNotifier.new,
-);
+      ActiveAttachmentsNotifier.new,
+    );
 
 class SearchQueryNotifier extends Notifier<String> {
   @override
@@ -80,13 +81,17 @@ class SearchQueryNotifier extends Notifier<String> {
   }
 }
 
-final searchQueryProvider =
-    NotifierProvider<SearchQueryNotifier, String>(SearchQueryNotifier.new);
+final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(
+  SearchQueryNotifier.new,
+);
 
-final conversationsStreamProvider = StreamProvider<List<AiConversationModel>>((ref) {
+final conversationsStreamProvider = StreamProvider<List<AiConversationModel>>((
+  ref,
+) {
   return AiChatFirestoreService.streamConversations();
 });
 
-final messagesStreamProvider = StreamProvider.family<List<AiMessageModel>, String>((ref, conversationId) {
-  return AiChatFirestoreService.streamMessages(conversationId);
-});
+final messagesStreamProvider =
+    StreamProvider.family<List<AiMessageModel>, String>((ref, conversationId) {
+      return AiChatFirestoreService.streamMessages(conversationId);
+    });

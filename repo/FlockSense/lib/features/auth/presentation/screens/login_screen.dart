@@ -154,7 +154,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       Text(
                         'Welcome back, farmer!',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -198,7 +200,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           decoration: BoxDecoration(
                             color: AppColors.dangerLight,
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: AppColors.danger.withOpacity(0.4)),
+                            border: Border.all(
+                              color: AppColors.danger.withOpacity(0.4),
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -278,7 +282,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           textAlign: TextAlign.center,
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontSize: 11,
-                            color: isDark ? AppColors.darkTextSecondary : AppColors.textDisabled,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.textDisabled,
                           ),
                         ),
                       ),
@@ -293,4 +299,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-

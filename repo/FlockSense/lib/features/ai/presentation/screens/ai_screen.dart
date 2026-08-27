@@ -86,7 +86,9 @@ class _AiScreenState extends ConsumerState<AiScreen> {
 
       // 5. Call Gemini Service
       final aiResponseText = await GeminiService.generateResponse(
-        prompt: userText.isNotEmpty ? userText : 'Analyze the uploaded content and telemetry.',
+        prompt: userText.isNotEmpty
+            ? userText
+            : 'Analyze the uploaded content and telemetry.',
         contextSnapshot: contextSnapshot,
       );
 
@@ -151,7 +153,9 @@ class _AiScreenState extends ConsumerState<AiScreen> {
               if (mounted) {
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Gemini API key saved successfully.')),
+                  const SnackBar(
+                    content: Text('Gemini API key saved successfully.'),
+                  ),
                 );
               }
             },
@@ -204,21 +208,34 @@ class _AiScreenState extends ConsumerState<AiScreen> {
                           Container(
                             padding: const EdgeInsets.all(18),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1B5E20).withAlpha((0.1 * 255).toInt()),
+                              color: const Color(
+                                0xFF1B5E20,
+                              ).withAlpha((0.1 * 255).toInt()),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.psychology, size: 48, color: Color(0xFF1B5E20)),
+                            child: const Icon(
+                              Icons.psychology,
+                              size: 48,
+                              color: Color(0xFF1B5E20),
+                            ),
                           ),
                           const SizedBox(height: 16),
                           const Text(
                             'Welcome to FlockSense AI Workspace',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.black87,
+                            ),
                           ),
                           const SizedBox(height: 6),
                           const Text(
                             'Ask any question about your flock, analyze photos, upload reports, or generate performance predictions.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 12, color: Colors.black54),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
                           ),
                         ],
                       ),
@@ -236,7 +253,10 @@ class _AiScreenState extends ConsumerState<AiScreen> {
                       message: msg,
                       onRegenerate: () {
                         if (msg.sender == AiMessageSender.ai) {
-                          _handleSendMessage('Regenerate response for previous query', []);
+                          _handleSendMessage(
+                            'Regenerate response for previous query',
+                            [],
+                          );
                         }
                       },
                     );
@@ -244,7 +264,8 @@ class _AiScreenState extends ConsumerState<AiScreen> {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error loading messages: $e')),
+              error: (e, _) =>
+                  Center(child: Text('Error loading messages: $e')),
             ),
           ),
 
@@ -252,7 +273,8 @@ class _AiScreenState extends ConsumerState<AiScreen> {
           AiInputBar(
             onSend: _handleSendMessage,
             isSending: isSending,
-            onStop: () => ref.read(aiSendingStateProvider.notifier).setSending(false),
+            onStop: () =>
+                ref.read(aiSendingStateProvider.notifier).setSending(false),
           ),
         ],
       ),

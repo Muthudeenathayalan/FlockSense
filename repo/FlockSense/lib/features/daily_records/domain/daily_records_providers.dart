@@ -12,7 +12,9 @@ class DailyRecordFarmNotifier extends Notifier<String?> {
 }
 
 final dailyRecordFarmIdProvider =
-    NotifierProvider<DailyRecordFarmNotifier, String?>(DailyRecordFarmNotifier.new);
+    NotifierProvider<DailyRecordFarmNotifier, String?>(
+      DailyRecordFarmNotifier.new,
+    );
 
 class DailyRecordBatchNotifier extends Notifier<String?> {
   @override
@@ -21,7 +23,9 @@ class DailyRecordBatchNotifier extends Notifier<String?> {
 }
 
 final dailyRecordBatchIdProvider =
-    NotifierProvider<DailyRecordBatchNotifier, String?>(DailyRecordBatchNotifier.new);
+    NotifierProvider<DailyRecordBatchNotifier, String?>(
+      DailyRecordBatchNotifier.new,
+    );
 
 class DailyRecordDateNotifier extends Notifier<DateTime> {
   @override
@@ -30,7 +34,9 @@ class DailyRecordDateNotifier extends Notifier<DateTime> {
 }
 
 final dailyRecordDateProvider =
-    NotifierProvider<DailyRecordDateNotifier, DateTime>(DailyRecordDateNotifier.new);
+    NotifierProvider<DailyRecordDateNotifier, DateTime>(
+      DailyRecordDateNotifier.new,
+    );
 
 class DailyRecordSearchNotifier extends Notifier<String> {
   @override
@@ -39,7 +45,9 @@ class DailyRecordSearchNotifier extends Notifier<String> {
 }
 
 final dailyRecordSearchQueryProvider =
-    NotifierProvider<DailyRecordSearchNotifier, String>(DailyRecordSearchNotifier.new);
+    NotifierProvider<DailyRecordSearchNotifier, String>(
+      DailyRecordSearchNotifier.new,
+    );
 
 class DailyRecordFilterNotifier extends Notifier<String> {
   @override
@@ -48,7 +56,9 @@ class DailyRecordFilterNotifier extends Notifier<String> {
 }
 
 final dailyRecordFilterCategoryProvider =
-    NotifierProvider<DailyRecordFilterNotifier, String>(DailyRecordFilterNotifier.new);
+    NotifierProvider<DailyRecordFilterNotifier, String>(
+      DailyRecordFilterNotifier.new,
+    );
 
 class DailyRecordSortNotifier extends Notifier<String> {
   @override
@@ -57,31 +67,37 @@ class DailyRecordSortNotifier extends Notifier<String> {
 }
 
 final dailyRecordSortOrderProvider =
-    NotifierProvider<DailyRecordSortNotifier, String>(DailyRecordSortNotifier.new);
-
-final dailyRecordsStreamProvider = StreamProvider.autoDispose<List<DailyRecordModel>>((ref) {
-  final authState = ref.watch(authStateProvider);
-  final activeFarmId = ref.watch(activeFarmIdProvider).asData?.value;
-  final selectedFarmId = ref.watch(dailyRecordFarmIdProvider) ?? activeFarmId;
-  final selectedBatchId = ref.watch(dailyRecordBatchIdProvider);
-
-  final user = authState.asData?.value;
-  final uid = user?.uid ?? 'local_user';
-
-  if (selectedFarmId != null &&
-      selectedFarmId.isNotEmpty &&
-      selectedBatchId != null &&
-      selectedBatchId.isNotEmpty) {
-    return DailyRecordService.watchDailyRecords(
-      farmId: selectedFarmId,
-      batchId: selectedBatchId,
+    NotifierProvider<DailyRecordSortNotifier, String>(
+      DailyRecordSortNotifier.new,
     );
-  }
 
-  return DailyRecordService.watchAllUserDailyRecords(uid);
-});
+final dailyRecordsStreamProvider =
+    StreamProvider.autoDispose<List<DailyRecordModel>>((ref) {
+      final authState = ref.watch(authStateProvider);
+      final activeFarmId = ref.watch(activeFarmIdProvider).asData?.value;
+      final selectedFarmId =
+          ref.watch(dailyRecordFarmIdProvider) ?? activeFarmId;
+      final selectedBatchId = ref.watch(dailyRecordBatchIdProvider);
 
-final dailyRecordSyncStatusProvider = StreamProvider.autoDispose<SyncStatus>((ref) {
+      final user = authState.asData?.value;
+      final uid = user?.uid ?? 'local_user';
+
+      if (selectedFarmId != null &&
+          selectedFarmId.isNotEmpty &&
+          selectedBatchId != null &&
+          selectedBatchId.isNotEmpty) {
+        return DailyRecordService.watchDailyRecords(
+          farmId: selectedFarmId,
+          batchId: selectedBatchId,
+        );
+      }
+
+      return DailyRecordService.watchAllUserDailyRecords(uid);
+    });
+
+final dailyRecordSyncStatusProvider = StreamProvider.autoDispose<SyncStatus>((
+  ref,
+) {
   final authState = ref.watch(authStateProvider);
   final activeFarmId = ref.watch(activeFarmIdProvider).asData?.value;
   final selectedFarmId = ref.watch(dailyRecordFarmIdProvider) ?? activeFarmId;
@@ -97,7 +113,9 @@ final dailyRecordSyncStatusProvider = StreamProvider.autoDispose<SyncStatus>((re
   );
 });
 
-final filteredDailyRecordsProvider = Provider.autoDispose<List<DailyRecordModel>>((ref) {
+final filteredDailyRecordsProvider = Provider.autoDispose<List<DailyRecordModel>>((
+  ref,
+) {
   final records = ref.watch(dailyRecordsStreamProvider).value ?? [];
   final query = ref.watch(dailyRecordSearchQueryProvider).toLowerCase().trim();
   final filter = ref.watch(dailyRecordFilterCategoryProvider);
@@ -107,7 +125,8 @@ final filteredDailyRecordsProvider = Provider.autoDispose<List<DailyRecordModel>
     // 1. Search Query Filter (Date, Medicine, Feed, Vaccine)
     final dateStr =
         '${r.recordDate.year}-${r.recordDate.month.toString().padLeft(2, '0')}-${r.recordDate.day.toString().padLeft(2, '0')}';
-    final matchesQuery = query.isEmpty ||
+    final matchesQuery =
+        query.isEmpty ||
         dateStr.contains(query) ||
         (r.medicineName?.toLowerCase().contains(query) ?? false) ||
         (r.feedType?.toLowerCase().contains(query) ?? false) ||
@@ -119,15 +138,20 @@ final filteredDailyRecordsProvider = Provider.autoDispose<List<DailyRecordModel>
     // 2. Category Filter (All, Feed, Water, Mortality, Medicine, Vaccination, Weight, Environment)
     switch (filter) {
       case 'Feed':
-        return r.feedConsumedKg > 0 || (r.feedType != null && r.feedType!.isNotEmpty);
+        return r.feedConsumedKg > 0 ||
+            (r.feedType != null && r.feedType!.isNotEmpty);
       case 'Water':
-        return r.waterConsumedLiters > 0 || (r.waterSource != null && r.waterSource!.isNotEmpty);
+        return r.waterConsumedLiters > 0 ||
+            (r.waterSource != null && r.waterSource!.isNotEmpty);
       case 'Mortality':
-        return r.mortalityCount > 0 || (r.mortalityCause != null && r.mortalityCause!.isNotEmpty);
+        return r.mortalityCount > 0 ||
+            (r.mortalityCause != null && r.mortalityCause!.isNotEmpty);
       case 'Medicine':
-        return r.medicineGiven || (r.medicineName != null && r.medicineName!.isNotEmpty);
+        return r.medicineGiven ||
+            (r.medicineName != null && r.medicineName!.isNotEmpty);
       case 'Vaccination':
-        return r.vaccineGiven || (r.vaccineName != null && r.vaccineName!.isNotEmpty);
+        return r.vaccineGiven ||
+            (r.vaccineName != null && r.vaccineName!.isNotEmpty);
       case 'Weight':
         return r.avgWeightGrams > 0;
       case 'Environment':
@@ -194,7 +218,8 @@ final dailyRecordsStatsProvider = Provider.autoDispose<DailyRecordStats>((ref) {
   String upcomingVaccine = 'None Scheduled';
 
   for (final r in records) {
-    final isToday = r.recordDate.year == todayStart.year &&
+    final isToday =
+        r.recordDate.year == todayStart.year &&
         r.recordDate.month == todayStart.month &&
         r.recordDate.day == todayStart.day;
 
@@ -202,7 +227,9 @@ final dailyRecordsStatsProvider = Provider.autoDispose<DailyRecordStats>((ref) {
       todayFeed += r.feedConsumedKg;
       todayWater += r.waterConsumedLiters;
       todayMortality += r.mortalityCount;
-      if (r.medicineGiven && r.medicineName != null && r.medicineName!.isNotEmpty) {
+      if (r.medicineGiven &&
+          r.medicineName != null &&
+          r.medicineName!.isNotEmpty) {
         medicines.add(r.medicineName!);
       }
     }

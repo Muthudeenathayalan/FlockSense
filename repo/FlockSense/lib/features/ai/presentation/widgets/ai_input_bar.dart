@@ -54,9 +54,9 @@ class _AiInputBarState extends State<AiInputBar> {
     } catch (e) {
       setState(() => _isUploadingAttachment = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add image: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to add image: $e')));
       }
     }
   }
@@ -89,9 +89,9 @@ class _AiInputBarState extends State<AiInputBar> {
     } catch (e) {
       setState(() => _isUploadingAttachment = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to pick document: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to pick document: $e')));
       }
     }
   }
@@ -112,7 +112,9 @@ class _AiInputBarState extends State<AiInputBar> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade300, width: 0.8)),
+        border: Border(
+          top: BorderSide(color: Colors.grey.shade300, width: 0.8),
+        ),
       ),
       child: SafeArea(
         child: Column(
@@ -129,37 +131,60 @@ class _AiInputBarState extends State<AiInputBar> {
                       Container(
                         margin: const EdgeInsets.only(right: 8),
                         padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(10)),
-                        child: const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
                       ),
-                    ..._attachments.map((att) => Container(
-                          margin: const EdgeInsets.only(right: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade50,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.green.shade200),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                att.fileType == AiAttachmentType.image ? Icons.image : Icons.insert_drive_file,
-                                size: 16,
-                                color: const Color(0xFF1B5E20),
+                    ..._attachments.map(
+                      (att) => Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.green.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              att.fileType == AiAttachmentType.image
+                                  ? Icons.image
+                                  : Icons.insert_drive_file,
+                              size: 16,
+                              color: const Color(0xFF1B5E20),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              att.fileName,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1B5E20),
                               ),
-                              const SizedBox(width: 6),
-                              Text(
-                                att.fileName,
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF1B5E20)),
+                            ),
+                            const SizedBox(width: 6),
+                            GestureDetector(
+                              onTap: () =>
+                                  setState(() => _attachments.remove(att)),
+                              child: const Icon(
+                                Icons.close,
+                                size: 14,
+                                color: Colors.grey,
                               ),
-                              const SizedBox(width: 6),
-                              GestureDetector(
-                                onTap: () => setState(() => _attachments.remove(att)),
-                                child: const Icon(Icons.close, size: 14, color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                        )),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -178,15 +203,23 @@ class _AiInputBarState extends State<AiInputBar> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           ListTile(
-                            leading: const Icon(Icons.camera_alt, color: Color(0xFF1B5E20)),
-                            title: const Text('Capture Photo (Bird / Droppings / Label)'),
+                            leading: const Icon(
+                              Icons.camera_alt,
+                              color: Color(0xFF1B5E20),
+                            ),
+                            title: const Text(
+                              'Capture Photo (Bird / Droppings / Label)',
+                            ),
                             onTap: () {
                               Navigator.pop(ctx);
                               _pickImage(ImageSource.camera);
                             },
                           ),
                           ListTile(
-                            leading: const Icon(Icons.photo_library, color: Color(0xFF00838F)),
+                            leading: const Icon(
+                              Icons.photo_library,
+                              color: Color(0xFF00838F),
+                            ),
                             title: const Text('Choose from Gallery'),
                             onTap: () {
                               Navigator.pop(ctx);
@@ -194,8 +227,13 @@ class _AiInputBarState extends State<AiInputBar> {
                             },
                           ),
                           ListTile(
-                            leading: const Icon(Icons.upload_file, color: Color(0xFFE65100)),
-                            title: const Text('Attach Document (PDF, CSV, Excel, TXT)'),
+                            leading: const Icon(
+                              Icons.upload_file,
+                              color: Color(0xFFE65100),
+                            ),
+                            title: const Text(
+                              'Attach Document (PDF, CSV, Excel, TXT)',
+                            ),
                             onTap: () {
                               Navigator.pop(ctx);
                               _pickFile();
@@ -214,8 +252,14 @@ class _AiInputBarState extends State<AiInputBar> {
                     textCapitalization: TextCapitalization.sentences,
                     decoration: InputDecoration(
                       hintText: 'Ask FlockSense AI or analyze files...',
-                      hintStyle: const TextStyle(fontSize: 13, color: Colors.black45),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      hintStyle: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black45,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       filled: true,
                       fillColor: const Color(0xFFF8FAFC),
                       border: OutlineInputBorder(
@@ -228,7 +272,10 @@ class _AiInputBarState extends State<AiInputBar> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(color: Color(0xFF1B5E20), width: 1.5),
+                        borderSide: const BorderSide(
+                          color: Color(0xFF1B5E20),
+                          width: 1.5,
+                        ),
                       ),
                     ),
                   ),
@@ -239,7 +286,11 @@ class _AiInputBarState extends State<AiInputBar> {
                   tooltip: 'Voice Search (Tap to speak)',
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Voice Assistant ready. Speak your question now...')),
+                      const SnackBar(
+                        content: Text(
+                          'Voice Assistant ready. Speak your question now...',
+                        ),
+                      ),
                     );
                   },
                 ),

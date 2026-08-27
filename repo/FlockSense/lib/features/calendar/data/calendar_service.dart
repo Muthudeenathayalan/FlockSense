@@ -9,7 +9,7 @@ class CalendarService {
   final FirebaseFirestore _firestore;
 
   CalendarService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Stream real-time calendar events with instant initial yield and offline fallback
   Stream<List<CalendarEventModel>> watchCalendarEvents({
@@ -38,7 +38,9 @@ class CalendarService {
       await for (final snapshot in query.snapshots()) {
         final events = snapshot.docs
             .map((doc) => CalendarEventModel.fromJson(doc.data()))
-            .where((e) => batchId == null || batchId.isEmpty || e.batchId == batchId)
+            .where(
+              (e) => batchId == null || batchId.isEmpty || e.batchId == batchId,
+            )
             .toList();
 
         if (events.isNotEmpty) {
@@ -52,9 +54,14 @@ class CalendarService {
   }
 
   /// Generate rich fallback events for offline & initial state
-  List<CalendarEventModel> _generateDefaultFallbackEvents(String uid, String? farmId) {
+  List<CalendarEventModel> _generateDefaultFallbackEvents(
+    String uid,
+    String? farmId,
+  ) {
     final now = DateTime.now();
-    final effectiveFarmId = (farmId != null && farmId.isNotEmpty) ? farmId : 'default_farm';
+    final effectiveFarmId = (farmId != null && farmId.isNotEmpty)
+        ? farmId
+        : 'default_farm';
 
     return [
       CalendarEventModel(
@@ -63,8 +70,13 @@ class CalendarService {
         ownerId: uid,
         title: 'Lasota / Ranikhet Booster Vaccination',
         eventType: 'Vaccination',
-        description: 'Scheduled Day 7 Ranikhet booster vaccination for active flock.',
-        eventDate: DateTime(now.year, now.month, now.day).add(const Duration(days: 1)),
+        description:
+            'Scheduled Day 7 Ranikhet booster vaccination for active flock.',
+        eventDate: DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).add(const Duration(days: 1)),
         eventTime: '07:30',
         priority: 'urgent',
         reminderBeforeMinutes: 1440,
@@ -80,7 +92,11 @@ class CalendarService {
         title: 'Broiler Starter Feed Restock',
         eventType: 'Inventory Restock',
         description: 'Order 50 bags of Broiler Starter Feed from supplier.',
-        eventDate: DateTime(now.year, now.month, now.day).add(const Duration(days: 3)),
+        eventDate: DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).add(const Duration(days: 3)),
         eventTime: '10:00',
         priority: 'high',
         reminderBeforeMinutes: 720,
@@ -95,8 +111,13 @@ class CalendarService {
         ownerId: uid,
         title: 'Gumboro IBD Vaccination',
         eventType: 'Vaccination',
-        description: 'Scheduled Day 14 Gumboro IBD drinking water vaccination protocol.',
-        eventDate: DateTime(now.year, now.month, now.day).add(const Duration(days: 7)),
+        description:
+            'Scheduled Day 14 Gumboro IBD drinking water vaccination protocol.',
+        eventDate: DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).add(const Duration(days: 7)),
         eventTime: '08:00',
         priority: 'urgent',
         reminderBeforeMinutes: 1440,
@@ -111,8 +132,13 @@ class CalendarService {
         ownerId: uid,
         title: 'Batch Maturity & Bird Harvest Date',
         eventType: 'Harvest Date',
-        description: 'Batch reaches target 42-day maturity age. Prepare bird sales & weighments.',
-        eventDate: DateTime(now.year, now.month, now.day).add(const Duration(days: 14)),
+        description:
+            'Batch reaches target 42-day maturity age. Prepare bird sales & weighments.',
+        eventDate: DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).add(const Duration(days: 14)),
         eventTime: '06:00',
         priority: 'high',
         reminderBeforeMinutes: 2880,
@@ -128,7 +154,11 @@ class CalendarService {
         title: 'Shed Disinfection & Cleaning',
         eventType: 'Shed Sanitation',
         description: 'Full biosecurity washdown and disinfectant spray.',
-        eventDate: DateTime(now.year, now.month, now.day).add(const Duration(days: 18)),
+        eventDate: DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).add(const Duration(days: 18)),
         eventTime: '09:00',
         priority: 'medium',
         reminderBeforeMinutes: 720,
@@ -248,7 +278,9 @@ class CalendarService {
           .where('ownerId', isEqualTo: uid)
           .get();
 
-      final batches = batchesSnap.docs.map((d) => BatchModel.fromJson(d.data())).toList();
+      final batches = batchesSnap.docs
+          .map((d) => BatchModel.fromJson(d.data()))
+          .toList();
 
       for (final b in batches) {
         if (b.status.toLowerCase() != 'active') continue;
@@ -275,7 +307,8 @@ class CalendarService {
             ownerId: uid,
             title: harvestEventTitle,
             eventType: 'Harvest Date',
-            description: 'Batch ${b.batchName} reaches target maturity age (42 Days). Prepare for bird sales.',
+            description:
+                'Batch ${b.batchName} reaches target maturity age (42 Days). Prepare for bird sales.',
             eventDate: harvestDate,
             eventTime: '08:00',
             priority: 'high',
@@ -291,9 +324,17 @@ class CalendarService {
 
         // Standard Poultry Vaccination Reminders
         final standardVaccines = [
-          {'name': 'Lasota / Ranikhet Booster', 'day': 7, 'type': 'Vaccination'},
+          {
+            'name': 'Lasota / Ranikhet Booster',
+            'day': 7,
+            'type': 'Vaccination',
+          },
           {'name': 'Gumboro IBD Vaccination', 'day': 14, 'type': 'Vaccination'},
-          {'name': 'Gumboro Booster Vaccination', 'day': 21, 'type': 'Vaccination'},
+          {
+            'name': 'Gumboro Booster Vaccination',
+            'day': 21,
+            'type': 'Vaccination',
+          },
         ];
 
         for (final v in standardVaccines) {
@@ -301,7 +342,9 @@ class CalendarService {
           final vacName = v['name'] as String;
           final vacDate = b.placementDate.add(Duration(days: vacDay - 1));
 
-          if (vacDate.isAfter(DateTime.now().subtract(const Duration(days: 1)))) {
+          if (vacDate.isAfter(
+            DateTime.now().subtract(const Duration(days: 1)),
+          )) {
             final vacTitle = '$vacName — ${b.batchName}';
             final existingVacSnap = await _firestore
                 .collection('users')
@@ -320,7 +363,8 @@ class CalendarService {
                 ownerId: uid,
                 title: vacTitle,
                 eventType: 'Vaccination',
-                description: 'Scheduled Day $vacDay vaccination protocol for ${b.batchName}.',
+                description:
+                    'Scheduled Day $vacDay vaccination protocol for ${b.batchName}.',
                 eventDate: vacDate,
                 eventTime: '07:30',
                 priority: 'urgent',
@@ -366,7 +410,8 @@ class CalendarService {
               ownerId: uid,
               title: restockTitle,
               eventType: 'Inventory Restock',
-              description: 'Stock quantity (${item.quantityAvailable} ${item.unit}) is below minimum threshold (${item.minStockLevel} ${item.unit}). Contact supplier ${item.supplier}.',
+              description:
+                  'Stock quantity (${item.quantityAvailable} ${item.unit}) is below minimum threshold (${item.minStockLevel} ${item.unit}). Contact supplier ${item.supplier}.',
               eventDate: DateTime.now(),
               eventTime: '10:00',
               priority: 'high',

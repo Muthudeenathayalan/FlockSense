@@ -6,14 +6,17 @@ import 'package:flock_sense/features/notifications/data/models/notification_mode
 class FcmLocalNotificationService {
   FcmLocalNotificationService._();
 
-  static final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
+  static final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
 
   static Future<void> initialize() async {
     if (_initialized) return;
 
     try {
-      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const androidSettings = AndroidInitializationSettings(
+        '@mipmap/ic_launcher',
+      );
       const iosSettings = DarwinInitializationSettings(
         requestAlertPermission: true,
         requestBadgePermission: true,
@@ -28,7 +31,9 @@ class FcmLocalNotificationService {
       await _localNotifications.initialize(
         initSettings,
         onDidReceiveNotificationResponse: (details) {
-          debugPrint('[FcmLocalNotificationService] Notification tapped: ${details.payload}');
+          debugPrint(
+            '[FcmLocalNotificationService] Notification tapped: ${details.payload}',
+          );
         },
       );
 
@@ -36,21 +41,25 @@ class FcmLocalNotificationService {
       const alertChannel = AndroidNotificationChannel(
         'flocksense_alerts',
         'FlockSense General Alerts',
-        description: 'Notifications for farm, batch, feed, medicine, and AI alerts.',
+        description:
+            'Notifications for farm, batch, feed, medicine, and AI alerts.',
         importance: Importance.high,
       );
 
       const criticalChannel = AndroidNotificationChannel(
         'flocksense_critical',
         'FlockSense Emergency & Critical Alerts',
-        description: 'Urgent mortality spikes, disease alerts, and budget breaches.',
+        description:
+            'Urgent mortality spikes, disease alerts, and budget breaches.',
         importance: Importance.max,
         playSound: true,
         enableVibration: true,
       );
 
       final androidImpl = _localNotifications
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
 
       if (androidImpl != null) {
         await androidImpl.createNotificationChannel(alertChannel);
@@ -59,7 +68,9 @@ class FcmLocalNotificationService {
 
       // Initialize FCM Messaging Listener
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        debugPrint('[FCM] Foreground Message Received: ${message.notification?.title}');
+        debugPrint(
+          '[FCM] Foreground Message Received: ${message.notification?.title}',
+        );
         final notif = message.notification;
         if (notif != null) {
           showLocalNotification(
@@ -84,7 +95,8 @@ class FcmLocalNotificationService {
       final currentMinutes = now.hour * 60 + now.minute;
 
       final startParts = settings.quietHoursStart.split(':');
-      final startMinutes = int.parse(startParts[0]) * 60 + int.parse(startParts[1]);
+      final startMinutes =
+          int.parse(startParts[0]) * 60 + int.parse(startParts[1]);
 
       final endParts = settings.quietHoursEnd.split(':');
       final endMinutes = int.parse(endParts[0]) * 60 + int.parse(endParts[1]);
@@ -112,7 +124,9 @@ class FcmLocalNotificationService {
     if (isQuietHourActive(settings)) {
       final isEmergency = priority == NotificationPriority.critical;
       if (!isEmergency || !settings.emergencyOverride) {
-        debugPrint('[FcmLocalNotificationService] Suppressed by Quiet Hours: $title');
+        debugPrint(
+          '[FcmLocalNotificationService] Suppressed by Quiet Hours: $title',
+        );
         return;
       }
     }

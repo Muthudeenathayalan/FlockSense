@@ -102,8 +102,8 @@ class SettingsNotifier extends Notifier<UserPreferencesModel> {
 
 final settingsNotifierProvider =
     NotifierProvider<SettingsNotifier, UserPreferencesModel>(
-  SettingsNotifier.new,
-);
+      SettingsNotifier.new,
+    );
 
 final currentUserProvider = Provider<User?>((ref) {
   return FirebaseAuth.instance.currentUser;

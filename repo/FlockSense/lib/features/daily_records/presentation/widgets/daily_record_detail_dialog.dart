@@ -20,7 +20,8 @@ class DailyRecordDetailDialog extends StatefulWidget {
   final String batchId;
 
   @override
-  State<DailyRecordDetailDialog> createState() => _DailyRecordDetailDialogState();
+  State<DailyRecordDetailDialog> createState() =>
+      _DailyRecordDetailDialogState();
 }
 
 class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
@@ -30,7 +31,8 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
     final confirm = await AppDialog.confirm(
       context: context,
       title: 'Confirm Delete',
-      message: 'Are you sure you want to delete the daily record for ${_formatDate(widget.record.recordDate)}?',
+      message:
+          'Are you sure you want to delete the daily record for ${_formatDate(widget.record.recordDate)}?',
       confirmLabel: 'Delete',
       isDanger: true,
     );
@@ -104,7 +106,11 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.description_rounded, color: Colors.white, size: 26),
+                  const Icon(
+                    Icons.description_rounded,
+                    color: Colors.white,
+                    size: 26,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -120,7 +126,10 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
                         ),
                         Text(
                           'Day ${r.batchAgeDay} • ${r.closingBirds} Birds Remaining',
-                          style: const TextStyle(fontSize: 13, color: Colors.white70),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.white70,
+                          ),
                         ),
                       ],
                     ),
@@ -140,7 +149,11 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildSectionHeader('Flock Summary', Icons.groups_rounded, theme),
+                    _buildSectionHeader(
+                      'Flock Summary',
+                      Icons.groups_rounded,
+                      theme,
+                    ),
                     _buildInfoGrid([
                       _InfoItem('Opening Birds', '${r.openingBirds}'),
                       _InfoItem('Mortality Count', '${r.mortalityCount}'),
@@ -149,46 +162,100 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
                     ], context),
                     const SizedBox(height: 16),
 
-                    _buildSectionHeader('Feed & Water', Icons.restaurant_rounded, theme),
+                    _buildSectionHeader(
+                      'Feed & Water',
+                      Icons.restaurant_rounded,
+                      theme,
+                    ),
                     _buildInfoGrid([
-                      _InfoItem('Feed Quantity', '${r.feedConsumedKg.toStringAsFixed(1)} kg'),
+                      _InfoItem(
+                        'Feed Quantity',
+                        '${r.feedConsumedKg.toStringAsFixed(1)} kg',
+                      ),
                       _InfoItem('Feed Type', r.feedType ?? 'Standard'),
-                      _InfoItem('Feed Cost', r.feedCost != null ? '₹${r.feedCost}' : 'N/A'),
-                      _InfoItem('Water Consumed', '${r.waterConsumedLiters.toStringAsFixed(1)} L'),
+                      _InfoItem(
+                        'Feed Cost',
+                        r.feedCost != null ? '₹${r.feedCost}' : 'N/A',
+                      ),
+                      _InfoItem(
+                        'Water Consumed',
+                        '${r.waterConsumedLiters.toStringAsFixed(1)} L',
+                      ),
                       _InfoItem('Water Source', r.waterSource ?? 'N/A'),
                       _InfoItem('Water Quality', r.waterQuality ?? 'N/A'),
                     ], context),
                     const SizedBox(height: 16),
 
-                    _buildSectionHeader('Weight & Growth', Icons.monitor_weight_rounded, theme),
+                    _buildSectionHeader(
+                      'Weight & Growth',
+                      Icons.monitor_weight_rounded,
+                      theme,
+                    ),
                     _buildInfoGrid([
-                      _InfoItem('Average Weight', '${r.avgWeightGrams.toStringAsFixed(0)} g'),
-                      _InfoItem('Sample Size', r.sampleBirds != null ? '${r.sampleBirds} birds' : 'N/A'),
-                    ], context),
-                    const SizedBox(height: 16),
-
-                    _buildSectionHeader('Health & Vaccination', Icons.medical_services_rounded, theme),
-                    _buildInfoGrid([
-                      _InfoItem('Medicine Given', r.medicineGiven ? (r.medicineName ?? 'Yes') : 'No'),
-                      _InfoItem('Medicine Dose', r.medicineDose ?? 'N/A'),
-                      _InfoItem('Vaccine Administered', r.vaccineGiven ? (r.vaccineName ?? 'Yes') : 'None'),
-                      _InfoItem('Vaccine Administered By', r.vaccineCompletedBy ?? 'N/A'),
                       _InfoItem(
-                        'Next Vaccine Due',
-                        r.vaccineNextDueDate != null ? _formatDate(r.vaccineNextDueDate!) : 'N/A',
+                        'Average Weight',
+                        '${r.avgWeightGrams.toStringAsFixed(0)} g',
+                      ),
+                      _InfoItem(
+                        'Sample Size',
+                        r.sampleBirds != null
+                            ? '${r.sampleBirds} birds'
+                            : 'N/A',
                       ),
                     ], context),
                     const SizedBox(height: 16),
 
-                    _buildSectionHeader('Environment', Icons.thermostat_rounded, theme),
+                    _buildSectionHeader(
+                      'Health & Vaccination',
+                      Icons.medical_services_rounded,
+                      theme,
+                    ),
                     _buildInfoGrid([
-                      _InfoItem('Temperature', r.temperature != null ? '${r.temperature} °C' : 'N/A'),
-                      _InfoItem('Humidity', r.humidity != null ? '${r.humidity} %' : 'N/A'),
+                      _InfoItem(
+                        'Medicine Given',
+                        r.medicineGiven ? (r.medicineName ?? 'Yes') : 'No',
+                      ),
+                      _InfoItem('Medicine Dose', r.medicineDose ?? 'N/A'),
+                      _InfoItem(
+                        'Vaccine Administered',
+                        r.vaccineGiven ? (r.vaccineName ?? 'Yes') : 'None',
+                      ),
+                      _InfoItem(
+                        'Vaccine Administered By',
+                        r.vaccineCompletedBy ?? 'N/A',
+                      ),
+                      _InfoItem(
+                        'Next Vaccine Due',
+                        r.vaccineNextDueDate != null
+                            ? _formatDate(r.vaccineNextDueDate!)
+                            : 'N/A',
+                      ),
+                    ], context),
+                    const SizedBox(height: 16),
+
+                    _buildSectionHeader(
+                      'Environment',
+                      Icons.thermostat_rounded,
+                      theme,
+                    ),
+                    _buildInfoGrid([
+                      _InfoItem(
+                        'Temperature',
+                        r.temperature != null ? '${r.temperature} °C' : 'N/A',
+                      ),
+                      _InfoItem(
+                        'Humidity',
+                        r.humidity != null ? '${r.humidity} %' : 'N/A',
+                      ),
                       _InfoItem('Weather', r.weather ?? 'N/A'),
                     ], context),
                     if (r.notes != null && r.notes!.isNotEmpty) ...[
                       const SizedBox(height: 16),
-                      _buildSectionHeader('Notes & Observations', Icons.notes_rounded, theme),
+                      _buildSectionHeader(
+                        'Notes & Observations',
+                        Icons.notes_rounded,
+                        theme,
+                      ),
                       AppCard(
                         padding: const EdgeInsets.all(12),
                         variant: AppCardVariant.flat,
@@ -210,7 +277,9 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
                 children: [
                   IconButton(
                     onPressed: _isDeleting ? null : _deleteRecord,
-                    style: IconButton.styleFrom(foregroundColor: AppColors.danger),
+                    style: IconButton.styleFrom(
+                      foregroundColor: AppColors.danger,
+                    ),
                     icon: _isDeleting
                         ? const SizedBox(
                             width: 18,
@@ -276,10 +345,7 @@ class _DailyRecordDetailDialogState extends State<DailyRecordDetailDialog> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  item.label,
-                  style: theme.textTheme.bodySmall,
-                ),
+                Text(item.label, style: theme.textTheme.bodySmall),
                 const SizedBox(height: 4),
                 Text(
                   item.value,
@@ -305,4 +371,3 @@ class _InfoItem {
   final String value;
   const _InfoItem(this.label, this.value);
 }
-

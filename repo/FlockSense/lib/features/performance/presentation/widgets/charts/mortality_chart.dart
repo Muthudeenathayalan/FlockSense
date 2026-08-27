@@ -11,66 +11,91 @@ class MortalityChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (bars.isEmpty) {
-      return const Center(child: Text('No mortality records recorded', style: TextStyle(color: AppColors.textSecondary)));
+      return const Center(
+        child: Text(
+          'No mortality records recorded',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+      );
     }
 
-    final computedMax = bars.fold<double>(5.0, (max, p) => p.value > max ? p.value : max) * 1.2;
+    final computedMax =
+        bars.fold<double>(5.0, (max, p) => p.value > max ? p.value : max) * 1.2;
     final safeMaxY = computedMax > 1.0 ? computedMax : 5.0;
     final bottomInterval = (bars.length / 5).clamp(1.0, 10.0);
 
     return SizedBox(
       height: 200,
       child: BarChart(
-      BarChartData(
-        maxY: safeMaxY,
-        gridData: FlGridData(
-          show: true,
-          drawVerticalLine: false,
-          getDrawingHorizontalLine: (val) => const FlLine(color: AppColors.border, strokeWidth: 0.8),
-        ),
-        titlesData: FlTitlesData(
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 22,
-              interval: bottomInterval,
-              getTitlesWidget: (val, meta) {
-                final idx = val.toInt();
-                if (idx >= 0 && idx < bars.length) {
-                  return Text(bars[idx].label, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary));
-                }
-                return const SizedBox.shrink();
-              },
-            ),
+        BarChartData(
+          maxY: safeMaxY,
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            getDrawingHorizontalLine: (val) =>
+                const FlLine(color: AppColors.border, strokeWidth: 0.8),
           ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 26,
-              getTitlesWidget: (val, meta) {
-                return Text('${val.toInt()}', style: const TextStyle(fontSize: 10, color: AppColors.textSecondary));
-              },
+          titlesData: FlTitlesData(
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
             ),
-          ),
-        ),
-        borderData: FlBorderData(show: false),
-        barGroups: bars.asMap().entries.map((e) {
-          return BarChartGroupData(
-            x: e.key,
-            barRods: [
-              BarChartRodData(
-                toY: e.value.value,
-                color: AppColors.danger,
-                width: bars.length > 20 ? 6 : 12,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 22,
+                interval: bottomInterval,
+                getTitlesWidget: (val, meta) {
+                  final idx = val.toInt();
+                  if (idx >= 0 && idx < bars.length) {
+                    return Text(
+                      bars[idx].label,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: AppColors.textSecondary,
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
               ),
-            ],
-          );
-        }).toList(),
+            ),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 26,
+                getTitlesWidget: (val, meta) {
+                  return Text(
+                    '${val.toInt()}',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: AppColors.textSecondary,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          borderData: FlBorderData(show: false),
+          barGroups: bars.asMap().entries.map((e) {
+            return BarChartGroupData(
+              x: e.key,
+              barRods: [
+                BarChartRodData(
+                  toY: e.value.value,
+                  color: AppColors.danger,
+                  width: bars.length > 20 ? 6 : 12,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(4),
+                  ),
+                ),
+              ],
+            );
+          }).toList(),
+        ),
       ),
-    ),
     );
   }
 }

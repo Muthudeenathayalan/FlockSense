@@ -60,14 +60,10 @@ class DashboardCard extends StatelessWidget {
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 6),
-            Text(
-              subtitle!,
-              style: theme.textTheme.bodySmall,
-            ),
+            Text(subtitle!, style: theme.textTheme.bodySmall),
           ],
         ],
       ),
     );
   }
 }
-

@@ -49,7 +49,13 @@ class InsightsCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('• ', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                  const Text(
+                    '• ',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
                   Expanded(
                     child: Text(
                       text,

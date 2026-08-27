@@ -25,8 +25,12 @@ class GrowthAnalyticsFilterState {
     bool clearBatch = false,
   }) {
     return GrowthAnalyticsFilterState(
-      selectedFarmId: clearFarm ? null : (selectedFarmId ?? this.selectedFarmId),
-      selectedBatchId: clearBatch ? null : (selectedBatchId ?? this.selectedBatchId),
+      selectedFarmId: clearFarm
+          ? null
+          : (selectedFarmId ?? this.selectedFarmId),
+      selectedBatchId: clearBatch
+          ? null
+          : (selectedBatchId ?? this.selectedBatchId),
       dateRange: dateRange ?? this.dateRange,
     );
   }
@@ -203,6 +207,7 @@ class GrowthAnalyticsData {
   double get totalFeedConsumedKg => feedConsumedKg;
   double get totalWaterConsumedLiters => waterConsumedLiters;
   double get netProfit => estimatedProfit;
-  double get profitMarginPercentage => estimatedRevenue > 0 ? (estimatedProfit / estimatedRevenue * 100.0) : 0.0;
+  double get profitMarginPercentage =>
+      estimatedRevenue > 0 ? (estimatedProfit / estimatedRevenue * 100.0) : 0.0;
   List<DailyRecordModel> get dailyRecords => filteredRecords;
 }

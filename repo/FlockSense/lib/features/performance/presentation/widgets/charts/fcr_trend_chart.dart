@@ -14,7 +14,10 @@ class FcrTrendChart extends StatelessWidget {
       return const SizedBox(
         height: 180,
         child: Center(
-          child: Text('No daily telemetry records available', style: TextStyle(color: AppColors.textSecondary)),
+          child: Text(
+            'No daily telemetry records available',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
         ),
       );
     }
@@ -24,7 +27,9 @@ class FcrTrendChart extends StatelessWidget {
     final spotsTarget = <FlSpot>[];
 
     double cumFeed = 0;
-    double runningBirds = data.totalInitialBirds > 0 ? data.totalInitialBirds.toDouble() : 1000.0;
+    double runningBirds = data.totalInitialBirds > 0
+        ? data.totalInitialBirds.toDouble()
+        : 1000.0;
 
     for (int i = 0; i < records.length; i++) {
       final r = records[i];
@@ -32,11 +37,16 @@ class FcrTrendChart extends StatelessWidget {
       runningBirds -= r.mortalityCount;
 
       final ageDays = i + 1;
-      final avgWeightKg = r.avgWeightGrams > 0 ? (r.avgWeightGrams / 1000.0) : 0.1;
-      final totalLiveWeight = runningBirds > 0 ? (runningBirds * avgWeightKg) : 1.0;
+      final avgWeightKg = r.avgWeightGrams > 0
+          ? (r.avgWeightGrams / 1000.0)
+          : 0.1;
+      final totalLiveWeight = runningBirds > 0
+          ? (runningBirds * avgWeightKg)
+          : 1.0;
 
       final actualFcr = totalLiveWeight > 0 ? (cumFeed / totalLiveWeight) : 1.5;
-      final targetFcr = 1.10 + (ageDays * 0.011); // Standard Cobb500/Ross308 FCR curve
+      final targetFcr =
+          1.10 + (ageDays * 0.011); // Standard Cobb500/Ross308 FCR curve
 
       spotsActual.add(FlSpot(i.toDouble(), actualFcr.clamp(0.8, 3.0)));
       spotsTarget.add(FlSpot(i.toDouble(), targetFcr.clamp(0.8, 3.0)));
@@ -79,7 +89,10 @@ class FcrTrendChart extends StatelessWidget {
                       interval: 0.5,
                       getTitlesWidget: (val, meta) => Text(
                         val.toStringAsFixed(2),
-                        style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
                   ),
@@ -92,15 +105,22 @@ class FcrTrendChart extends StatelessWidget {
                         if (idx >= 0 && idx < records.length) {
                           return Text(
                             'D${idx + 1}',
-                            style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: AppColors.textSecondary,
+                            ),
                           );
                         }
                         return const SizedBox.shrink();
                       },
                     ),
                   ),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                 ),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
@@ -144,7 +164,14 @@ class FcrTrendChart extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
-        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textSecondary,
+          ),
+        ),
       ],
     );
   }

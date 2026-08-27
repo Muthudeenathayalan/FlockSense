@@ -72,7 +72,8 @@ class FarmListScreen extends ConsumerWidget {
             child: AppButton(
               label: 'New Farm',
               icon: Icons.add_rounded,
-              onPressed: () => Navigator.pushNamed(context, AppRoutes.farmSetup),
+              onPressed: () =>
+                  Navigator.pushNamed(context, AppRoutes.farmSetup),
               variant: AppButtonVariant.gradient,
               size: AppButtonSize.small,
             ),
@@ -94,7 +95,8 @@ class FarmListScreen extends ConsumerWidget {
               return AppEmptyState(
                 icon: Icons.holiday_village_outlined,
                 title: 'No farms yet',
-                message: 'Create your first farm to start managing batches and records.',
+                message:
+                    'Create your first farm to start managing batches and records.',
                 buttonLabel: 'Create Farm',
                 onButtonPressed: () =>
                     Navigator.pushNamed(context, AppRoutes.farmSetup),
@@ -180,7 +182,9 @@ class FarmListScreen extends ConsumerWidget {
                                 Icon(
                                   Icons.location_on_outlined,
                                   size: 18,
-                                  color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                                  color: isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.textSecondary,
                                 ),
                                 const SizedBox(width: 6),
                                 Expanded(
@@ -199,7 +203,9 @@ class FarmListScreen extends ConsumerWidget {
                                 Icon(
                                   Icons.straighten_rounded,
                                   size: 18,
-                                  color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                                  color: isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.textSecondary,
                                 ),
                                 const SizedBox(width: 6),
                                 Expanded(
@@ -255,7 +261,9 @@ class FarmListScreen extends ConsumerWidget {
                                 const Spacer(),
                                 Icon(
                                   Icons.chevron_right_rounded,
-                                  color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                                  color: isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.textSecondary,
                                   size: 22,
                                 ),
                               ],
@@ -274,4 +282,3 @@ class FarmListScreen extends ConsumerWidget {
     );
   }
 }
-

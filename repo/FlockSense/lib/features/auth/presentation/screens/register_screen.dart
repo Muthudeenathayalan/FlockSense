@@ -98,7 +98,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     'Join FlockSense',
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w900,
-                      color: isDark ? AppColors.primaryLight : AppColors.primary,
+                      color: isDark
+                          ? AppColors.primaryLight
+                          : AppColors.primary,
                     ),
                   ),
                 ),
@@ -107,7 +109,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: Text(
                     'Create your account to get started',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ),
@@ -165,7 +169,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           decoration: BoxDecoration(
                             color: AppColors.dangerLight,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.danger.withOpacity(0.4)),
+                            border: Border.all(
+                              color: AppColors.danger.withOpacity(0.4),
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -206,7 +212,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Text(
                       'Already have an account? ',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.textSecondary,
                       ),
                     ),
                     TextButton(
@@ -226,4 +234,3 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
-

@@ -30,12 +30,20 @@ class AiPromptChips extends StatelessWidget {
           return ActionChip(
             backgroundColor: Colors.white,
             side: const BorderSide(color: Color(0xFFCBD5E1)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             label: Text(
               prompt,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Color(0xFF1B5E20)),
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF1B5E20),
+              ),
             ),
-            onPressed: () => onSelectPrompt(prompt.replaceAll(RegExp(r'^[^\w]+'), '').trim()),
+            onPressed: () => onSelectPrompt(
+              prompt.replaceAll(RegExp(r'^[^\w]+'), '').trim(),
+            ),
           );
         },
       ),

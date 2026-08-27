@@ -17,7 +17,8 @@ class AppLoadingIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final effectiveColor = color ?? (isDark ? AppColors.primaryLight : AppColors.primary);
+    final effectiveColor =
+        color ?? (isDark ? AppColors.primaryLight : AppColors.primary);
 
     return Center(
       child: Padding(
@@ -41,7 +42,9 @@ class AppLoadingIndicator extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
-                  color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.textSecondary,
                 ),
               ),
             ],
