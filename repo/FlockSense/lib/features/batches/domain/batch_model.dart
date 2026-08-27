@@ -60,6 +60,30 @@ class BatchModel {
     this.notes,
   });
 
+  bool get isActive => status.toLowerCase() == 'active';
+  bool get isCompleted => status.toLowerCase() == 'completed';
+
+  /// Validates placement bird count (must be positive).
+  static bool isValidBirdCount(int birds) => birds > 0;
+
+  /// Validates placement date (cannot be in the far future, max +1 day for timezone buffer).
+  static bool isValidPlacementDate(DateTime placementDate) {
+    final tomorrow = DateTime.now().add(const Duration(days: 1));
+    return placementDate.isBefore(tomorrow);
+  }
+
+  /// Computes remaining live birds ensuring non-negative lower bound.
+  static int calculateRemainingBirds({
+    required int totalBirds,
+    required int cumulativeMortality,
+    required int cumulativeCulls,
+    int adjustments = 0,
+  }) {
+    final remaining =
+        totalBirds - cumulativeMortality - cumulativeCulls + adjustments;
+    return remaining > 0 ? remaining : 0;
+  }
+
   factory BatchModel.fromJson(Map<String, dynamic> json) {
     DateTime parseDate(dynamic v) {
       if (v is Timestamp) return v.toDate();
