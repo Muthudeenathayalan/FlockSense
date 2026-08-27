@@ -22,8 +22,8 @@ This backlog documents legitimate, verified improvements, refactorings, bug fixe
 | **FS-002** | Farms | Calculate current live bird population from active batches | P0 | Small | Required | Done |
 | **FS-003** | Farms | Calculate active batch count across user farms | P0 | Small | Required | Done |
 | **FS-004** | Farms | Add unit & provider tests for `farmDashboardStatsProvider` | P2 | Medium | Required | Done |
-| **FS-005** | Reports | Route empty report action directly to `DailyRecordsDashboardScreen` | P1 | Small | Required | Todo |
-| **FS-006** | Daily Records | Remove obsolete `DailyRecordsPlaceholderScreen` widget | P3 | Small | Optional | Todo |
+| **FS-005** | Reports | Route empty report action directly to `DailyRecordsDashboardScreen` | P1 | Small | Required | Done |
+| **FS-006** | Daily Records | Remove obsolete `DailyRecordsPlaceholderScreen` widget | P3 | Small | Optional | Done |
 | **FS-007** | Auth | Centralize auth method availability and clean unsupported Email OTP UI | P0 | Small | Required | Todo |
 | **FS-008** | Auth | Document secure Cloud Functions / backend email OTP architecture | P5 | Small | N/A | Todo |
 | **FS-009** | Home | Connect Home dashboard active farm & bird population to live streams | P1 | Medium | Required | Todo |

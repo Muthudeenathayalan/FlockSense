@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
-import 'package:flock_sense/features/daily_records/presentation/screens/daily_records_placeholder_screen.dart';
+import 'package:flock_sense/features/daily_records/presentation/screens/daily_records_dashboard_screen.dart';
 import 'package:flock_sense/features/reports/domain/report_data.dart';
 import 'package:flock_sense/features/reports/domain/report_types.dart';
 import 'package:flock_sense/features/reports/presentation/providers/reports_providers.dart';
@@ -16,10 +16,12 @@ class ReportsDashboardScreen extends ConsumerStatefulWidget {
   const ReportsDashboardScreen({super.key});
 
   @override
-  ConsumerState<ReportsDashboardScreen> createState() => _ReportsDashboardScreenState();
+  ConsumerState<ReportsDashboardScreen> createState() =>
+      _ReportsDashboardScreenState();
 }
 
-class _ReportsDashboardScreenState extends ConsumerState<ReportsDashboardScreen> {
+class _ReportsDashboardScreenState
+    extends ConsumerState<ReportsDashboardScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -90,7 +92,11 @@ class _ReportsDashboardScreenState extends ConsumerState<ReportsDashboardScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: AppColors.danger),
+              const Icon(
+                Icons.error_outline,
+                size: 48,
+                color: AppColors.danger,
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Unable to Load Report Data',
@@ -100,7 +106,10 @@ class _ReportsDashboardScreenState extends ConsumerState<ReportsDashboardScreen>
               Text(
                 error.toString(),
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: 20),
               ElevatedButton.icon(
@@ -110,7 +119,9 @@ class _ReportsDashboardScreenState extends ConsumerState<ReportsDashboardScreen>
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
               ),
             ],
@@ -135,11 +146,19 @@ class _ReportsDashboardScreenState extends ConsumerState<ReportsDashboardScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.description_outlined, size: 56, color: AppColors.textHint),
+              const Icon(
+                Icons.description_outlined,
+                size: 56,
+                color: AppColors.textHint,
+              ),
               const SizedBox(height: 16),
               const Text(
                 'No report data available.',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -152,7 +171,9 @@ class _ReportsDashboardScreenState extends ConsumerState<ReportsDashboardScreen>
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const DailyRecordsPlaceholderScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const DailyRecordsDashboardScreen(),
+                    ),
                   );
                 },
                 icon: const Icon(Icons.assignment_outlined),
@@ -160,7 +181,9 @@ class _ReportsDashboardScreenState extends ConsumerState<ReportsDashboardScreen>
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
               ),
             ],
@@ -196,9 +219,17 @@ class _ReportsDashboardScreenState extends ConsumerState<ReportsDashboardScreen>
                 controller: _searchController,
                 onChanged: (val) => filterNotifier.setSearchQuery(val),
                 decoration: InputDecoration(
-                  hintText: 'Search report types (e.g. Farm, Finance, Growth)...',
-                  hintStyle: const TextStyle(fontSize: 13, color: AppColors.textHint),
-                  prefixIcon: const Icon(Icons.search, color: AppColors.primary, size: 20),
+                  hintText:
+                      'Search report types (e.g. Farm, Finance, Growth)...',
+                  hintStyle: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textHint,
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
                   suffixIcon: filterState.searchQuery.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.clear, size: 18),
@@ -209,30 +240,31 @@ class _ReportsDashboardScreenState extends ConsumerState<ReportsDashboardScreen>
                         )
                       : null,
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 16),
 
             // Filter Bar
-            ReportFilterBar(
-              farms: data.farms,
-              batches: data.batches,
-            ),
+            ReportFilterBar(farms: data.farms, batches: data.batches),
             const SizedBox(height: 20),
 
             // Recently Generated Reports
-            RecentReportsSection(
-              historyItems: historyItems,
-              reportData: data,
-            ),
+            RecentReportsSection(historyItems: historyItems, reportData: data),
             if (historyItems.isNotEmpty) const SizedBox(height: 24),
 
             // Category Header
             Row(
               children: [
-                const Icon(Icons.grid_view_rounded, size: 20, color: AppColors.primary),
+                const Icon(
+                  Icons.grid_view_rounded,
+                  size: 20,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Report Categories (${filteredTypes.length})',
@@ -249,7 +281,9 @@ class _ReportsDashboardScreenState extends ConsumerState<ReportsDashboardScreen>
             // Grid of Report Cards
             LayoutBuilder(
               builder: (context, constraints) {
-                final crossAxisCount = constraints.maxWidth > 600 ? 3 : (constraints.maxWidth > 340 ? 2 : 1);
+                final crossAxisCount = constraints.maxWidth > 600
+                    ? 3
+                    : (constraints.maxWidth > 340 ? 2 : 1);
                 return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -262,8 +296,12 @@ class _ReportsDashboardScreenState extends ConsumerState<ReportsDashboardScreen>
                   itemCount: filteredTypes.length,
                   itemBuilder: (context, index) {
                     final type = filteredTypes[index];
-                    final historyMatch = historyItems.where((h) => h.reportType == type).toList();
-                    final lastDate = historyMatch.isNotEmpty ? historyMatch.first.generatedAt : null;
+                    final historyMatch = historyItems
+                        .where((h) => h.reportType == type)
+                        .toList();
+                    final lastDate = historyMatch.isNotEmpty
+                        ? historyMatch.first.generatedAt
+                        : null;
 
                     return ReportCard(
                       reportType: type,
@@ -290,10 +328,7 @@ class _ReportsDashboardScreenState extends ConsumerState<ReportsDashboardScreen>
             const SizedBox(height: 28),
 
             // Full Report History Section
-            ReportHistorySection(
-              historyItems: historyItems,
-              reportData: data,
-            ),
+            ReportHistorySection(historyItems: historyItems, reportData: data),
             const SizedBox(height: 24),
           ],
         ),
