@@ -39,6 +39,27 @@ class VaccineRecordModel {
   final String? doneBy;
   final String? notes;
 
+  /// Validates dose quantity (must be positive).
+  static bool isValidQuantity(double quantity) => quantity > 0;
+
+  /// Validates application date relative to batch placement date.
+  static bool isValidApplicationDate({
+    required DateTime applicationDate,
+    required DateTime batchPlacementDate,
+  }) {
+    final appDay = DateTime(
+      applicationDate.year,
+      applicationDate.month,
+      applicationDate.day,
+    );
+    final placeDay = DateTime(
+      batchPlacementDate.year,
+      batchPlacementDate.month,
+      batchPlacementDate.day,
+    );
+    return !appDay.isBefore(placeDay);
+  }
+
   factory VaccineRecordModel.fromJson(Map<String, dynamic> json) {
     DateTime parseDate(dynamic value) {
       if (value is Timestamp) return value.toDate();

@@ -35,6 +35,15 @@ class MedicineRecordModel {
   final String? route;
   final String? notes;
 
+  /// Validates medicine dosage quantity (must be positive).
+  static bool isValidQuantity(double quantity) => quantity > 0;
+
+  /// Validates financial value if recorded.
+  static bool isValidValue(double? value) {
+    if (value == null) return true;
+    return value >= 0;
+  }
+
   factory MedicineRecordModel.fromJson(Map<String, dynamic> json) {
     DateTime parseDate(dynamic value) {
       if (value is Timestamp) return value.toDate();
