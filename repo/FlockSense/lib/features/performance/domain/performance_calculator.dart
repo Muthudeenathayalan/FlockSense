@@ -56,24 +56,57 @@ class PerformanceCalculator {
     42: 1.69,
   };
 
+  /// Calculates daily FCR for a single record if per-bird feed is available,
+  /// or returns ratio of feed consumed to total live biomass gain.
   static double? calculateDayFcr(DailyRecordModel record) {
-    if (record.avgWeightGrams <= 0) return null;
-    if (record.feedConsumedKg <= 0) return null;
-    return record.feedConsumedKg / (record.avgWeightGrams / 1000.0);
+    if (record.avgWeightGrams <= 0 || record.feedConsumedKg <= 0) return null;
+    final liveBirds = record.closingBirds > 0
+        ? record.closingBirds
+        : record.openingBirds;
+    if (liveBirds <= 0) return null;
+    final liveBiomassKg = liveBirds * (record.avgWeightGrams / 1000.0);
+    if (liveBiomassKg <= 0) return null;
+    // Cumulative or day ratio
+    final feedPerBirdKg = record.feedConsumedKg / liveBirds;
+    final weightKg = record.avgWeightGrams / 1000.0;
+    return weightKg > 0 ? (feedPerBirdKg / weightKg) : null;
   }
 
+  /// Calculates cumulative FCR (Total Feed in kg / Total Live Biomass in kg).
   static double? calculateCumulativeFcr(
     List<DailyRecordModel> records,
     int upToDay,
   ) {
     final relevant = records.where((r) => r.batchAgeDay <= upToDay).toList();
     if (relevant.isEmpty) return null;
-    final totalFeed = relevant.fold(0.0, (sum, r) => sum + r.feedConsumedKg);
+    final totalFeedKg = relevant.fold(0.0, (sum, r) => sum + r.feedConsumedKg);
     final lastRecord = relevant.reduce(
       (a, b) => a.batchAgeDay > b.batchAgeDay ? a : b,
     );
-    if (lastRecord.avgWeightGrams <= 0) return null;
-    return totalFeed / (lastRecord.avgWeightGrams / 1000.0);
+    if (lastRecord.avgWeightGrams <= 0 || totalFeedKg <= 0) return null;
+    final liveBirds = lastRecord.closingBirds > 0
+        ? lastRecord.closingBirds
+        : lastRecord.openingBirds;
+    if (liveBirds <= 0) return null;
+
+    final totalBiomassKg = liveBirds * (lastRecord.avgWeightGrams / 1000.0);
+    if (totalBiomassKg <= 0) return null;
+
+    final fcr = totalFeedKg / totalBiomassKg;
+    return double.parse(fcr.toStringAsFixed(3));
+  }
+
+  /// Calculates Average Daily Gain (ADG) in grams per bird per day.
+  /// ADG = (Current Weight (g) - Initial Chick Weight (g)) / Age in Days.
+  static double? calculateAdg({
+    required double currentAvgWeightGrams,
+    required int ageDays,
+    double initialChickWeightGrams = 42.0,
+  }) {
+    if (ageDays <= 0 || currentAvgWeightGrams <= 0) return null;
+    final netGain = currentAvgWeightGrams - initialChickWeightGrams;
+    final adg = netGain / ageDays;
+    return double.parse(adg.toStringAsFixed(2));
   }
 
   static double calculateCumulativeMortalityPct(
@@ -85,9 +118,12 @@ class PerformanceCalculator {
     final totalMort = records
         .where((r) => r.batchAgeDay <= upToDay)
         .fold(0, (sum, r) => sum + r.mortalityCount + r.cullCount);
-    return (totalMort / totalBirds) * 100;
+    final pct = (totalMort / totalBirds) * 100;
+    return double.parse(pct.toStringAsFixed(2));
   }
 
+  /// Calculates European Production Efficiency Factor (EPEF / PEF).
+  /// EPEF = (Liveability % * Avg Body Weight in kg) / (Age in Days * FCR) * 100.
   static double? calculatePef(
     List<DailyRecordModel> records,
     int totalBirds,
@@ -105,7 +141,8 @@ class PerformanceCalculator {
     final avgWeightKg = lastRecord.avgWeightGrams / 1000.0;
     final fcr = calculateCumulativeFcr(records, ageDays);
     if (fcr == null || fcr <= 0 || avgWeightKg <= 0) return null;
-    return (liveabilityPct * avgWeightKg) / (ageDays * fcr) * 100;
+    final pef = (liveabilityPct * avgWeightKg) / (ageDays * fcr) * 100;
+    return double.parse(pef.toStringAsFixed(1));
   }
 
   static List<WeeklyMortality> calculateWeeklyMortality(

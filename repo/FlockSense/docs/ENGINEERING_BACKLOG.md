@@ -55,12 +55,12 @@ This backlog documents legitimate, verified improvements, refactorings, bug fixe
 | **FS-035** | Daily Records | Prevent duplicate daily records for identical batch and date | P0 | Medium | Required | Todo |
 | **FS-036** | Daily Records | Extract repeated telemetry input card widgets in `add_record_wizard` | P3 | Medium | Optional | Todo |
 | **FS-037** | Daily Records | Unit test daily record closing bird calculation edge cases | P2 | Small | Required | Todo |
-| **FS-038** | Performance | Standardize Feed Conversion Ratio (FCR) formula calculation | P0 | Medium | Required | Todo |
-| **FS-039** | Performance | Correct Mortality % formula with proper batch opening denominator | P0 | Small | Required | Todo |
-| **FS-040** | Performance | Standardize Average Daily Gain (ADG) calculation across growth charts | P0 | Medium | Required | Todo |
+| **FS-038** | Performance | Standardize Feed Conversion Ratio (FCR) formula calculation | P0 | Medium | Required | Done |
+| **FS-039** | Performance | Correct Mortality % formula with proper batch opening denominator | P0 | Small | Required | Done |
+| **FS-040** | Performance | Standardize Average Daily Gain (ADG) calculation across growth charts | P0 | Medium | Required | Done |
 | **FS-041** | Performance | Handle zero-data and single-point time series gracefully in charts | P4 | Small | Optional | Todo |
 | **FS-042** | Performance | Prevent invalid zero-range Y-axis exceptions in `fl_chart` | P0 | Small | Required | Todo |
-| **FS-043** | Performance | Unit test performance formulas (FCR, ADG, Mortality %, EPEF) | P2 | Medium | Required | Todo |
+| **FS-043** | Performance | Unit test performance formulas (FCR, ADG, Mortality %, EPEF) | P2 | Medium | Required | Done |
 | **FS-044** | Home | Extract `HomeDashboardHeader` widget from `HomeScreen` | P3 | Small | Optional | Todo |
 | **FS-045** | Home | Extract `HomeKpiSection` widget from `HomeScreen` | P3 | Small | Optional | Todo |
 | **FS-046** | Home | Extract `HomeQuickActions` widget from `HomeScreen` | P3 | Small | Optional | Todo |
@@ -125,7 +125,7 @@ This backlog documents legitimate, verified improvements, refactorings, bug fixe
 | **FS-105** | Docs | Write comprehensive `README.md` with features and architecture | P5 | Medium | N/A | Todo |
 | **FS-106** | Docs | Create `docs/ARCHITECTURE.md` detailing clean architecture | P5 | Medium | N/A | Todo |
 | **FS-107** | Docs | Create `docs/FIREBASE_SCHEMA.md` with Firestore paths & rules | P5 | Medium | N/A | Todo |
-| **FS-108** | Docs | Create `docs/ANALYTICS_FORMULAS.md` documenting FCR, ADG, EPEF | P5 | Small | N/A | Todo |
+| **FS-108** | Docs | Create `docs/ANALYTICS_FORMULAS.md` documenting FCR, ADG, EPEF | P5 | Small | N/A | Done |
 | **FS-109** | Docs | Create `docs/DEVELOPMENT_SETUP.md` with local run guidelines | P5 | Small | N/A | Todo |
 | **FS-110** | Docs | Create `docs/TESTING.md` documenting unit & widget test runner | P5 | Small | N/A | Todo |
 | **FS-111** | Docs | Create `docs/CONTRIBUTING.md` with coding standards & branch guide | P5 | Small | N/A | Todo |
