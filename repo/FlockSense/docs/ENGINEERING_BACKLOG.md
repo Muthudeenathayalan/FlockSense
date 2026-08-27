@@ -28,9 +28,9 @@ This backlog documents legitimate, verified improvements, refactorings, bug fixe
 | **FS-008** | Auth | Document secure Cloud Functions / backend email OTP architecture | P5 | Small | N/A | Done |
 | **FS-009** | Home | Connect Home dashboard active farm & bird population to live streams | P1 | Medium | Required | Done |
 | **FS-010** | Home | Derive today's mortality and feed telemetry on Home from daily records | P1 | Medium | Required | Done |
-| **FS-011** | Daily Records | Reject negative mortality values in daily records form & domain | P0 | Small | Required | Todo |
-| **FS-012** | Daily Records | Prevent mortality input from exceeding current live bird population | P0 | Small | Required | Todo |
-| **FS-013** | Feed | Validate feed bag quantity, weight per bag, and prevent negative stock | P0 | Small | Required | Todo |
+| **FS-011** | Daily Records | Reject negative mortality values in daily records form & domain | P0 | Small | Required | Done |
+| **FS-012** | Daily Records | Prevent mortality input from exceeding current live bird population | P0 | Small | Required | Done |
+| **FS-013** | Feed | Validate feed bag quantity, weight per bag, and prevent negative stock | P0 | Small | Required | Done |
 | **FS-014** | Farms | Validate farm dimensions, area calculation, and physical capacity | P1 | Small | Required | Todo |
 | **FS-015** | Farms | Extract `FarmIdentityHeader` from `FarmCommandCenterScreen` | P3 | Medium | Required | Todo |
 | **FS-016** | Farms | Extract `FarmOperationalSummary` metrics card from Command Center | P3 | Small | Optional | Todo |

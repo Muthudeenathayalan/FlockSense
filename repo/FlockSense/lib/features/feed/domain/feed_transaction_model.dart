@@ -100,7 +100,7 @@ class FeedTransactionModel {
 
     final legacyDate = json['transactionDate'] ?? json['date'];
     final feedType = (json['feedType'] as String? ?? '').trim();
-    final bagCount = parseInt(json['bags']);
+    final bagCount = parseInt(json['bags']).clamp(0, 999999);
     final parsedWeightKg = parseDouble(json['weightKg']);
     final parsedWeightPerBag = parseDouble(json['weightPerBagKg']);
     final resolvedWeight = parsedWeightKg > 0
@@ -108,6 +108,7 @@ class FeedTransactionModel {
         : (bagCount > 0 && parsedWeightPerBag > 0
               ? bagCount * parsedWeightPerBag
               : parseDouble(json['totalKg']));
+    final validWeight = resolvedWeight < 0 ? 0.0 : resolvedWeight;
 
     return FeedTransactionModel(
       id: json['id'] as String? ?? '',
@@ -122,7 +123,7 @@ class FeedTransactionModel {
       batchNumber:
           json['batchNumber'] as String? ?? json['feedBatchNumber'] as String?,
       bags: bagCount,
-      weightKg: resolvedWeight,
+      weightKg: validWeight,
       cumulativeBags: parseInt(json['cumulativeBags']),
       cumulativeKg: parseDouble(json['cumulativeKg']),
       supplierName:
@@ -134,6 +135,16 @@ class FeedTransactionModel {
       costPerKg: parseDouble(json['costPerKg']),
       totalCost: parseDouble(json['totalCost']),
     );
+  }
+
+  /// Validates a feed transaction entry.
+  static bool isValidTransaction({
+    required int bags,
+    required double weightKg,
+    required double totalCost,
+  }) {
+    if (bags < 0 || weightKg < 0 || totalCost < 0) return false;
+    return true;
   }
 
   Map<String, dynamic> toJson() => {

@@ -175,12 +175,16 @@ class DailyRecordModel {
       json['recordDate'] ?? json['recordDateString'] ?? json['date'],
     );
     final openingBirds = parseInt(json['openingBirds']);
-    final mortalityCount = parseInt(json['mortalityCount']);
-    final cullCount = parseInt(json['cullCount']);
+    final rawMortality = parseInt(json['mortalityCount']);
+    final mortalityCount = rawMortality < 0 ? 0 : rawMortality;
+    final rawCull = parseInt(json['cullCount']);
+    final cullCount = rawCull < 0 ? 0 : rawCull;
     final adjustmentCount = parseInt(json['adjustmentCount']);
+    final calcClosing =
+        openingBirds - mortalityCount - cullCount + adjustmentCount;
     final closingBirds = parseInt(json['closingBirds']) != 0
         ? parseInt(json['closingBirds'])
-        : openingBirds - mortalityCount - cullCount + adjustmentCount;
+        : (calcClosing < 0 ? 0 : calcClosing);
 
     return DailyRecordModel(
       id: json['id'] as String? ?? '',
@@ -381,6 +385,26 @@ class DailyRecordModel {
   static String _formatRecordDate(DateTime date) {
     return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
+
+  /// Validates mortality input against live birds.
+  static bool isValidMortality(int mortality, int liveBirds) {
+    if (mortality < 0) return false;
+    if (liveBirds > 0 && mortality > liveBirds) return false;
+    return true;
+  }
+
+  /// Validates feed consumption (must be >= 0).
+  static bool isValidFeedIntake(double feedKg) => feedKg >= 0;
+
+  /// Validates water consumption (must be >= 0).
+  static bool isValidWaterIntake(double waterLiters) => waterLiters >= 0;
+
+  /// Validates temperature within plausible environmental poultry range (°C).
+  static bool isValidTemperature(double tempC) => tempC >= 0 && tempC <= 60;
+
+  /// Validates relative humidity percentage (0% to 100%).
+  static bool isValidHumidity(double humidity) =>
+      humidity >= 0 && humidity <= 100;
 
   static DateTime? _parseDateString(String value) {
     try {
