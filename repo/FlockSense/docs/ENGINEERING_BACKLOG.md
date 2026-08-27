@@ -120,16 +120,16 @@ This backlog documents legitimate, verified improvements, refactorings, bug fixe
 | **FS-100** | Accessibility | Ensure touch targets are at least 48x48 dp on mobile forms | P4 | Medium | Optional | Todo |
 | **FS-101** | Accessibility | Add accessible descriptions to performance charts | P4 | Small | Optional | Todo |
 | **FS-102** | Responsiveness | Fix potential RenderFlex overflow on compact mobile screens | P1 | Medium | Required | Todo |
-| **FS-103** | Responsiveness | Adapt report and analytics grids for tablet and desktop widths | P4 | Medium | Optional | Todo |
+| **FS-103** | Responsiveness | Adapt report and analytics grids for tablet and desktop widths | P4 | Medium | Required | Todo |
 | **FS-104** | Demo Data | Create isolated development seed data generator for testing | P5 | Large | Required | Todo |
-| **FS-105** | Docs | Write comprehensive `README.md` with features and architecture | P5 | Medium | N/A | Todo |
-| **FS-106** | Docs | Create `docs/ARCHITECTURE.md` detailing clean architecture | P5 | Medium | N/A | Todo |
-| **FS-107** | Docs | Create `docs/FIREBASE_SCHEMA.md` with Firestore paths & rules | P5 | Medium | N/A | Todo |
+| **FS-105** | Docs | Write comprehensive `README.md` with features and architecture | P5 | Medium | N/A | Done |
+| **FS-106** | Docs | Create `docs/ARCHITECTURE.md` detailing clean architecture | P5 | Medium | N/A | Done |
+| **FS-107** | Docs | Create `docs/FIREBASE_SCHEMA.md` with Firestore paths & rules | P5 | Medium | N/A | Done |
 | **FS-108** | Docs | Create `docs/ANALYTICS_FORMULAS.md` documenting FCR, ADG, EPEF | P5 | Small | N/A | Done |
-| **FS-109** | Docs | Create `docs/DEVELOPMENT_SETUP.md` with local run guidelines | P5 | Small | N/A | Todo |
-| **FS-110** | Docs | Create `docs/TESTING.md` documenting unit & widget test runner | P5 | Small | N/A | Todo |
-| **FS-111** | Docs | Create `docs/CONTRIBUTING.md` with coding standards & branch guide | P5 | Small | N/A | Todo |
-| **FS-112** | Docs | Create `docs/FEATURE_MAP.md` mapping all 20+ poultry features | P5 | Medium | N/A | Todo |
+| **FS-109** | Docs | Create `docs/DEVELOPMENT_SETUP.md` with local run guidelines | P5 | Small | N/A | Done |
+| **FS-110** | Docs | Create `docs/TESTING.md` documenting unit & widget test runner | P5 | Small | N/A | Done |
+| **FS-111** | Docs | Create `docs/CONTRIBUTING.md` with coding standards & branch guide | P5 | Small | N/A | Done |
+| **FS-112** | Docs | Create `docs/CHANGELOG.md` documenting release history | P5 | Small | N/A | Done |
 | **FS-113** | Docs | Create `docs/SECURITY.md` covering credential hygiene and rules | P5 | Small | N/A | Todo |
 | **FS-114** | Docs | Create `docs/DEMO_DATA.md` documenting sample farm & batch data | P5 | Small | N/A | Todo |
 | **FS-115** | Sheds | Add shed creation form validation (length, width, capacity) | P1 | Small | Required | Todo |
