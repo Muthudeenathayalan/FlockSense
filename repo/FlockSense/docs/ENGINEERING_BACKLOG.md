@@ -32,11 +32,11 @@ This backlog documents legitimate, verified improvements, refactorings, bug fixe
 | **FS-012** | Daily Records | Prevent mortality input from exceeding current live bird population | P0 | Small | Required | Done |
 | **FS-013** | Feed | Validate feed bag quantity, weight per bag, and prevent negative stock | P0 | Small | Required | Done |
 | **FS-014** | Farms | Validate farm dimensions, area calculation, and physical capacity | P1 | Small | Required | Todo |
-| **FS-015** | Farms | Extract `FarmIdentityHeader` from `FarmCommandCenterScreen` | P3 | Medium | Required | Todo |
-| **FS-016** | Farms | Extract `FarmOperationalSummary` metrics card from Command Center | P3 | Small | Optional | Todo |
-| **FS-017** | Farms | Extract `FarmActiveBatchesSection` from Command Center | P3 | Medium | Optional | Todo |
-| **FS-018** | Farms | Extract `FarmSpecsCard` from `FarmCommandCenterScreen` | P3 | Small | Optional | Todo |
-| **FS-019** | Farms | Extract `FarmStatusControlCard` from `FarmCommandCenterScreen` | P3 | Small | Optional | Todo |
+| **FS-015** | Farms | Extract `FarmIdentityHeader` from `FarmCommandCenterScreen` | P3 | Medium | Required | Done |
+| **FS-016** | Farms | Extract `FarmOperationalSummary` metrics card from Command Center | P3 | Small | Optional | Done |
+| **FS-017** | Farms | Extract `FarmActiveBatchesSection` from Command Center | P3 | Medium | Optional | Done |
+| **FS-018** | Farms | Extract `FarmSpecsCard` from `FarmCommandCenterScreen` | P3 | Small | Optional | Done |
+| **FS-019** | Farms | Extract `FarmStatusControlCard` from `FarmCommandCenterScreen` | P3 | Small | Optional | Done |
 | **FS-020** | Farms | Validate phone numbers and district/state in `FarmSetupScreen` | P1 | Small | Required | Todo |
 | **FS-021** | Farms | Standardize farm status badges across list and command center | P4 | Small | Optional | Todo |
 | **FS-022** | Farms | Improve empty and error states in `FarmListScreen` | P4 | Small | Optional | Todo |
