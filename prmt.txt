@@ -1,0 +1,237 @@
+Use the following prompt with ChatGPT, Gemini, Canva AI, Gamma, or PowerPoint Copilot to generate a professional presentation for your project.
+
+---
+
+# Presentation Prompt
+
+**Create a professional 15-slide PowerPoint presentation for my B.Tech AI & Data Science mini project titled "FlockSense: Smart Poultry Farm Management System".**
+
+### Project Overview
+
+FlockSense is a Flutter and Firebase-based mobile application developed to help poultry farmers manage farm operations digitally. The application provides user authentication, poultry record management, feed tracking, marketplace functionality, analytics dashboard, and cloud-based data storage using Firebase Firestore.
+
+### Technology Stack
+
+* Flutter
+* Dart
+* Firebase Authentication
+* Firebase Firestore
+* Firebase Storage
+* GitHub
+* VS Code
+
+### Presentation Structure
+
+#### Slide 1: Title Slide
+
+* Project Name: FlockSense
+* Subtitle: Smart Poultry Farm Management System
+* Student Name: Muthudeenathayalan V
+* Department: Artificial Intelligence & Data Science
+* College Name
+* Academic Year
+
+#### Slide 2: Introduction
+
+* Problems faced by poultry farmers
+* Need for digital farm management
+* Benefits of mobile-based solutions
+
+#### Slide 3: Problem Statement
+
+* Manual record maintenance
+* Feed tracking difficulties
+* Lack of centralized farm management
+* Inefficient data analysis
+
+#### Slide 4: Objectives
+
+* Digitize farm records
+* Monitor feed consumption
+* Provide real-time access to data
+* Improve farm productivity
+* Enable marketplace functionality
+
+#### Slide 5: Existing System
+
+* Paper-based management
+* Data redundancy
+* Difficult tracking process
+* Limited accessibility
+
+#### Slide 6: Proposed System
+
+* Flutter mobile application
+* Cloud database integration
+* Secure authentication
+* Real-time data management
+* Analytics dashboard
+
+#### Slide 7: System Architecture Diagram
+
+Create a professional architecture diagram showing:
+
+```text
+User
+  ↓
+Flutter Mobile App
+  ↓
+Firebase Authentication
+  ↓
+Firestore Database
+  ↓
+Firebase Storage
+  ↓
+Dashboard & Analytics
+```
+
+#### Slide 8: ER Diagram
+
+Create a detailed ER Diagram with the following entities and relationships:
+
+```text
+USER
+-----
+userId (PK)
+name
+email
+phone
+
+    |
+    | Owns
+    |
+    V
+
+FARM
+-----
+farmId (PK)
+farmName
+location
+ownerId (FK)
+
+    |
+    | Contains
+    |
+    V
+
+POULTRY_RECORD
+--------------
+recordId (PK)
+farmId (FK)
+birdCount
+birdType
+date
+
+    |
+    | Uses
+    |
+    V
+
+FEED_RECORD
+-----------
+feedId (PK)
+farmId (FK)
+quantity
+date
+
+    |
+    | Listed In
+    |
+    V
+
+PRODUCT
+-------
+productId (PK)
+sellerId (FK)
+title
+price
+imageUrl
+```
+
+Use standard ER diagram symbols and show cardinality relationships.
+
+#### Slide 9: Database Design
+
+Explain Firestore Collections:
+
+```text
+users
+farms
+poultryRecords
+feedRecords
+products
+```
+
+#### Slide 10: Algorithms Used
+
+1. Firebase Authentication Algorithm
+2. Feed Tracking Algorithm
+3. Poultry Record Management Algorithm
+4. Marketplace Search Algorithm
+5. Linear Regression for Bird Growth Prediction
+6. Profit Calculation Algorithm
+
+#### Slide 11: Application Workflow
+
+```text
+User Login
+     ↓
+Dashboard
+     ↓
+Select Module
+     ↓
+Add/Update Data
+     ↓
+Store in Firestore
+     ↓
+Display Analytics
+```
+
+#### Slide 12: Screenshots
+
+Add placeholders for:
+
+* Login Screen
+* Registration Screen
+* Dashboard
+* Feed Management Page
+* Marketplace Page
+
+#### Slide 13: Advantages
+
+* Real-time data access
+* Secure cloud storage
+* Easy farm management
+* Improved productivity
+* User-friendly interface
+
+#### Slide 14: Future Enhancements
+
+* AI Disease Prediction
+* Bird Growth Prediction
+* Push Notifications
+* Weather Forecast Integration
+* Revenue Analytics
+* Admin Dashboard
+
+#### Slide 15: Conclusion
+
+* Summary of project
+* Achievements
+* Impact on poultry farm management
+* Thank You Slide
+
+### Design Requirements
+
+* Modern dark theme
+* Blue and green color palette
+* Professional icons
+* Clean animations
+* Consistent typography
+* Academic presentation style
+* Include diagrams, flowcharts, and ER diagram visuals
+* Use high-quality layouts suitable for final-year project presentation
+
+---
+
+This prompt will generate a complete **project presentation including the ER Diagram, System Architecture, Workflow Diagram, Database Design, Algorithms, and Future Scope** for your FlockSense project. 🚀

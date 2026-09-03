@@ -1,0 +1,720 @@
+Starting with an audit of the current Flutter project structure and key source files.
+
+Read [](file:///c%3A/MyProject/repo/FlockSense/lib)
+
+Searched for regex `class .*Screen|class .*Service|class .*Repository|class .*Model|Provider|Riverpod|StateNotifier|ChangeNotifier|Firestore|FirebaseFirestore|CollectionReference` (`**/lib/**/*.dart`), 49 results
+
+Read [](file:///c%3A/MyProject/repo/FlockSense/pubspec.yaml)
+
+I found the current app is already using a basic Firebase service layer and domain models; next I’ll inspect those file implementations to make the upgrade plan specific.
+
+Read [](file:///c%3A/MyProject/repo/FlockSense/lib/models)
+
+Read [](file:///c%3A/MyProject/repo/FlockSense/lib/services)
+
+Read [](file:///c%3A/MyProject/repo/FlockSense/lib/services/firestore_service.dart)
+
+Read [](file:///c%3A/MyProject/repo/FlockSense/lib/models/flock.dart)
+
+Read [](file:///c%3A/MyProject/repo/FlockSense/lib/models/daily_record.dart)
+
+I’m checking main app flow, auth, dashboard, flocks, and finance screens to capture current architectural gaps.
+
+Read [](file:///c%3A/MyProject/repo/FlockSense/lib/main.dart)
+
+Read [](file:///c%3A/MyProject/repo/FlockSense/lib/auth_screen.dart)
+
+Read [](file:///c%3A/MyProject/repo/FlockSense/lib/screens/dashboard_screen.dart)
+
+Read [](file:///c%3A/MyProject/repo/FlockSense/lib/screens/flocks_screen.dart)
+
+Read [](file:///c%3A/MyProject/repo/FlockSense/lib/screens/new_flock_screen.dart)
+
+Read [](file:///c%3A/MyProject/repo/FlockSense/lib/screens/flock_detail_screen.dart)
+
+Read [](file:///c%3A/MyProject/repo/FlockSense/lib/screens/finance_screen.dart)
+
+Read [](file:///c%3A/MyProject/repo/FlockSense/lib/screens/reports_screen.dart)
+
+I’ve audited the existing flow and identified current layering and feature gaps; next I’m formalizing the refactor plan and implementation roadmap.
+
+Starting: *Design Firestore schema* (3/13)
+
+## Audit Summary
+
+### Current state
+- Existing app uses direct `FirebaseAuth` + `CloudFirestore` access inside UI screens.
+- There is a single `FirestoreService` layer and two domain models (`Flock`, `DailyRecord`).
+- Navigation/screens are simple and not separated into feature modules.
+- No dedicated state management framework.
+- No feed inventory, vaccination, health, finance, AI or analytics modules implemented yet.
+- UI is functional but not yet production-grade for responsive dashboards, charts, or error handling.
+
+---
+
+## 1. Recommended Clean Architecture Folder Structure
+
+Use `lib/` with feature-based Clean Architecture:
+
+```
+lib/
+  main.dart
+  app.dart
+  core/
+    error/
+      failures.dart
+    network/
+      firebase_client.dart
+      firestore_client.dart
+    theme/
+      app_theme.dart
+      app_theme_dark.dart
+      app_theme_light.dart
+    utils/
+      date_utils.dart
+      formatters.dart
+      validators.dart
+    widgets/
+      app_scaffold.dart
+      edge_insets.dart
+      loading_indicator.dart
+      section_header.dart
+  features/
+    auth/
+      data/
+        datasources/
+          auth_remote_data_source.dart
+        models/
+          user_model.dart
+        repositories/
+          auth_repository_impl.dart
+      domain/
+        entities/
+          user_entity.dart
+        repositories/
+          auth_repository.dart
+        usecases/
+          sign_in_with_google.dart
+          sign_in_with_phone.dart
+          sign_out.dart
+      presentation/
+        providers/
+          auth_provider.dart
+        screens/
+          auth_screen.dart
+        widgets/
+          auth_button.dart
+    dashboard/
+      data/
+      domain/
+      presentation/
+    flock/
+      data/
+        datasources/
+          flock_remote_data_source.dart
+        models/
+          flock_model.dart
+          daily_record_model.dart
+        repositories/
+          flock_repository_impl.dart
+      domain/
+        entities/
+          flock_entity.dart
+          daily_record_entity.dart
+        repositories/
+          flock_repository.dart
+        usecases/
+          get_flocks.dart
+          add_flock.dart
+          get_flock_metrics.dart
+      presentation/
+        providers/
+          flock_provider.dart
+        screens/
+          flocks_screen.dart
+          flock_detail_screen.dart
+        widgets/
+          flock_card.dart
+    feed/
+      data/
+        datasources/
+          feed_remote_data_source.dart
+        models/
+          feed_item_model.dart
+          feed_transaction_model.dart
+        repositories/
+          feed_repository_impl.dart
+      domain/
+        entities/
+          feed_item_entity.dart
+          feed_transaction_entity.dart
+        repositories/
+          feed_repository.dart
+        usecases/
+          get_feed_stock.dart
+          add_feed_purchase.dart
+          consume_feed.dart
+      presentation/
+        providers/
+          feed_provider.dart
+        screens/
+          feed_inventory_screen.dart
+          feed_detail_screen.dart
+        widgets/
+          feed_status_tile.dart
+    health/
+      data/
+        datasources/
+          health_remote_data_source.dart
+        models/
+          health_record_model.dart
+          vaccination_task_model.dart
+        repositories/
+          health_repository_impl.dart
+      domain/
+        entities/
+          health_record_entity.dart
+          vaccination_task_entity.dart
+        repositories/
+          health_repository.dart
+        usecases/
+          get_health_records.dart
+          add_health_record.dart
+          get_vaccination_schedule.dart
+          complete_vaccination.dart
+      presentation/
+        providers/
+          health_provider.dart
+        screens/
+          health_dashboard_screen.dart
+          vaccination_schedule_screen.dart
+        widgets/
+          health_alert_card.dart
+    finance/
+      data/
+        datasources/
+          finance_remote_data_source.dart
+        models/
+          finance_entry_model.dart
+        repositories/
+          finance_repository_impl.dart
+      domain/
+        entities/
+          finance_entry_entity.dart
+          profit_loss_entity.dart
+        repositories/
+          finance_repository.dart
+        usecases/
+          get_finance_entries.dart
+          add_finance_entry.dart
+          calculate_profit_loss.dart
+      presentation/
+        providers/
+          finance_provider.dart
+        screens/
+          finance_screen.dart
+          finance_report_screen.dart
+        widgets/
+          finance_summary_card.dart
+    reports/
+      presentation/
+        screens/
+          reports_screen.dart
+        providers/
+          reports_provider.dart
+    ai/
+      data/
+        datasources/
+          ai_remote_data_source.dart
+        models/
+          ai_prediction_model.dart
+        repositories/
+          ai_repository_impl.dart
+      domain/
+        entities/
+          ai_prediction_entity.dart
+        repositories/
+          ai_repository.dart
+        usecases/
+          request_disease_prediction.dart
+      presentation/
+        providers/
+          ai_provider.dart
+        screens/
+          ai_screen.dart
+        widgets/
+          ai_prediction_card.dart
+  firebase/
+    firebase_options.dart
+  shared/
+    models/
+      app_user.dart
+```
+
+---
+
+## 2. Recommended Firestore Database Schema
+
+### Top-level structure
+Use `users/{uid}` as the primary root. Keep multi-tenancy clean and secure.
+
+```
+users/{uid}
+  flocks/{flockId}
+    name
+    birdType
+    breed
+    placementDate
+    openingCount
+    currentCount
+    status
+    targetFcr
+    expectedHarvestDay
+    averageWeightGrams
+    totalFeedConsumedKg
+    createdAt
+    updatedAt
+
+    dailyRecords/{recordId}
+      date
+      openingCount
+      mortality
+      culls
+      closingCount
+      feedConsumedKg
+      avgWeightGrams
+      remarks
+      createdAt
+
+    feedInventory/{feedItemId}
+      name
+      brand
+      batchNumber
+      quantityKg
+      unitCost
+      expiryDate
+      reorderLevelKg
+      storageLocation
+      lastUpdatedAt
+
+    vaccinations/{vaccinationId}
+      vaccineName
+      scheduledDate
+      dose
+      status
+      completedAt
+      notes
+      flockId
+
+    healthRecords/{healthRecordId}
+      recordDate
+      flockId
+      symptoms
+      diagnosis
+      treatment
+      medication
+      veterinarianNotes
+      severity
+      outcome
+      createdAt
+
+    financeEntries/{financeEntryId}
+      type               // expense | revenue
+      category           // feed, vaccine, labor, sales, etc.
+      amount
+      currency
+      description
+      date
+      flockId
+      vendor
+      receiptUrl
+      createdAt
+
+    alerts/{alertId}
+      type               // vaccination_due, low_stock, health_alert
+      message
+      severity
+      read
+      createdAt
+```
+
+### User-level collections
+```
+users/{uid}/aiPredictions/{predictionId}
+  symptoms
+  predictedDisease
+  confidence
+  recommendation
+  createdAt
+
+users/{uid}/notifications/{notificationId}
+  title
+  body
+  read
+  createdAt
+
+users/{uid}/settings/{settingsId}
+  darkMode
+  defaultCurrency
+  farmName
+```
+
+---
+
+## 3. Riverpod State Management Migration Plan
+
+### Core migration strategy
+- Add `flutter_riverpod` and use `ProviderScope` in main.dart.
+- Stop using `StreamBuilder` directly in UI, replace with `ref.watch(...)`.
+- Keep UI stateless where possible and move state into providers/notifiers.
+
+### Recommended providers
+- `authRepositoryProvider`
+- `authStateProvider`
+- `currentUserProvider`
+- `flockRepositoryProvider`
+- `flockListProvider`
+- `selectedFlockProvider`
+- `dailyRecordsProvider`
+- `dashboardMetricsProvider`
+- `feedRepositoryProvider`
+- `feedStockProvider`
+- `vaccinationProvider`
+- `healthRecordProvider`
+- `financeProvider`
+- `reportsProvider`
+- `aiPredictionProvider`
+- `themeModeProvider`
+
+### Providers / Notifiers
+- `AuthNotifier extends StateNotifier<AuthState>`
+- `FlockNotifier extends StateNotifier<FlockState>`
+- `DailyRecordNotifier extends StateNotifier<DailyRecordState>`
+- `FeedNotifier extends StateNotifier<FeedState>`
+- `VaccinationNotifier extends StateNotifier<VaccinationState>`
+- `HealthNotifier extends StateNotifier<HealthState>`
+- `FinanceNotifier extends StateNotifier<FinanceState>`
+- `DashboardNotifier extends StateNotifier<DashboardState>`
+- `AiNotifier extends StateNotifier<AiState>`
+
+### Migration steps
+1. Wrap app in `ProviderScope`.
+2. Create `auth_provider.dart` and `auth_repository.dart`.
+3. Move `FirebaseAuth.instance` usage out of widgets.
+4. Create `FirestoreRemoteDataSource` classes.
+5. Create repository interfaces in domain.
+6. Replace direct `FirestoreService` UI calls with `ref.watch(...)`.
+7. Add error / loading / empty states to providers.
+
+---
+
+## 4. Repositories, Services, and Model Classes
+
+### Repository interfaces
+- `AuthRepository`
+- `FlockRepository`
+- `FeedRepository`
+- `HealthRepository`
+- `VaccinationRepository`
+- `FinanceRepository`
+- `ReportRepository`
+- `AiRepository`
+
+### Concrete repository implementations
+- `AuthRepositoryImpl`
+- `FlockRepositoryImpl`
+- `FeedRepositoryImpl`
+- `HealthRepositoryImpl`
+- `VaccinationRepositoryImpl`
+- `FinanceRepositoryImpl`
+- `ReportRepositoryImpl`
+- `AiRepositoryImpl`
+
+### Services / Data sources
+- `AuthRemoteDataSource`
+- `FlockRemoteDataSource`
+- `FeedRemoteDataSource`
+- `HealthRemoteDataSource`
+- `VaccinationRemoteDataSource`
+- `FinanceRemoteDataSource`
+- `AiRemoteDataSource`
+- `NotificationService`
+- `FirestoreClient` / `FirebaseClient`
+
+### Model classes
+Existing models are a good start. Expand with:
+
+- `flock_model.dart`
+- `daily_record_model.dart`
+- `feed_item_model.dart`
+- `feed_transaction_model.dart`
+- `vaccination_task_model.dart`
+- `health_record_model.dart`
+- `finance_entry_model.dart`
+- `ai_prediction_model.dart`
+- `dashboard_metrics_model.dart`
+- `alert_model.dart`
+
+### Domain entities
+- `FlockEntity`
+- `DailyRecordEntity`
+- `FeedItemEntity`
+- `VaccinationTaskEntity`
+- `HealthRecordEntity`
+- `FinanceEntryEntity`
+- `AiPredictionEntity`
+- `DashboardMetricsEntity`
+
+### Shared utilities
+- `fcr_calculator.dart`
+- `mortality_calculator.dart`
+- `profit_loss_calculator.dart`
+- `feed_alerts.dart`
+- `vaccination_scheduler.dart`
+
+---
+
+## 5. Dashboard Improvements
+
+### Key metric panels
+- `Total birds`
+- `Mortality rate` (7-day / 30-day)
+- `Feed stock remaining`
+- `Vaccination due / overdue`
+- `Health alerts`
+- `Revenue`
+- `Expenses`
+- `Profit / Loss`
+
+### Recommended UI
+- Responsive `GridView` or `Wrap` with cards
+- Chart sections:
+  - FCR trend line
+  - mortality trend bar
+  - revenue vs expenses area chart
+- Quick action buttons:
+  - Add flock
+  - Log daily record
+  - Create feed purchase
+  - Schedule vaccine
+  - Add health record
+- Status banners:
+  - low stock alert
+  - pending vaccinations
+  - high mortality warning
+
+### Technical changes
+- Use `fl_chart` or `syncfusion_flutter_charts`
+- Use provider-driven metrics from `dashboardMetricsProvider`
+- Add summary cards with color-coded warning states
+- Add `refresh` and `error` widgets
+
+---
+
+## 6. Feed Management Architecture
+
+### Domain
+- `FeedItem`
+- `FeedTransaction`
+- `FeedStockStatus`
+- `ReorderAlert`
+
+### Key behavior
+- track feed inventory by `name`, `brand`, `batchNumber`, `quantityKg`
+- record purchases and consumptions separately
+- compute `currentStockKg`
+- generate low-stock and expiry alerts
+- link feed consumption to specific flock(s) for FCR
+
+### Firestore design
+```
+users/{uid}/flocks/{flockId}/feedInventory/{feedId}
+```
+
+Alternative:
+```
+users/{uid}/feedInventory/{feedId}
+```
+if feed is shared across flocks.
+
+### UI
+- `Feed Inventory` list
+- `Feed Item` detail
+- `Add stock` / `Consume stock`
+- reorder widget showing `reorderLevelKg`
+- stock analytics card (days remaining)
+
+---
+
+## 7. Health & Vaccination Module Architecture
+
+### Entities
+- `VaccinationTask`
+- `HealthRecord`
+- `SymptomChecklist`
+- `DiseaseAlert`
+
+### Data model
+```
+users/{uid}/flocks/{flockId}/vaccinations/{vaccinationId}
+users/{uid}/flocks/{flockId}/healthRecords/{healthRecordId}
+```
+
+### Capabilities
+- schedule vaccines by flock
+- mark vaccine status: scheduled / completed / missed
+- show overdue vaccinations
+- log health symptoms and diagnoses
+- store treatments, medication, notes, severity
+- generate health alert count for dashboard
+
+### UI
+- vaccination calendar / list
+- health record list
+- intake form with symptom checklist
+- risk alert cards
+- history chronology
+
+---
+
+## 8. Finance Module Improvements
+
+### Entities
+- `FinanceEntry`
+- `ProfitLossSummary`
+- `TransactionCategory`
+
+### Data model
+```
+users/{uid}/flocks/{flockId}/financeEntries/{financeEntryId}
+```
+
+### Capabilities
+- log expenses and revenue
+- categorize by feed, vaccine, labor, sales
+- calculate:
+  - total expenses
+  - total revenue
+  - gross profit
+  - profit margin
+  - cost per bird
+  - cost per kg
+- support date filters
+- show P&L cards and trend charts
+
+### UI
+- finance overview cards
+- `Expense` / `Revenue` transaction list
+- add/Edit transaction modal
+- summary charts
+- export placeholder for CSV/PDF
+
+---
+
+## 9. AI Disease Prediction Module Architecture
+
+### Purpose
+- use structured user data to suggest disease risks
+- produce explainable recommendations
+
+### Architecture
+- `AiRemoteDataSource` calls:
+  - Firebase Functions endpoint
+  - or external AI API
+- `AiRepository` abstracts calls
+- `request_disease_prediction.dart` use case
+
+### Data flow
+1. user selects flock + symptoms
+2. UI sends payload to AI backend
+3. backend returns:
+   - `predictedDisease`
+   - `confidenceScore`
+   - `recommendedAction`
+   - `nextSteps`
+4. save history to:
+   - `users/{uid}/aiPredictions/{predictionId}`
+
+### UI
+- symptom-wizard screen
+- prediction result card
+- history list
+- advice / care checklist
+- link to vaccination/health record entry
+
+### Implementation options
+- MVP: rule-based local predictor using thresholds
+- Phase 2: Firebase Cloud Function calling OpenAI or domain model
+
+---
+
+## 10. Step-by-Step Implementation Roadmap
+
+### Phase 1 — Foundation (High impact, moderate effort)
+1. Add packages:
+   - `flutter_riverpod`
+   - `cloud_firestore`
+   - `firebase_auth`
+   - `firebase_core`
+   - `fl_chart`
+   - `flutter_local_notifications`
+   - `intl`
+   - optional: `cloud_functions`
+2. Create Clean Architecture folders.
+3. Replace main.dart with `ProviderScope` and theme provider.
+4. Build `AuthRepository` / `AuthProvider`.
+5. Create `FirestoreRemoteDataSource` and repository interfaces for core domain.
+
+### Phase 2 — Core domain + dashboard (High impact, medium effort)
+6. Implement `FlockRepository` + `FlockProvider`.
+7. Build `DashboardScreen` with metrics:
+   - bird count
+   - mortality
+   - feed status
+   - vaccination due
+   - revenue/expense summary
+   - FCR trend chart
+8. Migrate `FlocksScreen`, `FlockDetailScreen`, `NewFlockScreen` into Clean modules.
+
+### Phase 3 — Feed & health (High impact, moderate effort)
+9. Add `FeedInventory` module and UI.
+10. Add `HealthRecord` + `VaccinationSchedule` modules.
+11. Add provider-driven alerts for low feed and due vaccines.
+
+### Phase 4 — Finance & reports (Medium impact, medium effort)
+12. Add `FinanceEntry` module and transaction UI.
+13. Add `ReportsScreen` with P&L and trending charts.
+14. Add monthly/weekly finance summary providers.
+
+### Phase 5 — AI & analytics (Medium impact, higher effort)
+15. Add `AiPrediction` domain and screen.
+16. Implement backend call stub or Firebase Function for disease prediction.
+17. Store AI prediction history and integrate with health workflows.
+
+### Phase 6 — Polish, UX, production readiness (High impact, moderate effort)
+18. Add `darkModeProvider`
+19. Add responsive layout support for tablet / landscape.
+20. Add reusable widgets in `core/widgets`.
+21. Add error handling wrappers and loading states.
+22. Add notifications:
+   - vaccination due
+   - feed low stock
+   - health alerts
+
+### Phase 7 — Validation & release
+23. Add unit tests for providers/use cases.
+24. Add widget tests for dashboard / inventory / health flows.
+25. Add CI pipeline and review Firebase security rules.
+26. Prepare release build and production Firebase config.
+
+---
+
+## Recommended immediate next step
+
+Start with this minimal scope:
+1. Build `core/` and `features/auth/`
+2. Migrate main.dart to Riverpod
+3. Create `FlockRepository` + `DashboardProvider`
+4. Replace `DashboardScreen` with computed metrics
+
+If you want, I can now generate the actual new folder skeleton and pubspec.yaml dependency updates for the upgraded architecture.
