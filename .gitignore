@@ -1,0 +1,12 @@
+﻿# Log files
+*.log
+debug.log
+
+# Zip backups
+*.zip
+
+# Workspace settings
+*.code-workspace
+
+# External folders
+repo/Poultry/

@@ -1,90 +1,90 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // User documents with role-based access
+    // User documents with subcollections - owner only
     match /users/{uid} {
-      allow read, write: if request.auth.uid == uid;
-      
-      // Validate user document on create
-      allow create: if request.resource.data.keys().hasAll([
-        'uid', 'email', 'name', 'role'
-      ]) &&
-      request.resource.data.email is string &&
-      request.resource.data.name is string &&
-      request.resource.data.role in ['owner', 'admin', 'viewer'];
-      
-      // Farm subcollection - owner only
-      match /farms/{farmId} {
-        allow read, write: if request.auth.uid == uid;
-        
-        // Validate farm data on create
-        allow create: if request.resource.data.keys().hasAll([
-          'farmName', 'farmType', 'flockType', 'address'
-        ]) &&
-        request.resource.data.farmName is string &&
-        request.resource.data.farmName.size() >= 2 &&
-        request.resource.data.farmName.size() <= 100 &&
-        request.resource.data.address is string &&
-        request.resource.data.address.size() >= 5;
-        
-        // Validate farm data on update
-        allow update: if request.resource.data.farmName.size() >= 2 &&
-        request.resource.data.farmName.size() <= 100;
-        
-        // Shed subcollection - physical structure under farm
-        match /sheds/{shedId} {
-          allow read, write: if request.auth.uid == uid;
-          
-          // Validate shed data on create
-          allow create: if request.resource.data.keys().hasAll([
-            'shedName', 'physicalCapacity'
-          ]) &&
-          request.resource.data.shedName is string &&
-          request.resource.data.physicalCapacity is number &&
-          request.resource.data.physicalCapacity > 0 &&
-          request.resource.data.physicalCapacity <= 1000000;
-        }
-        
-        // Batch subcollection - bird batch lifecycle
-        match /batches/{batchId} {
-          allow read, write: if request.auth.uid == uid;
-          
-          // Validate batch data on create
-          allow create: if request.resource.data.keys().hasAll([
-            'initialBirds', 'currentBirds', 'flockType', 'placementDate'
-          ]) &&
-          request.resource.data.initialBirds is number &&
-          request.resource.data.initialBirds > 0 &&
-          request.resource.data.currentBirds is number &&
-          request.resource.data.currentBirds > 0;
-        }
-        
-        // Flock subcollection - scoped to specific farm (legacy)
-        match /flocks/{flockId} {
-          allow read, write: if request.auth.uid == uid;
-          
-          // Validate flock data on create
-          allow create: if request.resource.data.keys().hasAll([
-            'name', 'birdType', 'farmId', 'openingCount'
-          ]) &&
-          request.resource.data.farmId == farmId &&
-          request.resource.data.openingCount is number &&
-          request.resource.data.openingCount > 0;
-          
-          // Daily records subcollection
-          match /daily_records/{recordId} {
-            allow read, write: if request.auth.uid == uid;
-          }
-        }
-      }
-      
-      // Audit logs subcollection - user can only read own logs
-      match /audit_logs/{logId} {
-        allow read, write: if request.auth.uid == uid;
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      // Allow full access to any subcollections under user's document
+      // (farms, batches, dailyRecords, inventory, sheds, notifications, settings, etc.)
+      match /{allSubcollections=**} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
       }
     }
 
-    // Prevent accessing other collections directly
+    // Collection Group Queries for Daily Records
+    match /{path=**}/dailyRecords/{recordId} {
+      allow read, write: if request.auth != null && (
+        resource == null ||
+        resource.data.ownerId == request.auth.uid ||
+        request.resource.data.ownerId == request.auth.uid
+      );
+    }
+
+    // Collection Group Queries for Batches
+    match /{path=**}/batches/{batchId} {
+      allow read, write: if request.auth != null && (
+        resource == null ||
+        resource.data.ownerId == request.auth.uid ||
+        request.resource.data.ownerId == request.auth.uid
+      );
+    }
+
+    // Collection Group Queries for Medicine Records
+    match /{path=**}/medicineRecords/{recordId} {
+      allow read, write: if request.auth != null && (
+        resource == null ||
+        resource.data.ownerId == request.auth.uid ||
+        request.resource.data.ownerId == request.auth.uid
+      );
+    }
+
+    // Collection Group Queries for Vaccine Records
+    match /{path=**}/vaccineRecords/{recordId} {
+      allow read, write: if request.auth != null && (
+        resource == null ||
+        resource.data.ownerId == request.auth.uid ||
+        request.resource.data.ownerId == request.auth.uid
+      );
+    }
+
+    // Collection Group Queries for Sales Records
+    match /{path=**}/salesRecords/{recordId} {
+      allow read, write: if request.auth != null && (
+        resource == null ||
+        resource.data.ownerId == request.auth.uid ||
+        request.resource.data.ownerId == request.auth.uid
+      );
+    }
+
+    // Collection Group Queries for Inventory Items
+    match /{path=**}/inventoryItems/{itemId} {
+      allow read, write: if request.auth != null && (
+        resource == null ||
+        resource.data.ownerId == request.auth.uid ||
+        request.resource.data.ownerId == request.auth.uid
+      );
+    }
+
+    // Collection Group Queries for Sheds
+    match /{path=**}/sheds/{shedId} {
+      allow read, write: if request.auth != null && (
+        resource == null ||
+        resource.data.ownerId == request.auth.uid ||
+        request.resource.data.ownerId == request.auth.uid
+      );
+    }
+
+    // Collection Group Queries for Calendar Events
+    match /{path=**}/calendarEvents/{eventId} {
+      allow read, write: if request.auth != null && (
+        resource == null ||
+        resource.data.ownerId == request.auth.uid ||
+        request.resource.data.ownerId == request.auth.uid
+      );
+    }
+
+    // Prevent accessing any unauthorized collections
     match /{document=**} {
       allow read, write: if false;
     }
