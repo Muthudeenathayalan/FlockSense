@@ -4,8 +4,6 @@ import 'package:flock_sense/features/feed/domain/feed_transaction_model.dart';
 
 void main() {
   group('DailyRecordModel Validation & Calculations', () {
-    final testDate = DateTime(2026, 1, 1);
-
     test('validates mortality inputs against live bird count', () {
       expect(DailyRecordModel.isValidMortality(0, 1000), isTrue);
       expect(DailyRecordModel.isValidMortality(50, 1000), isTrue);

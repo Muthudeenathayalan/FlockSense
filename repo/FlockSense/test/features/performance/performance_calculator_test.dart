@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flock_sense/features/batches/domain/batch_model.dart';
 import 'package:flock_sense/features/daily_records/domain/daily_record_model.dart';
 import 'package:flock_sense/features/performance/domain/performance_calculator.dart';
 
