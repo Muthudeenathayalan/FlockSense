@@ -23,8 +23,8 @@ class OtpVerificationScreen extends StatefulWidget {
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
-  final _controllers = List.generate(4, (_) => TextEditingController());
-  final _focuses = List.generate(4, (_) => FocusNode());
+  final _controllers = List.generate(6, (_) => TextEditingController());
+  final _focuses = List.generate(6, (_) => FocusNode());
   bool _verifying = false;
   bool _showDevCode = true; // dev-mode OTP banner
   String? _error;
@@ -39,7 +39,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     if (widget.devCode != null) {
       Future.delayed(const Duration(milliseconds: 800), () {
         if (!mounted) return;
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < widget.devCode!.length && i < 6; i++) {
           _controllers[i].text = widget.devCode![i];
         }
         setState(() {});
@@ -62,16 +62,20 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   @override
   void dispose() {
     _timer?.cancel();
-    for (final c in _controllers) c.dispose();
-    for (final f in _focuses) f.dispose();
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    for (final f in _focuses) {
+      f.dispose();
+    }
     super.dispose();
   }
 
   String get _otp => _controllers.map((c) => c.text).join();
 
   Future<void> _verify() async {
-    if (_otp.length < 4) {
-      setState(() => _error = 'Enter the 4-digit code');
+    if (_otp.length < 6) {
+      setState(() => _error = 'Enter the 6-digit code');
       return;
     }
     setState(() {
@@ -135,7 +139,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -192,7 +196,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               const SizedBox(height: 8),
               Center(
                 child: Text(
-                  'We sent a 4-digit code to\n$masked',
+                  'We sent a 6-digit code to\n$masked',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: AppColors.textSecondary,
@@ -238,23 +242,36 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 ),
               ],
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 36),
 
-              // 4 OTP boxes
+              // 6 OTP boxes
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(
-                  4,
+                  6,
                   (i) => _OtpBox(
                     controller: _controllers[i],
                     focus: _focuses[i],
                     onChanged: (v) {
-                      if (v.isNotEmpty && i < 3) {
+                      if (v.length > 1) {
+                        final digits = v.replaceAll(RegExp(r'\D'), '');
+                        for (int k = 0; k < digits.length && k < 6; k++) {
+                          _controllers[k].text = digits[k];
+                        }
+                        if (digits.length >= 6) {
+                          FocusScope.of(context).unfocus();
+                          _verify();
+                        } else {
+                          FocusScope.of(context).requestFocus(_focuses[digits.length]);
+                        }
+                        return;
+                      }
+                      if (v.isNotEmpty && i < 5) {
                         FocusScope.of(context).requestFocus(_focuses[i + 1]);
                       } else if (v.isEmpty && i > 0) {
                         FocusScope.of(context).requestFocus(_focuses[i - 1]);
                       }
-                      if (_otp.length == 4) _verify();
+                      if (_otp.length == 6) _verify();
                     },
                     hasError: _error != null,
                   ),
@@ -271,11 +288,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       color: Colors.red.shade600,
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      _error!,
-                      style: TextStyle(
-                        color: Colors.red.shade600,
-                        fontSize: 13,
+                    Expanded(
+                      child: Text(
+                        _error!,
+                        style: TextStyle(
+                          color: Colors.red.shade600,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ],
@@ -352,8 +371,8 @@ class _OtpBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 68,
-      height: 68,
+      width: 46,
+      height: 56,
       child: TextFormField(
         controller: controller,
         focusNode: focus,
@@ -362,7 +381,7 @@ class _OtpBox extends StatelessWidget {
         maxLength: 1,
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         style: TextStyle(
-          fontSize: 28,
+          fontSize: 22,
           fontWeight: FontWeight.w900,
           color: hasError ? Colors.red.shade700 : AppColors.textPrimary,
         ),
@@ -371,20 +390,20 @@ class _OtpBox extends StatelessWidget {
           filled: true,
           fillColor: hasError ? Colors.red.shade50 : Colors.white,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
               color: hasError ? Colors.red : AppColors.border,
             ),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
               color: hasError ? Colors.red : AppColors.primary,
-              width: 2.5,
+              width: 2.0,
             ),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
               color: hasError ? Colors.red.shade300 : AppColors.border,
             ),

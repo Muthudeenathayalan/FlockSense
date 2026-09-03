@@ -267,6 +267,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 10),
 
                       AppButton(
+                        label: 'Sign in with Phone Number',
+                        onPressed: () =>
+                            Navigator.pushNamed(context, AppRoutes.phoneAuth),
+                        variant: AppButtonVariant.outlined,
+                        icon: Icons.phone_android_outlined,
+                        size: AppButtonSize.medium,
+                      ),
+                      const SizedBox(height: 10),
+
+                      AppButton(
                         label: 'Create New Account',
                         onPressed: () =>
                             Navigator.pushNamed(context, AppRoutes.register),

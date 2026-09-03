@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/features/auth/data/auth_service.dart';
+import 'package:flock_sense/features/auth/presentation/screens/create_password_screen.dart';
 import 'package:flock_sense/features/auth/presentation/screens/otp_verification_screen.dart';
 
 /// Step 1 of registration: user enters phone number and gets an OTP.
@@ -40,15 +41,26 @@ class _RegistrationMethodScreenState extends State<RegistrationMethodScreen> {
       ).then((id) => verificationId = id);
       if (!mounted) return;
       if (verificationId != null) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => OtpVerificationScreen(
-              contact: phone,
-              isEmail: false,
-              verificationId: verificationId,
+        if (verificationId == 'auto-verified') {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => CreatePasswordScreen(
+                contact: phone,
+                isEmail: false,
+              ),
             ),
-          ),
-        );
+          );
+        } else {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => OtpVerificationScreen(
+                contact: phone,
+                isEmail: false,
+                verificationId: verificationId,
+              ),
+            ),
+          );
+        }
       }
     } catch (e) {
       setState(() => _error = e.toString());

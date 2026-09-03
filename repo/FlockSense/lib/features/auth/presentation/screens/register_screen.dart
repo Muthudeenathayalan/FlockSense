@@ -202,6 +202,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         variant: AppButtonVariant.primary,
                         size: AppButtonSize.large,
                       ),
+                      const SizedBox(height: 12),
+                      AppButton(
+                        label: 'Sign up with Phone Number',
+                        onPressed: () => Navigator.pushReplacementNamed(
+                          context,
+                          AppRoutes.phoneAuth,
+                        ),
+                        variant: AppButtonVariant.outlined,
+                        icon: Icons.phone_android_outlined,
+                        size: AppButtonSize.medium,
+                      ),
                     ],
                   ),
                 ),

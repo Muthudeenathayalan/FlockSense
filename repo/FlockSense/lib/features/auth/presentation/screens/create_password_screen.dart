@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flock_sense/config/routes/app_routes.dart';
@@ -68,9 +69,23 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> {
           password: _passCtrl.text.trim(),
         );
       } else {
-        // Phone auth already signed in — just update display name and user doc.
+        // Phone auth already signed in — update display name and create user doc.
         final user = FirebaseAuth.instance.currentUser;
-        await user?.updateDisplayName(_nameCtrl.text.trim());
+        if (user != null) {
+          await user.updateDisplayName(_nameCtrl.text.trim());
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+            'uid': user.uid,
+            'name': _nameCtrl.text.trim(),
+            'email': user.email ?? '',
+            'phone': widget.contact,
+            'role': 'owner',
+            'hasCompletedOnboarding': false,
+            'hasFarm': false,
+            'activeFarmId': null,
+            'createdAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        }
       }
       if (!mounted) return;
       Navigator.pushNamedAndRemoveUntil(
