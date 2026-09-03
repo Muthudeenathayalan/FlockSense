@@ -84,7 +84,7 @@ class HomeScreen extends ConsumerWidget {
         ref
             .watch(allUserBatchesProvider)
             .value
-            ?.where((b) => b.status == 'active')
+            ?.where((b) => b.isActive)
             .toList() ??
         const <BatchModel>[];
 

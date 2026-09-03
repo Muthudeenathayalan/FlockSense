@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flock_sense/core/models/sync_status.dart';
 import 'package:flock_sense/core/exceptions/app_exceptions.dart';
 import 'package:flock_sense/core/services/notification_service.dart';
+import 'package:flock_sense/features/batches/data/batch_service.dart';
 import 'package:flock_sense/features/daily_records/domain/daily_record_model.dart';
 import 'package:flock_sense/features/inventory/data/inventory_service.dart';
 import 'package:flock_sense/features/notifications/data/models/notification_model.dart';
@@ -87,6 +89,13 @@ class DailyRecordService {
     String? dgName,
   }) async {
     final uid = _auth.currentUser?.uid ?? 'local_user';
+
+    if (farmId.trim().isEmpty || farmId == 'default_farm') {
+      throw ValidationException('A valid farm must be selected to save a daily record.');
+    }
+    if (batchId.trim().isEmpty || batchId == 'default_batch') {
+      throw ValidationException('A valid flock batch must be selected to save a daily record.');
+    }
 
     if (openingBirds < 0) {
       throw ValidationException('Opening birds must be zero or positive.');
@@ -345,26 +354,78 @@ class DailyRecordService {
     }
   }
 
-  /// Stream ALL daily records across user farms
-  static Stream<List<DailyRecordModel>> watchAllUserDailyRecords(
-    String uid,
-  ) async* {
-    yield const [];
-    try {
-      final stream = _db.collectionGroup('dailyRecords').snapshots();
+  /// Stream ALL daily records across user farms and batches.
+  /// Uses direct subcollection listeners so no Firestore collection group index is required.
+  static Stream<List<DailyRecordModel>> watchAllUserDailyRecords(String uid) {
+    final controller = StreamController<List<DailyRecordModel>>.broadcast();
+    StreamSubscription? batchesSub;
+    final Map<String, StreamSubscription> recordSubs = {};
+    final Map<String, List<DailyRecordModel>> batchRecords = {};
 
-      await for (final snap in stream) {
-        final list = snap.docs
-            .map((doc) => DailyRecordModel.fromJson(doc.data()))
-            .where((r) => r.ownerId == uid || r.ownerId.isEmpty)
-            .toList();
-        list.sort((a, b) => b.recordDate.compareTo(a.recordDate));
-        yield list;
+    void emit() {
+      if (controller.isClosed) return;
+      final all = <DailyRecordModel>[];
+      for (final list in batchRecords.values) {
+        all.addAll(list);
       }
-    } catch (e) {
-      debugPrint('[DailyRecordService] watchAllUserDailyRecords error: $e');
-      yield const [];
+      all.sort((a, b) => b.recordDate.compareTo(a.recordDate));
+      controller.add(all);
     }
+
+    batchesSub = BatchService.watchAllUserBatches(uid).listen(
+      (batches) {
+        final currentBatchKeys =
+            batches.map((b) => '${b.farmId}_${b.id}').toSet();
+
+        final removedKeys =
+            recordSubs.keys.where((k) => !currentBatchKeys.contains(k)).toList();
+        for (final k in removedKeys) {
+          recordSubs[k]?.cancel();
+          recordSubs.remove(k);
+          batchRecords.remove(k);
+        }
+
+        if (batches.isEmpty) {
+          batchRecords.clear();
+          emit();
+          return;
+        }
+
+        for (final b in batches) {
+          final key = '${b.farmId}_${b.id}';
+          if (!recordSubs.containsKey(key)) {
+            recordSubs[key] = _dailyRecordsRef(uid, b.farmId, b.id)
+                .snapshots()
+                .listen(
+                  (snap) {
+                    batchRecords[key] = snap.docs
+                        .map((doc) => DailyRecordModel.fromJson(doc.data()))
+                        .toList();
+                    emit();
+                  },
+                  onError: (e) {
+                    debugPrint('[watchAllUserDailyRecords] Error on $key: $e');
+                  },
+                );
+          }
+        }
+        emit();
+      },
+      onError: (e) {
+        debugPrint('[watchAllUserDailyRecords] Error watching batches: $e');
+      },
+    );
+
+    controller.onCancel = () {
+      batchesSub?.cancel();
+      for (final sub in recordSubs.values) {
+        sub.cancel();
+      }
+      recordSubs.clear();
+      batchRecords.clear();
+    };
+
+    return controller.stream;
   }
 
   static Future<List<DailyRecordModel>> getAllDailyRecords({

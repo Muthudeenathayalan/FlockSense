@@ -8,11 +8,15 @@ import 'package:flock_sense/core/widgets/sync_status_banner.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/features/batches/data/batch_service.dart';
 import 'package:flock_sense/features/batches/domain/batch_model.dart';
+import 'package:flock_sense/features/batches/presentation/providers/batch_providers.dart';
+import 'package:flock_sense/features/batches/presentation/screens/batch_form_screen.dart';
 import 'package:flock_sense/features/daily_records/data/daily_record_service.dart';
 import 'package:flock_sense/features/daily_records/domain/daily_record_model.dart';
 import 'package:flock_sense/features/daily_records/domain/daily_records_providers.dart';
 import 'package:flock_sense/features/farms/data/farm_service.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
+import 'package:flock_sense/features/farms/presentation/providers/farm_providers.dart';
+import 'package:flock_sense/features/farms/presentation/screens/farm_setup_screen.dart';
 import 'package:flock_sense/features/home/presentation/providers/home_dashboard_provider.dart';
 
 enum LogRecordType {
@@ -120,12 +124,14 @@ class _DailyRecordsDashboardScreenState
   // 2-Step Wizard: 0 = Select (Farm, Batch & Record Type), 1 = Details & Review
   int _currentStep = 0;
   bool _isLoadingData = true;
+  bool _isLoadingBatches = false;
   bool _isSaving = false;
+  DateTime _selectedRecordDate = DateTime.now();
 
-  List<FarmModel> _farms = [_defaultFarm];
-  List<BatchModel> _batches = [_defaultBatch];
-  FarmModel? _selectedFarm = _defaultFarm;
-  BatchModel? _selectedBatch = _defaultBatch;
+  List<FarmModel> _farms = [];
+  List<BatchModel> _batches = [];
+  FarmModel? _selectedFarm;
+  BatchModel? _selectedBatch;
 
   // Mode Selection: true = Daily Operations Log Bundle (Feed, Water, Mortality, DG)
   // false = Single Optional Category (Medicine, Vaccine, Weight, Notes)
@@ -183,36 +189,6 @@ class _DailyRecordsDashboardScreenState
   final _dgNameController = TextEditingController(text: 'Main Generator');
   final _dgNotesController = TextEditingController();
 
-  static final _defaultFarm = FarmModel(
-    id: 'default_farm',
-    userId: 'default_user',
-    farmName: 'Main FlockSense Farm',
-    farmType: 'EC',
-    flockType: 'Broiler',
-    address: 'Namakkal, Tamil Nadu',
-    lengthFt: 100,
-    widthFt: 40,
-    totalSqFt: 4000,
-    createdAt: DateTime.now(),
-    updatedAt: DateTime.now(),
-  );
-
-  static final _defaultBatch = BatchModel(
-    id: 'default_batch',
-    farmId: 'default_farm',
-    ownerId: 'default_user',
-    batchName: 'Batch B-2026-01',
-    hatchDate: DateTime.now().subtract(const Duration(days: 25)),
-    placementDate: DateTime.now().subtract(const Duration(days: 24)),
-    maleCount: 2500,
-    femaleCount: 2500,
-    totalBirds: 5000,
-    currentBirds: 4920,
-    breedOrFlockType: 'Cobb 500',
-    createdAt: DateTime.now(),
-    updatedAt: DateTime.now(),
-  );
-
   @override
   void initState() {
     super.initState();
@@ -223,6 +199,7 @@ class _DailyRecordsDashboardScreenState
   }
 
   void _prefillFromExistingRecord(DailyRecordModel record) {
+    _selectedRecordDate = record.recordDate;
     if (record.feedConsumedKg > 0 || record.feedType != null) {
       _isDailyOpsSelected = true;
       _feedTypeController.text = record.feedType ?? 'Broiler Starter';
@@ -335,20 +312,32 @@ class _DailyRecordsDashboardScreenState
   }
 
   Future<void> _loadFarmsAndBatches() async {
+    setState(() => _isLoadingData = true);
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid ?? 'local_user';
       final prefs = await SharedPreferences.getInstance();
       final lastFarmId = prefs.getString('flocksense_last_farm_$uid');
       final lastBatchId = prefs.getString('flocksense_last_batch_$uid');
 
-      var farms = await FarmService.getUserFarms().timeout(
-        const Duration(seconds: 3),
-        onTimeout: () => [_defaultFarm],
-      );
-      if (farms.isEmpty) {
-        farms = [_defaultFarm];
-      }
+      var rawFarms = await FarmService.getUserFarms(forceRefresh: true);
       if (!mounted) return;
+
+      final farms = rawFarms
+          .where((f) => f.id.trim().isNotEmpty && f.id != 'default_farm')
+          .toList();
+
+      if (farms.isEmpty) {
+        setState(() {
+          _farms = [];
+          _selectedFarm = null;
+          _batches = [];
+          _selectedBatch = null;
+          _currentStep = 0;
+        });
+        ref.read(dailyRecordFarmIdProvider.notifier).selectFarm(null);
+        ref.read(dailyRecordBatchIdProvider.notifier).selectBatch(null);
+        return;
+      }
 
       final activeFarmId =
           widget.initialFarmId ??
@@ -369,23 +358,27 @@ class _DailyRecordsDashboardScreenState
       final targetBatchId = widget.initialBatchId ?? lastBatchId;
       await _loadBatchesForFarm(farm.id, targetBatchId: targetBatchId);
 
-      // Auto-skip Step 1 if there's only 1 farm and 1 active batch
+      // Auto-skip Step 0 ONLY if there's exactly 1 farm and 1 active batch
       if (mounted) {
         final activeBatches = _batches
-            .where((b) => b.status != 'archived')
+            .where((b) => b.isActive && b.status != 'archived')
             .toList();
         if (_farms.length == 1 &&
-            (activeBatches.length == 1 || _batches.length == 1)) {
+            _selectedBatch != null &&
+            activeBatches.length == 1) {
           _currentStep = 1;
+        } else {
+          _currentStep = 0;
         }
       }
     } catch (e) {
       debugPrint('[LogDataWizard] _loadFarmsAndBatches error: $e');
       if (mounted) {
-        _farms = [_defaultFarm];
-        _selectedFarm = _defaultFarm;
-        _batches = [_defaultBatch];
-        _selectedBatch = _defaultBatch;
+        _farms = [];
+        _selectedFarm = null;
+        _batches = [];
+        _selectedBatch = null;
+        _currentStep = 0;
       }
     } finally {
       if (mounted) setState(() => _isLoadingData = false);
@@ -396,33 +389,150 @@ class _DailyRecordsDashboardScreenState
     String farmId, {
     String? targetBatchId,
   }) async {
+    if (!mounted || farmId.isEmpty) return;
+    setState(() {
+      _isLoadingBatches = true;
+    });
     try {
-      var batches = await BatchService.getBatchesByFarmId(
-        farmId,
-      ).timeout(const Duration(seconds: 3), onTimeout: () => [_defaultBatch]);
-      if (batches.isEmpty) {
-        batches = [_defaultBatch];
-      }
+      var allBatches = await BatchService.getBatchesByFarmId(farmId);
       if (!mounted) return;
+      final batches = allBatches
+          .where((b) =>
+              b.id.trim().isNotEmpty &&
+              b.id != 'default_batch' &&
+              b.isActive &&
+              b.status.toLowerCase() != 'archived' &&
+              b.status.toLowerCase() != 'deleted')
+          .toList();
+
       setState(() {
+        _isLoadingBatches = false;
         _batches = batches;
-        final selected = targetBatchId != null
-            ? batches.firstWhere(
-                (b) => b.id == targetBatchId,
-                orElse: () => batches.first,
-              )
-            : batches.first;
-        _selectedBatch = selected;
-        ref.read(dailyRecordBatchIdProvider.notifier).selectBatch(selected.id);
+        if (batches.isNotEmpty) {
+          final selected = targetBatchId != null
+              ? batches.firstWhere(
+                  (b) => b.id == targetBatchId,
+                  orElse: () => batches.first,
+                )
+              : batches.first;
+          _selectedBatch = selected;
+          ref.read(dailyRecordBatchIdProvider.notifier).selectBatch(selected.id);
+          if (_selectedFarm != null && _selectedFarm!.id == farmId) {
+            _saveLastSelection(farmId, selected.id);
+          }
+        } else {
+          _selectedBatch = null;
+          ref.read(dailyRecordBatchIdProvider.notifier).selectBatch(null);
+        }
       });
-      if (_selectedFarm != null && _selectedBatch != null) {
-        _saveLastSelection(_selectedFarm!.id, _selectedBatch!.id);
-      }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[LogDataWizard] _loadBatchesForFarm error: $e');
       if (mounted) {
         setState(() {
-          _batches = [_defaultBatch];
-          _selectedBatch = _defaultBatch;
+          _isLoadingBatches = false;
+          _batches = [];
+          _selectedBatch = null;
+        });
+      }
+    }
+  }
+
+  void _syncFarmsWithLiveStream(List<FarmModel> liveFarms) {
+    final validFarms = liveFarms
+        .where((f) => f.id.trim().isNotEmpty && f.id != 'default_farm')
+        .toList();
+
+    if (validFarms.isEmpty) {
+      if (_farms.isNotEmpty || _selectedFarm != null) {
+        setState(() {
+          _farms = [];
+          _selectedFarm = null;
+          _batches = [];
+          _selectedBatch = null;
+          _currentStep = 0;
+        });
+        ref.read(dailyRecordFarmIdProvider.notifier).selectFarm(null);
+        ref.read(dailyRecordBatchIdProvider.notifier).selectBatch(null);
+      }
+      return;
+    }
+
+    final currentFarmExists = _selectedFarm != null &&
+        validFarms.any((f) => f.id == _selectedFarm!.id);
+
+    if (!currentFarmExists) {
+      final farmToSelect = validFarms.firstWhere(
+        (f) => f.id == widget.initialFarmId,
+        orElse: () => validFarms.first,
+      );
+      setState(() {
+        _farms = validFarms;
+        _selectedFarm = farmToSelect;
+        _selectedBatch = null;
+        _batches = [];
+      });
+      ref.read(dailyRecordFarmIdProvider.notifier).selectFarm(farmToSelect.id);
+      ref.read(dailyRecordBatchIdProvider.notifier).selectBatch(null);
+      _loadBatchesForFarm(farmToSelect.id, targetBatchId: widget.initialBatchId);
+    } else {
+      final updatedFarm =
+          validFarms.firstWhere((f) => f.id == _selectedFarm!.id);
+      if (_farms.length != validFarms.length || _selectedFarm != updatedFarm) {
+        setState(() {
+          _farms = validFarms;
+          _selectedFarm = updatedFarm;
+        });
+      }
+    }
+  }
+
+  void _syncBatchesWithLiveStream(List<BatchModel> liveBatches) {
+    final activeBatches = liveBatches
+        .where((b) =>
+            b.id.trim().isNotEmpty &&
+            b.id != 'default_batch' &&
+            b.isActive &&
+            b.status.toLowerCase() != 'archived' &&
+            b.status.toLowerCase() != 'deleted')
+        .toList();
+
+    if (activeBatches.isEmpty) {
+      if (_batches.isNotEmpty || _selectedBatch != null) {
+        setState(() {
+          _batches = [];
+          _selectedBatch = null;
+        });
+        ref.read(dailyRecordBatchIdProvider.notifier).selectBatch(null);
+      }
+      return;
+    }
+
+    final currentBatchExists = _selectedBatch != null &&
+        activeBatches.any((b) => b.id == _selectedBatch!.id);
+
+    if (!currentBatchExists) {
+      final batchToSelect = activeBatches.firstWhere(
+        (b) => b.id == widget.initialBatchId,
+        orElse: () => activeBatches.first,
+      );
+      setState(() {
+        _batches = activeBatches;
+        _selectedBatch = batchToSelect;
+      });
+      ref
+          .read(dailyRecordBatchIdProvider.notifier)
+          .selectBatch(batchToSelect.id);
+      if (_selectedFarm != null) {
+        _saveLastSelection(_selectedFarm!.id, batchToSelect.id);
+      }
+    } else {
+      final updatedBatch =
+          activeBatches.firstWhere((b) => b.id == _selectedBatch!.id);
+      if (_batches.length != activeBatches.length ||
+          _selectedBatch != updatedBatch) {
+        setState(() {
+          _batches = activeBatches;
+          _selectedBatch = updatedBatch;
         });
       }
     }
@@ -585,24 +695,38 @@ class _DailyRecordsDashboardScreenState
   }
 
   Future<void> _saveRecord() async {
-    if (_selectedFarm == null || _selectedBatch == null) return;
+    if (_selectedFarm == null ||
+        _selectedBatch == null ||
+        _selectedFarm!.id.isEmpty ||
+        _selectedBatch!.id.isEmpty ||
+        _selectedFarm!.id == 'default_farm' ||
+        _selectedBatch!.id == 'default_batch') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cannot save: A valid Farm and Batch must be selected.'),
+          backgroundColor: AppColors.danger,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
 
     setState(() => _isSaving = true);
     try {
       final farmId = _selectedFarm!.id;
       final batchId = _selectedBatch!.id;
-      final now = DateTime.now();
+      final recordDate = _selectedRecordDate;
 
       final existingRecord = await DailyRecordService.getDailyRecordByDate(
         farmId: farmId,
         batchId: batchId,
-        recordDate: now,
+        recordDate: recordDate,
       );
 
       final currentBirds = _selectedBatch!.currentBirds;
       final opening = existingRecord?.openingBirds ?? currentBirds;
       final ageDay =
-          DateTime.now().difference(_selectedBatch!.placementDate).inDays + 1;
+          recordDate.difference(_selectedBatch!.placementDate).inDays + 1;
       final prevMortality = existingRecord?.mortalityCount ?? 0;
       final prevClosing = existingRecord?.closingBirds ?? opening;
       int loggedMortality = 0;
@@ -625,7 +749,7 @@ class _DailyRecordsDashboardScreenState
         await DailyRecordService.createOrUpdateDailyRecord(
           farmId: farmId,
           batchId: batchId,
-          recordDate: now,
+          recordDate: recordDate,
           batchAgeDay: ageDay,
           openingBirds: opening,
           mortalityCount: mortalityCount,
@@ -709,7 +833,7 @@ class _DailyRecordsDashboardScreenState
         await DailyRecordService.createOrUpdateDailyRecord(
           farmId: farmId,
           batchId: batchId,
-          recordDate: now,
+          recordDate: recordDate,
           batchAgeDay: ageDay,
           openingBirds: opening,
           mortalityCount: existingRecord?.mortalityCount ?? 0,
@@ -755,7 +879,7 @@ class _DailyRecordsDashboardScreenState
                   await DailyRecordService.undoMortalityLog(
                     farmId: farmId,
                     batchId: batchId,
-                    recordDate: now,
+                    recordDate: recordDate,
                     previousMortality: prevMortality,
                     previousClosing: prevClosing,
                   );
@@ -799,11 +923,12 @@ class _DailyRecordsDashboardScreenState
       // Reset form / step
       setState(() {
         final activeBatches = _batches
-            .where((b) => b.status != 'archived')
+            .where((b) => b.isActive && b.status != 'archived')
             .toList();
         final shouldAutoSkip =
             _farms.length == 1 &&
-            (activeBatches.length == 1 || _batches.length == 1);
+            _selectedBatch != null &&
+            activeBatches.length == 1;
         _currentStep = shouldAutoSkip ? 1 : 0;
         _isDailyOpsSelected = true;
         _selectedOptionalType = null;
@@ -826,10 +951,22 @@ class _DailyRecordsDashboardScreenState
 
   void _nextStep() {
     if (_currentStep == 0) {
-      if (_selectedFarm == null || _selectedBatch == null) {
+      if (_selectedFarm == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Please select a valid Farm and Batch.'),
+            content: Text('Please select or create a farm first.'),
+            backgroundColor: AppColors.danger,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+      if (_selectedBatch == null || _batches.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Cannot proceed without an active flock batch. Please add a batch to this farm first.',
+            ),
             backgroundColor: AppColors.danger,
             behavior: SnackBarBehavior.floating,
           ),
@@ -848,13 +985,36 @@ class _DailyRecordsDashboardScreenState
 
   @override
   Widget build(BuildContext context) {
+    final farmsAsync = ref.watch(farmListProvider);
     final List<DailyRecordModel> recentRecords =
         ref.watch(dailyRecordsStreamProvider).asData?.value ?? [];
     final syncStatus = ref
         .watch(dailyRecordSyncStatusProvider)
         .maybeWhen(data: (s) => s, orElse: () => SyncStatus.synced);
 
-    if (_isLoadingData) {
+    // Reactively listen to live farm stream changes
+    ref.listen<AsyncValue<List<FarmModel>>>(farmListProvider, (previous, next) {
+      next.whenData((farms) {
+        _syncFarmsWithLiveStream(farms);
+      });
+    });
+
+    // Reactively listen to live batch stream changes for the selected farm
+    if (_selectedFarm != null && _selectedFarm!.id.isNotEmpty) {
+      ref.listen<AsyncValue<List<BatchModel>>>(
+        batchListProvider(_selectedFarm!.id),
+        (previous, next) {
+          next.whenData((batches) {
+            _syncBatchesWithLiveStream(batches);
+          });
+        },
+      );
+    }
+
+    final hasNoFarms = _farms.isEmpty &&
+        (farmsAsync.hasValue ? (farmsAsync.value?.isEmpty ?? true) : true);
+
+    if (_isLoadingData && _farms.isEmpty && farmsAsync.isLoading) {
       return Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
@@ -886,6 +1046,102 @@ class _DailyRecordsDashboardScreenState
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
               ),
             ],
+          ),
+        ),
+      );
+    }
+
+    if (hasNoFarms) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          foregroundColor: AppColors.textPrimary,
+          title: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Daily Records',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                'Record daily farm telemetry',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.agriculture_outlined,
+                    size: 40,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'No Farms Found',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'You currently have no farms. Daily records require an active farm and flock batch before telemetry can be logged.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const FarmSetupScreen(),
+                      ),
+                    );
+                    _loadFarmsAndBatches();
+                  },
+                  icon: const Icon(Icons.add_rounded, color: Colors.white),
+                  label: const Text(
+                    'Create Your First Farm',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -1043,6 +1299,131 @@ class _DailyRecordsDashboardScreenState
     );
   }
 
+  Widget _buildDateSelector() {
+    final now = DateTime.now();
+    final isToday = DateUtils.isSameDay(_selectedRecordDate, now);
+    final yesterday = now.subtract(const Duration(days: 1));
+    final isYesterday = DateUtils.isSameDay(_selectedRecordDate, yesterday);
+    final formattedDate =
+        DateFormat('EEE, d MMM yyyy').format(_selectedRecordDate);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(
+                    Icons.calendar_today_rounded,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Record Date',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                ],
+              ),
+              InkWell(
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: _selectedRecordDate,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime.now(),
+                  );
+                  if (picked != null) {
+                    setState(() => _selectedRecordDate = picked);
+                  }
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAF5EA),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        formattedDate,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.edit_calendar_rounded,
+                        size: 14,
+                        color: AppColors.primary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              ChoiceChip(
+                label: const Text('Today', style: TextStyle(fontSize: 12)),
+                selected: isToday,
+                onSelected: (_) =>
+                    setState(() => _selectedRecordDate = DateTime.now()),
+                selectedColor: AppColors.primaryLight,
+                labelStyle: TextStyle(
+                  color: isToday
+                      ? AppColors.primaryDark
+                      : AppColors.textSecondary,
+                  fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+              const SizedBox(width: 8),
+              ChoiceChip(
+                label: const Text('Yesterday', style: TextStyle(fontSize: 12)),
+                selected: isYesterday,
+                onSelected: (_) =>
+                    setState(() => _selectedRecordDate = yesterday),
+                selectedColor: AppColors.primaryLight,
+                labelStyle: TextStyle(
+                  color: isYesterday
+                      ? AppColors.primaryDark
+                      : AppColors.textSecondary,
+                  fontWeight: isYesterday ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   // ==========================================
   // STEP 1: "SELECT" (Farm & Batch + Telemetry Picker)
   // ==========================================
@@ -1052,7 +1433,7 @@ class _DailyRecordsDashboardScreenState
     if (_selectedBatch != null) {
       try {
         final diff =
-            DateTime.now().difference(_selectedBatch!.placementDate).inDays + 1;
+            _selectedRecordDate.difference(_selectedBatch!.placementDate).inDays + 1;
         if (diff > 0) ageDays = diff;
       } catch (_) {}
     }
@@ -1069,29 +1450,10 @@ class _DailyRecordsDashboardScreenState
         farmList.add(f.id == safeId ? f : f.copyWith(id: safeId));
       }
     }
-    if (farmList.isEmpty) farmList.add(_defaultFarm);
 
     final String selectedFarmId = farmList.any((f) => f.id == _selectedFarm?.id)
         ? _selectedFarm!.id
-        : farmList.first.id;
-
-    final List<BatchModel> batchList = [];
-    final Set<String> seenBatchIds = {};
-    for (final b in _batches) {
-      final safeId = b.id.trim().isNotEmpty
-          ? b.id.trim()
-          : 'batch_${batchList.length}';
-      if (!seenBatchIds.contains(safeId)) {
-        seenBatchIds.add(safeId);
-        batchList.add(b.id == safeId ? b : b.copyWith(id: safeId));
-      }
-    }
-    if (batchList.isEmpty) batchList.add(_defaultBatch);
-
-    final String selectedBatchId =
-        batchList.any((b) => b.id == _selectedBatch?.id)
-        ? _selectedBatch!.id
-        : batchList.first.id;
+        : (farmList.isNotEmpty ? farmList.first.id : '');
 
     final optionalCategories = [
       LogRecordType.medicine,
@@ -1174,74 +1536,115 @@ class _DailyRecordsDashboardScreenState
               ),
             );
           }).toList(),
-          onChanged: (farmId) {
-            if (farmId == null) return;
+          onChanged: (farmId) async {
+            if (farmId == null || farmId == _selectedFarm?.id) return;
             final chosen = farmList.firstWhere(
               (f) => f.id == farmId,
               orElse: () => farmList.first,
             );
-            setState(() => _selectedFarm = chosen);
+            setState(() {
+              _selectedFarm = chosen;
+              _selectedBatch = null;
+              _batches = [];
+            });
             try {
               ref.read(dailyRecordFarmIdProvider.notifier).selectFarm(farmId);
             } catch (_) {}
-            _loadBatchesForFarm(farmId);
-            if (_selectedBatch != null) {
-              _saveLastSelection(chosen.id, _selectedBatch!.id);
-            }
+            await _loadBatchesForFarm(farmId);
           },
         ),
         const SizedBox(height: 12),
 
-        // 2. Outlined Material 3 Batch Dropdown (or disabled non-interactive if single batch)
-        if (batchList.length <= 1)
-          TextFormField(
-            initialValue: _selectedBatch?.batchName.trim().isNotEmpty == true
-                ? _selectedBatch!.batchName
-                : (batchList.isNotEmpty &&
-                          batchList.first.batchName.trim().isNotEmpty
-                      ? batchList.first.batchName
-                      : 'default_batch'),
-            key: ValueKey(
-              'batch_field_single_${_selectedBatch?.id}_${_selectedFarm?.id}',
+        // 2. Batch Selection: Loading State, Empty State, or Dropdown
+        if (_isLoadingBatches)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFCBD5E1)),
             ),
-            readOnly: true,
-            enabled: false,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Color(0xFF0F172A),
-              fontWeight: FontWeight.normal,
+            child: const Row(
+              children: [
+                SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                SizedBox(width: 12),
+                Text(
+                  'Loading batches for selected farm...',
+                  style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
+                ),
+              ],
             ),
-            decoration: InputDecoration(
-              labelText: 'Batch',
-              labelStyle: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF94A3B8),
-              ),
-              prefixIcon: const Icon(
-                Icons.layers_outlined,
-                size: 20,
-                color: Color(0xFF94A3B8),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              disabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-              ),
-              filled: true,
-              fillColor: const Color(0xFFF8FAFC),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 12,
-              ),
+          )
+        else if (_batches.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFBEB),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFFCD34D)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Color(0xFFD97706), size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'No Active Batches in this Farm',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Color(0xFF92400E),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'You need to create a flock batch before logging daily telemetry for this farm.',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF78350F)),
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    if (_selectedFarm != null) {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              BatchFormScreen(farmId: _selectedFarm!.id),
+                        ),
+                      );
+                      _loadBatchesForFarm(_selectedFarm!.id);
+                    }
+                  },
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: const Text('Add Batch to Farm'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD97706),
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
             ),
           )
         else
-          DropdownButtonFormField<String>(
-            key: ValueKey('batch_dropdown_$selectedBatchId'),
-            initialValue: selectedBatchId,
+          Builder(
+            builder: (context) {
+              final String selectedBatchId =
+                  _batches.any((b) => b.id == _selectedBatch?.id)
+                      ? _selectedBatch!.id
+                      : _batches.first.id;
+              return DropdownButtonFormField<String>(
+                key: ValueKey(
+                  'batch_dropdown_${_selectedFarm?.id}_$selectedBatchId',
+                ),
+                initialValue: selectedBatchId,
             decoration: InputDecoration(
               labelText: 'Batch',
               labelStyle: const TextStyle(
@@ -1285,12 +1688,12 @@ class _DailyRecordsDashboardScreenState
               fontWeight: FontWeight.normal,
             ),
             dropdownColor: Colors.white,
-            items: batchList.map((batch) {
+            items: _batches.map((batch) {
               return DropdownMenuItem<String>(
                 value: batch.id,
                 child: Text(
                   batch.batchName.trim().isNotEmpty
-                      ? batch.batchName
+                      ? '${batch.batchName} (${batch.currentBirds} birds)'
                       : 'Batch (${batch.id})',
                   style: const TextStyle(
                     fontSize: 16,
@@ -1302,9 +1705,9 @@ class _DailyRecordsDashboardScreenState
             }).toList(),
             onChanged: (batchId) {
               if (batchId == null) return;
-              final chosen = batchList.firstWhere(
+              final chosen = _batches.firstWhere(
                 (b) => b.id == batchId,
-                orElse: () => batchList.first,
+                orElse: () => _batches.first,
               );
               setState(() => _selectedBatch = chosen);
               try {
@@ -1316,19 +1719,22 @@ class _DailyRecordsDashboardScreenState
                 _saveLastSelection(_selectedFarm!.id, chosen.id);
               }
             },
-          ),
+          );
+        },
+      ),
         const SizedBox(height: 6),
 
-        // 3. Compact Plain Muted-Gray Stats Text (No dots/icons/badges)
-        Text(
-          '${NumberFormat('#,###').format(currentBirds)} birds · Day $ageDays · ${NumberFormat('#,###').format(avgWeight)}g avg',
-          style: const TextStyle(
-            fontSize: 12.5,
-            color: Color(0xFF64748B),
-            fontWeight: FontWeight.normal,
+        if (_selectedBatch != null)
+          Text(
+            '${NumberFormat('#,###').format(currentBirds)} birds · Day $ageDays · ${NumberFormat('#,###').format(avgWeight)}g avg',
+            style: const TextStyle(
+              fontSize: 12.5,
+              color: Color(0xFF64748B),
+              fontWeight: FontWeight.normal,
+            ),
           ),
-        ),
-        const SizedBox(height: 18),
+        _buildDateSelector(),
+        const SizedBox(height: 12),
 
         // 3. Telemetry Log Type Picker Header
         Row(
@@ -1685,6 +2091,9 @@ class _DailyRecordsDashboardScreenState
             ],
           ),
         ),
+
+        _buildDateSelector(),
+        const SizedBox(height: 8),
 
         if (_isDailyOpsSelected)
           _buildPathADailyOpsBundle()
@@ -3034,7 +3443,13 @@ class _DailyRecordsDashboardScreenState
   // BOTTOM NAVIGATION BAR
   // ==========================================
   Widget _buildBottomNavigationControls() {
-    final canSave = _isDailyOpsSelected ? _isAllBundleValid : _isOptionalValid;
+    final hasValidTarget = _selectedFarm != null &&
+        _selectedBatch != null &&
+        _selectedFarm!.id.isNotEmpty &&
+        _selectedBatch!.id.isNotEmpty;
+
+    final canSave = hasValidTarget &&
+        (_isDailyOpsSelected ? _isAllBundleValid : _isOptionalValid);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -3085,17 +3500,23 @@ class _DailyRecordsDashboardScreenState
           if (_currentStep == 0)
             Container(
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF059669), Color(0xFF047857)],
-                ),
+                gradient: hasValidTarget
+                    ? const LinearGradient(
+                        colors: [Color(0xFF059669), Color(0xFF047857)],
+                      )
+                    : const LinearGradient(
+                        colors: [Color(0xFF94A3B8), Color(0xFF64748B)],
+                      ),
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x25059669),
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
-                  ),
-                ],
+                boxShadow: hasValidTarget
+                    ? const [
+                        BoxShadow(
+                          color: Color(0x25059669),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ]
+                    : null,
               ),
               child: Material(
                 color: Colors.transparent,

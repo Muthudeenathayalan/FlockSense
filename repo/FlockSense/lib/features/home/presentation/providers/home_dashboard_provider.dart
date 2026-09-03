@@ -1,11 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flock_sense/features/auth/presentation/providers/auth_provider.dart';
+import 'package:flock_sense/features/batches/data/batch_service.dart';
 import 'package:flock_sense/features/batches/domain/batch_model.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
 import 'package:flock_sense/features/farms/presentation/providers/farm_providers.dart';
-
+import 'package:flock_sense/features/daily_records/data/daily_record_service.dart';
 import 'package:flock_sense/features/daily_records/domain/daily_record_model.dart';
+
+export 'package:flock_sense/features/farms/presentation/providers/farm_providers.dart'
+    show allUserBatchesProvider;
 
 String _formatTodayRecordDate() {
   final now = DateTime.now();
@@ -13,33 +17,6 @@ String _formatTodayRecordDate() {
       '${now.month.toString().padLeft(2, '0')}-'
       '${now.day.toString().padLeft(2, '0')}';
 }
-
-final latestDgRecordProvider = StreamProvider.autoDispose<DailyRecordModel?>((
-  ref,
-) {
-  final authState = ref.watch(authStateProvider);
-  return authState.when(
-    data: (user) {
-      if (user == null) return Stream<DailyRecordModel?>.value(null);
-      return FirebaseFirestore.instance
-          .collectionGroup('dailyRecords')
-          .where('ownerId', isEqualTo: user.uid)
-          .snapshots()
-          .map((snap) {
-            for (final doc in snap.docs) {
-              final data = doc.data();
-              if (data['dgLevelLiters'] != null) {
-                return DailyRecordModel.fromJson(data);
-              }
-            }
-            return null;
-          })
-          .handleError((_) => null);
-    },
-    loading: () => Stream<DailyRecordModel?>.value(null),
-    error: (err, stack) => Stream<DailyRecordModel?>.value(null),
-  );
-});
 
 final activeFarmIdProvider = StreamProvider.autoDispose<String?>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -57,83 +34,44 @@ final activeFarmIdProvider = StreamProvider.autoDispose<String?>((ref) {
   );
 });
 
-final allUserBatchesProvider = StreamProvider.autoDispose<List<BatchModel>>((
-  ref,
-) {
-  final authState = ref.watch(authStateProvider);
-  return authState.when(
-    data: (user) {
-      if (user == null) return Stream.value(<BatchModel>[]);
-      return FirebaseFirestore.instance
-          .collectionGroup('batches')
-          .where('ownerId', isEqualTo: user.uid)
-          .snapshots()
-          .map(
-            (snapshot) => snapshot.docs
-                .map((doc) => BatchModel.fromJson(doc.data()))
-                .toList(),
-          )
-          .handleError((_) => <BatchModel>[]);
-    },
-    loading: () => Stream.value(<BatchModel>[]),
-    error: (err, stack) => Stream.value(<BatchModel>[]),
-  );
-});
-
-final todayMortalityProvider = StreamProvider.autoDispose<int>((ref) {
-  final authState = ref.watch(authStateProvider);
-  return authState.when(
-    data: (user) {
-      if (user == null) return Stream<int>.value(0);
-      final todayId = _formatTodayRecordDate();
-      return FirebaseFirestore.instance
-          .collectionGroup('dailyRecords')
-          .where('ownerId', isEqualTo: user.uid)
-          .where('recordDate', isEqualTo: todayId)
-          .snapshots()
-          .map((snapshot) {
-            var total = 0;
-            for (final doc in snapshot.docs) {
-              final mortality = doc.data()['mortalityCount'];
-              if (mortality is int) {
-                total += mortality;
-              } else if (mortality is double) {
-                total += mortality.toInt();
-              } else if (mortality is String) {
-                total += int.tryParse(mortality) ?? 0;
-              }
-            }
-            return total;
-          })
-          .handleError((_) => 0);
-    },
-    loading: () => Stream<int>.value(0),
-    error: (err, stack) => Stream<int>.value(0),
-  );
-});
-
 final recentDailyRecordsProvider =
     StreamProvider.autoDispose<List<DailyRecordModel>>((ref) {
       final authState = ref.watch(authStateProvider);
       return authState.when(
         data: (user) {
           if (user == null) return Stream.value(<DailyRecordModel>[]);
-          return FirebaseFirestore.instance
-              .collectionGroup('dailyRecords')
-              .where('ownerId', isEqualTo: user.uid)
-              .snapshots()
-              .map((snapshot) {
-                final records = snapshot.docs
-                    .map((doc) => DailyRecordModel.fromJson(doc.data()))
-                    .toList();
-                records.sort((a, b) => b.recordDate.compareTo(a.recordDate));
-                return records;
-              })
-              .handleError((_) => <DailyRecordModel>[]);
+          return DailyRecordService.watchAllUserDailyRecords(user.uid);
         },
         loading: () => Stream.value(<DailyRecordModel>[]),
         error: (_, __) => Stream.value(<DailyRecordModel>[]),
       );
+    });
+
+final todayMortalityProvider = StreamProvider.autoDispose<int>((ref) async* {
+  final records = ref.watch(recentDailyRecordsProvider).value ?? const [];
+  final now = DateTime.now();
+  var total = 0;
+  for (final doc in records) {
+    if (doc.recordDate.year == now.year &&
+        doc.recordDate.month == now.month &&
+        doc.recordDate.day == now.day) {
+      total += doc.mortalityCount.toInt();
+    }
+  }
+  yield total;
+});
+
+final latestDgRecordProvider =
+    StreamProvider.autoDispose<DailyRecordModel?>((ref) async* {
+      final records = ref.watch(recentDailyRecordsProvider).value ?? const [];
+      DailyRecordModel? found;
+      for (final doc in records) {
+        if (doc.dgLevelLiters != null) {
+          found = doc;
+          break;
+        }
+      }
+      yield found;
     });
 
 class HomeDashboardData {
@@ -191,10 +129,10 @@ final homeDashboardDataProvider =
       }
 
       final activeBatchCount = batches
-          .where((batch) => batch.status == 'active')
+          .where((batch) => batch.isActive)
           .length;
       final liveBirds = batches
-          .where((batch) => batch.status == 'active')
+          .where((batch) => batch.isActive)
           .fold<int>(0, (total, batch) => total + batch.currentBirds);
 
       return AsyncValue.data(
