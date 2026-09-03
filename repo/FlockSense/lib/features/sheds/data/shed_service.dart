@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -36,6 +37,78 @@ class ShedService {
         .map(
           (snap) => snap.docs.map((d) => ShedModel.fromJson(d.data())).toList(),
         );
+  }
+
+  /// Real-time stream of ALL sheds across all farms owned by the user.
+  /// Uses direct subcollection listeners so no Firestore collection group index is required.
+  static Stream<List<ShedModel>> watchAllUserSheds(String uid) {
+    final controller = StreamController<List<ShedModel>>.broadcast();
+    StreamSubscription? farmsSub;
+    final Map<String, StreamSubscription> shedSubs = {};
+    final Map<String, List<ShedModel>> farmSheds = {};
+
+    void emit() {
+      if (controller.isClosed) return;
+      final all = <ShedModel>[];
+      for (final list in farmSheds.values) {
+        all.addAll(list);
+      }
+      all.sort((a, b) => a.shedName.compareTo(b.shedName));
+      controller.add(all);
+    }
+
+    farmsSub = _db
+        .collection('users')
+        .doc(uid)
+        .collection('farms')
+        .snapshots()
+        .listen((farmSnap) {
+          final currentFarmIds = farmSnap.docs.map((d) => d.id).toSet();
+
+          final removedFarmIds =
+              shedSubs.keys.where((id) => !currentFarmIds.contains(id)).toList();
+          for (final farmId in removedFarmIds) {
+            shedSubs[farmId]?.cancel();
+            shedSubs.remove(farmId);
+            farmSheds.remove(farmId);
+          }
+
+          if (currentFarmIds.isEmpty) {
+            farmSheds.clear();
+            emit();
+            return;
+          }
+
+          for (final farmId in currentFarmIds) {
+            if (!shedSubs.containsKey(farmId)) {
+              shedSubs[farmId] = _shedsRef(uid, farmId).snapshots().listen(
+                (shedSnap) {
+                  farmSheds[farmId] = shedSnap.docs
+                      .map((doc) => ShedModel.fromJson(doc.data()))
+                      .toList();
+                  emit();
+                },
+                onError: (e) {
+                  debugPrint('[watchAllUserSheds] Error on farm $farmId: $e');
+                },
+              );
+            }
+          }
+          emit();
+        }, onError: (e) {
+          debugPrint('[watchAllUserSheds] Error watching farms: $e');
+        });
+
+    controller.onCancel = () {
+      farmsSub?.cancel();
+      for (final sub in shedSubs.values) {
+        sub.cancel();
+      }
+      shedSubs.clear();
+      farmSheds.clear();
+    };
+
+    return controller.stream;
   }
 
   /// Sync-status stream — hasPendingWrites signals a local write not yet

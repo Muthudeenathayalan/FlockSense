@@ -8,10 +8,12 @@ final batchListProvider = StreamProvider.autoDispose
       final authState = ref.watch(authStateProvider);
       return authState.when(
         data: (user) {
-          if (user == null) return const Stream.empty();
+          if (user == null || farmId.trim().isEmpty) {
+            return Stream.value(<BatchModel>[]);
+          }
           return BatchService.watchBatches(farmId);
         },
-        loading: () => const Stream.empty(),
-        error: (_, __) => const Stream.empty(),
+        loading: () => Stream.value(<BatchModel>[]),
+        error: (_, __) => Stream.value(<BatchModel>[]),
       );
     });

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
 import 'package:flock_sense/core/exceptions/app_exceptions.dart';
 import 'package:flock_sense/core/utils/input_sanitizer.dart';
@@ -462,7 +463,7 @@ class FarmService {
   }
 
   /// Deletes a farm from the user's subcollection
-  /// Also clears activeFarmId if this was the active farm
+  /// Also clears activeFarmId if this was the active farm, cleans up subcollections & cache
   static Future<void> deleteFarm(String farmId) async {
     final user = _auth.currentUser;
     if (user == null) {
@@ -482,11 +483,43 @@ class FarmService {
       final userRef = _firestore.collection('users').doc(user.uid);
 
       final farmSnapshot = await farmRef.get();
-      farmName = farmSnapshot.get('farmName') as String?;
+      if (farmSnapshot.exists) {
+        farmName = farmSnapshot.get('farmName') as String?;
+      }
 
+      // 1. Delete batches and their nested dailyRecords subcollections under this farm
+      try {
+        final batchesSnapshot = await farmRef.collection('batches').get();
+        for (final bDoc in batchesSnapshot.docs) {
+          final dailyRecordsSnap =
+              await bDoc.reference.collection('dailyRecords').get();
+          for (final drDoc in dailyRecordsSnap.docs) {
+            await drDoc.reference.delete();
+          }
+          await bDoc.reference.delete();
+        }
+      } catch (e) {
+        debugPrint('[FarmService.deleteFarm] Error cleaning up batches: $e');
+      }
+
+      // 2. Delete sheds and calendarEvents under this farm if any
+      try {
+        final shedsSnap = await farmRef.collection('sheds').get();
+        for (final sDoc in shedsSnap.docs) {
+          await sDoc.reference.delete();
+        }
+        final eventsSnap = await farmRef.collection('calendarEvents').get();
+        for (final eDoc in eventsSnap.docs) {
+          await eDoc.reference.delete();
+        }
+      } catch (e) {
+        debugPrint('[FarmService.deleteFarm] Error cleaning up subcollections: $e');
+      }
+
+      // 3. Delete farm document & clear activeFarmId if this farm was active
       final batch = _firestore.batch();
       final userSnapshot = await userRef.get();
-      final activeFarmId = userSnapshot.get('activeFarmId') as String?;
+      final activeFarmId = userSnapshot.data()?['activeFarmId'] as String?;
 
       batch.delete(farmRef);
       if (activeFarmId == farmId) {
@@ -500,14 +533,25 @@ class FarmService {
       }
       await batch.commit();
 
-      // Log the deletion
+      // 4. Log the deletion
       await _auditService.logFarmDelete(
         farmId: farmId,
         farmName: farmName ?? 'Unknown',
       );
 
-      // Clear cache
+      // 5. Clear cache (both individual farm and user's full farms list)
       await _cacheService.deleteCachedFarm(user.uid, farmId);
+      await _cacheService.clearFarmCache(user.uid);
+
+      // 6. Clear last farm & batch selection in SharedPreferences if matching
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final lastFarm = prefs.getString('flocksense_last_farm_${user.uid}');
+        if (lastFarm == farmId) {
+          await prefs.remove('flocksense_last_farm_${user.uid}');
+          await prefs.remove('flocksense_last_batch_${user.uid}');
+        }
+      } catch (_) {}
 
       debugPrint('[FarmService.deleteFarm] Farm deleted successfully');
     } on AppException {

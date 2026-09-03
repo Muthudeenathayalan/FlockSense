@@ -11,7 +11,7 @@ import 'package:flock_sense/features/performance/presentation/screens/batch_perf
 import 'package:flock_sense/features/reports/presentation/screens/reports_screen.dart';
 import 'package:flock_sense/features/sales/presentation/screens/bird_sales_screen.dart';
 import 'package:flock_sense/features/vaccine/presentation/screens/vaccine_records_screen.dart';
-import 'package:flock_sense/features/weight/presentation/screens/weight_records_screen.dart';
+import 'package:flock_sense/core/widgets/app_dialog.dart';
 
 class BatchCommandCenterScreen extends StatefulWidget {
   const BatchCommandCenterScreen({
@@ -51,6 +51,39 @@ class _BatchCommandCenterScreenState extends State<BatchCommandCenterScreen> {
     }
   }
 
+  Future<void> _deleteBatch() async {
+    final confirmed = await AppDialog.confirm(
+      context: context,
+      title: 'Delete Batch',
+      message:
+          'Are you sure you want to delete "${widget.batchName}" and all associated daily records? This action cannot be undone.',
+      confirmLabel: 'Delete',
+      isDanger: true,
+      icon: Icons.delete_outline_rounded,
+    );
+    if (!confirmed || !mounted) return;
+
+    try {
+      await BatchService.deleteBatch(widget.farmId, widget.batchId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Batch "${widget.batchName}" deleted'),
+          backgroundColor: AppColors.primary,
+        ),
+      );
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete batch: $e'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
+  }
+
   int get _ageDays => _batch != null
       ? DateTime.now().difference(_batch!.placementDate).inDays
       : 0;
@@ -80,6 +113,11 @@ class _BatchCommandCenterScreenState extends State<BatchCommandCenterScreen> {
               IconButton(
                 icon: const Icon(Icons.refresh_rounded, color: Colors.white),
                 onPressed: _load,
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline_rounded, color: Colors.white),
+                tooltip: 'Delete Batch',
+                onPressed: _deleteBatch,
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(

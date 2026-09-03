@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flock_sense/features/batches/domain/batch_model.dart';
 import 'package:flock_sense/core/exceptions/app_exceptions.dart';
 
@@ -22,22 +24,107 @@ class BatchService {
 
   static Stream<List<BatchModel>> watchBatches(String farmId) {
     final user = _auth.currentUser;
-    if (user == null) return const Stream.empty();
+    if (user == null || farmId.trim().isEmpty) {
+      return Stream.value(<BatchModel>[]);
+    }
 
     return _batchesRef(user.uid, farmId)
-        .orderBy('createdAt', descending: false)
         .snapshots()
         .map(
-          (snap) => snap.docs
-              .map(
-                (d) => BatchModel.fromJson({
-                  'id': d.id,
-                  'farmId': farmId,
-                  ...d.data(),
-                }),
-              )
-              .toList(),
+          (snap) {
+            final list = snap.docs
+                .map(
+                  (d) => BatchModel.fromJson({
+                    'id': d.id,
+                    'farmId': farmId,
+                    ...d.data(),
+                  }),
+                )
+                .toList();
+            list.sort((a, b) => b.placementDate.compareTo(a.placementDate));
+            return list;
+          },
         );
+  }
+
+  /// Real-time stream of ALL batches across all farms owned by the user.
+  /// Uses direct subcollection listeners so no Firestore collection group index is required.
+  static Stream<List<BatchModel>> watchAllUserBatches(String uid) {
+    final controller = StreamController<List<BatchModel>>.broadcast();
+    StreamSubscription? farmsSub;
+    final Map<String, StreamSubscription> batchSubs = {};
+    final Map<String, List<BatchModel>> farmBatches = {};
+
+    void emit() {
+      if (controller.isClosed) return;
+      final all = <BatchModel>[];
+      for (final list in farmBatches.values) {
+        all.addAll(list);
+      }
+      all.sort((a, b) {
+        if (a.isActive && !b.isActive) return -1;
+        if (!a.isActive && b.isActive) return 1;
+        return b.placementDate.compareTo(a.placementDate);
+      });
+      controller.add(all);
+    }
+
+    farmsSub = _db
+        .collection('users')
+        .doc(uid)
+        .collection('farms')
+        .snapshots()
+        .listen((farmSnap) {
+          final currentFarmIds = farmSnap.docs.map((d) => d.id).toSet();
+
+          final removedFarmIds =
+              batchSubs.keys.where((id) => !currentFarmIds.contains(id)).toList();
+          for (final farmId in removedFarmIds) {
+            batchSubs[farmId]?.cancel();
+            batchSubs.remove(farmId);
+            farmBatches.remove(farmId);
+          }
+
+          if (currentFarmIds.isEmpty) {
+            farmBatches.clear();
+            emit();
+            return;
+          }
+
+          for (final farmId in currentFarmIds) {
+            if (!batchSubs.containsKey(farmId)) {
+              batchSubs[farmId] = _batchesRef(uid, farmId).snapshots().listen(
+                (batchSnap) {
+                  farmBatches[farmId] = batchSnap.docs.map((doc) {
+                    return BatchModel.fromJson({
+                      'id': doc.id,
+                      'farmId': farmId,
+                      ...doc.data(),
+                    });
+                  }).toList();
+                  emit();
+                },
+                onError: (e) {
+                  debugPrint('[watchAllUserBatches] Error on farm $farmId: $e');
+                },
+              );
+            }
+          }
+          emit();
+        }, onError: (e) {
+          debugPrint('[watchAllUserBatches] Error watching farms: $e');
+        });
+
+    controller.onCancel = () {
+      farmsSub?.cancel();
+      for (final sub in batchSubs.values) {
+        sub.cancel();
+      }
+      batchSubs.clear();
+      farmBatches.clear();
+    };
+
+    return controller.stream;
   }
 
   static Future<BatchModel?> getBatchById(String farmId, String batchId) async {
@@ -341,8 +428,29 @@ class BatchService {
     final user = _auth.currentUser;
     if (user == null) throw AuthException('Sign in before deleting a batch.');
 
-    await _batchesRef(user.uid, farmId).doc(batchId).delete();
-    debugPrint('[BatchService] Batch $batchId deleted');
+    final batchDocRef = _batchesRef(user.uid, farmId).doc(batchId);
+
+    // Delete nested daily records subcollection
+    try {
+      final recordsSnap = await batchDocRef.collection('dailyRecords').get();
+      for (final doc in recordsSnap.docs) {
+        await doc.reference.delete();
+      }
+    } catch (e) {
+      debugPrint('[BatchService] Error cleaning up batch daily records: $e');
+    }
+
+    await batchDocRef.delete();
+    debugPrint('[BatchService] Batch $batchId and linked daily records deleted');
+
+    // Clean up stored preferences if this batch was saved as last selected
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastBatch = prefs.getString('flocksense_last_batch_${user.uid}');
+      if (lastBatch == batchId) {
+        await prefs.remove('flocksense_last_batch_${user.uid}');
+      }
+    } catch (_) {}
   }
 
   static Future<List<BatchModel>> getBatchesForFarm(String farmId) async {

@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flock_sense/features/auth/presentation/providers/auth_provider.dart';
+import 'package:flock_sense/features/batches/data/batch_service.dart';
 import 'package:flock_sense/features/batches/domain/batch_model.dart';
 import 'package:flock_sense/features/farms/data/farm_service.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
+import 'package:flock_sense/features/sheds/data/shed_service.dart';
 import 'package:flock_sense/features/sheds/domain/shed_model.dart';
 
 /// Real-time list of the signed-in user's farms from Firestore.
@@ -27,16 +29,7 @@ final allUserBatchesProvider = StreamProvider.autoDispose<List<BatchModel>>((
   return authState.when(
     data: (user) {
       if (user == null) return Stream.value(<BatchModel>[]);
-      return FirebaseFirestore.instance
-          .collectionGroup('batches')
-          .where('ownerId', isEqualTo: user.uid)
-          .snapshots()
-          .map(
-            (snapshot) => snapshot.docs
-                .map((doc) => BatchModel.fromJson(doc.data()))
-                .toList(),
-          )
-          .handleError((_) => <BatchModel>[]);
+      return BatchService.watchAllUserBatches(user.uid);
     },
     loading: () => Stream.value(<BatchModel>[]),
     error: (_, __) => Stream.value(<BatchModel>[]),
@@ -49,16 +42,7 @@ final allUserShedsProvider = StreamProvider.autoDispose<List<ShedModel>>((ref) {
   return authState.when(
     data: (user) {
       if (user == null) return Stream.value(<ShedModel>[]);
-      return FirebaseFirestore.instance
-          .collectionGroup('sheds')
-          .where('ownerId', isEqualTo: user.uid)
-          .snapshots()
-          .map(
-            (snapshot) => snapshot.docs
-                .map((doc) => ShedModel.fromJson(doc.data()))
-                .toList(),
-          )
-          .handleError((_) => <ShedModel>[]);
+      return ShedService.watchAllUserSheds(user.uid);
     },
     loading: () => Stream.value(<ShedModel>[]),
     error: (_, __) => Stream.value(<ShedModel>[]),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
+import 'package:flock_sense/core/widgets/app_dialog.dart';
+import 'package:flock_sense/features/batches/data/batch_service.dart';
 import 'package:flock_sense/features/batches/domain/batch_model.dart';
 import 'package:flock_sense/features/batches/presentation/providers/batch_providers.dart';
 import 'package:flock_sense/features/batches/presentation/screens/batch_command_center_screen.dart';
@@ -16,6 +18,40 @@ class BatchListScreen extends ConsumerWidget {
   final String farmId;
   final String? farmName;
   final String? shedId;
+
+  Future<void> _deleteBatch(BuildContext context, BatchModel batch) async {
+    final confirmed = await AppDialog.confirm(
+      context: context,
+      title: 'Delete Batch',
+      message:
+          'Are you sure you want to delete "${batch.batchName}" and all associated daily records? This action cannot be undone.',
+      confirmLabel: 'Delete',
+      isDanger: true,
+      icon: Icons.delete_outline_rounded,
+    );
+    if (!confirmed) return;
+
+    try {
+      await BatchService.deleteBatch(farmId, batch.id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Batch "${batch.batchName}" deleted'),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete batch: $e'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,6 +95,7 @@ class BatchListScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+              onDelete: () => _deleteBatch(context, batches[i]),
             ),
           );
         },
@@ -84,9 +121,14 @@ class BatchListScreen extends ConsumerWidget {
 }
 
 class _BatchCard extends StatelessWidget {
-  const _BatchCard({required this.batch, required this.onTap});
+  const _BatchCard({
+    required this.batch,
+    required this.onTap,
+    this.onDelete,
+  });
   final BatchModel batch;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
 
   int get _age => DateTime.now().difference(batch.placementDate).inDays;
   bool get _isActive => batch.status == 'active';
@@ -111,7 +153,7 @@ class _BatchCard extends StatelessWidget {
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+              padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
               decoration: BoxDecoration(
                 gradient: _isActive
                     ? AppColors.primaryGradient
@@ -165,6 +207,41 @@ class _BatchCard extends StatelessWidget {
                     Colors.white.withValues(alpha: 0.25),
                     Colors.white,
                   ),
+                  if (onDelete != null)
+                    PopupMenuButton<String>(
+                      icon: const Icon(
+                        Icons.more_vert_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      padding: EdgeInsets.zero,
+                      onSelected: (val) {
+                        if (val == 'delete') onDelete?.call();
+                      },
+                      itemBuilder: (_) => [
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.delete_outline_rounded,
+                                color: AppColors.danger,
+                                size: 18,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Delete Batch',
+                                style: TextStyle(
+                                  color: AppColors.danger,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ),

@@ -148,6 +148,20 @@ class CacheService {
     try {
       final key = 'farm_${userId}_$farmId';
       await _farmsBox.delete(key);
+
+      // Also remove this farm from the cached farms list (farms_$userId)
+      final listKey = 'farms_$userId';
+      final cached = _farmsBox.get(listKey);
+      if (cached != null) {
+        final rawList = cached['farms'] as List? ?? [];
+        final updatedList = rawList
+            .where((f) => (f is Map && f['id'] != farmId))
+            .toList();
+        await _farmsBox.put(listKey, {
+          'farms': updatedList,
+          'cachedAt': DateTime.now().toIso8601String(),
+        });
+      }
       debugPrint('[CacheService] Deleted cached farm: $farmId');
     } catch (e) {
       debugPrint('[CacheService] Failed to delete cached farm: $e');
