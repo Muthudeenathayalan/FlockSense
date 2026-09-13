@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flock_sense/features/finance/data/models/finance_transaction_model.dart';
 import 'package:flock_sense/features/finance/data/services/finance_service.dart';
@@ -106,11 +107,12 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
         double.tryParse(_paidController.text) ??
         (_paymentStatus == PaymentStatus.paid ? total : 0.0);
 
+    final user = FirebaseAuth.instance.currentUser;
     final tx = FinanceTransactionModel(
       id: 'tx_${DateTime.now().millisecondsSinceEpoch}',
       farmId: widget.farmId,
       batchId: widget.batchId,
-      ownerId: 'user_default',
+      ownerId: user?.uid ?? 'user_default',
       type: _type,
       category: _category,
       date: _selectedDate,
@@ -275,6 +277,13 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
                     ),
                     border: OutlineInputBorder(),
                   ),
+                  validator: (val) {
+                    final amount = double.tryParse(val ?? '') ?? 0.0;
+                    if (!FinanceTransactionModel.isValidAmount(amount)) {
+                      return 'Enter a valid positive amount';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 10),
 
@@ -335,12 +344,48 @@ class _TransactionFormDialogState extends State<TransactionFormDialog> {
                               ),
                             )
                             .toList(),
-                        onChanged: (val) =>
-                            setState(() => _paymentStatus = val!),
+                        onChanged: (val) {
+                          setState(() {
+                            _paymentStatus = val!;
+                            if (_paymentStatus == PaymentStatus.paid) {
+                              _paidController.text = _totalController.text;
+                            } else if (_paymentStatus == PaymentStatus.pending ||
+                                _paymentStatus == PaymentStatus.overdue) {
+                              _paidController.text = '0';
+                            }
+                          });
+                        },
                       ),
                     ),
                   ],
                 ),
+                if (_paymentStatus == PaymentStatus.partial) ...[
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _paidController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Paid Amount (₹)',
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (val) {
+                      final paid = double.tryParse(val ?? '') ?? 0.0;
+                      final total =
+                          double.tryParse(_totalController.text) ?? 0.0;
+                      if (!FinanceTransactionModel.isValidPaidAmount(
+                        paid,
+                        total,
+                      )) {
+                        return 'Paid amount must be between 0 and ₹${total.toStringAsFixed(0)}';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
                 const SizedBox(height: 10),
 
                 TextFormField(

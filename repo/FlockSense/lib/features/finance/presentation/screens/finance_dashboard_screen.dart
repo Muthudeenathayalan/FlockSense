@@ -7,6 +7,7 @@ import 'package:flock_sense/features/finance/domain/finance_providers.dart';
 import 'package:flock_sense/features/finance/presentation/widgets/budget_settings_dialog.dart';
 import 'package:flock_sense/features/finance/presentation/widgets/finance_charts.dart';
 import 'package:flock_sense/features/finance/presentation/widgets/finance_kpi_card.dart';
+import 'package:flock_sense/features/finance/presentation/widgets/finance_summary_cards.dart';
 import 'package:flock_sense/features/finance/presentation/widgets/transaction_form_dialog.dart';
 import 'package:flock_sense/features/reports/domain/report_types.dart';
 
@@ -62,7 +63,7 @@ class _FinanceDashboardScreenState
     await FinanceReportGenerator.shareReport(
       transactions: transactions,
       title: 'Financial BI Report',
-      farmName: 'Green Valley Poultry',
+      farmName: 'FlockSense Farm',
       format: format,
     );
   }
@@ -186,173 +187,14 @@ class _FinanceDashboardScreenState
                 const SizedBox(height: 14),
               ],
 
-              // 10 KPI Cards Grid
-              const Text(
-                'EXECUTIVE FINANCIAL DASHBOARD',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  color: Color(0xFF1B5E20),
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisExtent: 94,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                ),
-                itemCount: 10,
-                itemBuilder: (context, index) {
-                  final kpiList = [
-                    FinanceKpiCard(
-                      label: "Today's Income",
-                      value: "₹${analytics.todayIncome.toStringAsFixed(0)}",
-                      subtext: "Daily Gross",
-                      icon: Icons.arrow_downward,
-                      color: const Color(0xFF1B5E20),
-                    ),
-                    FinanceKpiCard(
-                      label: "Today's Expenses",
-                      value: "₹${analytics.todayExpense.toStringAsFixed(0)}",
-                      subtext: "Daily Outflow",
-                      icon: Icons.arrow_upward,
-                      color: const Color(0xFFE65100),
-                    ),
-                    FinanceKpiCard(
-                      label: "Today's Profit",
-                      value: "₹${analytics.todayProfit.toStringAsFixed(0)}",
-                      subtext: "Net Daily",
-                      icon: Icons.attach_money,
-                      color: analytics.todayProfit >= 0
-                          ? const Color(0xFF1B5E20)
-                          : Colors.red,
-                    ),
-                    FinanceKpiCard(
-                      label: "Monthly Revenue",
-                      value:
-                          "₹${(analytics.monthlyRevenue / 1000).toStringAsFixed(1)}k",
-                      subtext: "Month Gross",
-                      icon: Icons.account_balance,
-                      color: const Color(0xFF1B5E20),
-                    ),
-                    FinanceKpiCard(
-                      label: "Monthly Expenses",
-                      value:
-                          "₹${(analytics.monthlyExpenses / 1000).toStringAsFixed(1)}k",
-                      subtext: "Month Outflow",
-                      icon: Icons.shopping_bag_outlined,
-                      color: const Color(0xFFE65100),
-                    ),
-                    FinanceKpiCard(
-                      label: "Monthly Profit",
-                      value:
-                          "₹${(analytics.monthlyProfit / 1000).toStringAsFixed(1)}k",
-                      subtext: "Month Net",
-                      icon: Icons.trending_up,
-                      color: const Color(0xFF1B5E20),
-                    ),
-                    FinanceKpiCard(
-                      label: "Current Cash Flow",
-                      value:
-                          "₹${(analytics.currentCashFlow / 1000).toStringAsFixed(1)}k",
-                      subtext: "Available",
-                      icon: Icons.payments_outlined,
-                      color: const Color(0xFF00838F),
-                    ),
-                    FinanceKpiCard(
-                      label: "Outstanding",
-                      value:
-                          "₹${(analytics.outstandingPayments / 1000).toStringAsFixed(1)}k",
-                      subtext: "Receivables",
-                      icon: Icons.schedule_outlined,
-                      color: Colors.purple.shade700,
-                    ),
-                    FinanceKpiCard(
-                      label: "Profit Margin",
-                      value: "${analytics.profitMarginPct.toStringAsFixed(1)}%",
-                      subtext: "Margin Index",
-                      icon: Icons.pie_chart,
-                      color: const Color(0xFF1B5E20),
-                    ),
-                    FinanceKpiCard(
-                      label: "ROI Index",
-                      value: "${analytics.roiPct.toStringAsFixed(1)}%",
-                      subtext: "Return Rate",
-                      icon: Icons.stars_outlined,
-                      color: const Color(0xFFF57F17),
-                    ),
-                  ];
-                  return kpiList[index];
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Unit Economics & Per-Bird Metrics
-              const Text(
-                'UNIT ECONOMICS & PER-BIRD METRICS',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  color: Color(0xFF0A3200),
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: FinanceKpiCard(
-                      label: "Revenue / Bird",
-                      value: "₹${analytics.revenuePerBird.toStringAsFixed(0)}",
-                      subtext: "Per Bird Sales",
-                      icon: Icons.person,
-                      color: const Color(0xFF1B5E20),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: FinanceKpiCard(
-                      label: "Cost / Bird",
-                      value: "₹${analytics.costPerBird.toStringAsFixed(0)}",
-                      subtext: "Per Bird Cost",
-                      icon: Icons.person_outline,
-                      color: const Color(0xFFE65100),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: FinanceKpiCard(
-                      label: "Feed Cost / Bird",
-                      value: "₹${analytics.feedCostPerBird.toStringAsFixed(0)}",
-                      subtext: "Feed Share",
-                      icon: Icons.grass,
-                      color: const Color(0xFF00838F),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: FinanceKpiCard(
-                      label: "Med Cost / Bird",
-                      value:
-                          "₹${analytics.medicineCostPerBird.toStringAsFixed(0)}",
-                      subtext: "Vet Share",
-                      icon: Icons.medication,
-                      color: Colors.purple.shade700,
-                    ),
-                  ),
-                ],
-              ),
+              // Executive Financial Dashboard & Unit Economics (FS-069)
+              FinanceSummaryCards(analytics: analytics),
               const SizedBox(height: 18),
 
               // Business Analytics Charts
-              const RevenueExpenseChart(),
+              RevenueExpenseChart(transactions: transactions),
               const SizedBox(height: 14),
-              const ExpensePieChart(),
+              ExpensePieChart(transactions: transactions),
               const SizedBox(height: 18),
 
               // Business Insights & Predictions
