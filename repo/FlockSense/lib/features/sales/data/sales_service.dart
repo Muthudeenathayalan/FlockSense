@@ -34,9 +34,14 @@ class SalesService {
       if (user == null) return const Stream.empty();
 
       return _salesRef(user.uid, farmId, batchId).snapshots().map((snapshot) {
-        final records = snapshot.docs
-            .map((doc) => SalesRecordModel.fromJson(doc.data()))
-            .toList();
+        final seen = <String>{};
+        final records = <SalesRecordModel>[];
+        for (final doc in snapshot.docs) {
+          final r = SalesRecordModel.fromJson(doc.data());
+          if (seen.add(r.id)) {
+            records.add(r);
+          }
+        }
         records.sort((a, b) => b.date.compareTo(a.date));
         return records;
       });
@@ -54,9 +59,15 @@ class SalesService {
     if (user == null) return [];
 
     final snapshot = await _salesRef(user.uid, farmId, batchId).get();
-    return snapshot.docs
-        .map((doc) => SalesRecordModel.fromJson(doc.data()))
-        .toList();
+    final seen = <String>{};
+    final list = <SalesRecordModel>[];
+    for (final doc in snapshot.docs) {
+      final r = SalesRecordModel.fromJson(doc.data());
+      if (seen.add(r.id)) {
+        list.add(r);
+      }
+    }
+    return list;
   }
 
   static Future<SalesRecordModel> createSalesRecord({
@@ -104,11 +115,39 @@ class SalesService {
         notes: notes?.trim(),
       );
 
-      await _salesRef(
-        user.uid,
-        farmId,
-        batchId,
-      ).doc(record.id).set(record.toJson());
+      final salesDocRef = _salesRef(user.uid, farmId, batchId).doc(record.id);
+      final batchRef = _db
+          .collection('users')
+          .doc(user.uid)
+          .collection('farms')
+          .doc(farmId)
+          .collection('batches')
+          .doc(batchId);
+
+      await salesDocRef.set(record.toJson());
+
+      // Update currentBirds in batch and mark completed if all birds sold
+      try {
+        final batchSnap = await batchRef.get();
+        if (batchSnap.exists) {
+          final current =
+              (batchSnap.data()?['currentBirds'] as num?)?.toInt() ??
+              (batchSnap.data()?['totalBirds'] as num?)?.toInt() ??
+              0;
+          final updated = (current - birdsSold).clamp(0, 9999999);
+          final updateMap = <String, dynamic>{
+            'currentBirds': updated,
+            'updatedAt': FieldValue.serverTimestamp(),
+          };
+          if (updated <= 0) {
+            updateMap['status'] = 'completed';
+          }
+          await batchRef.set(updateMap, SetOptions(merge: true));
+        }
+      } catch (err) {
+        debugPrint('Failed to update batch birds after sale: $err');
+      }
+
       return record;
     } catch (e) {
       debugPrint('SalesService.createSalesRecord failed: $e');
@@ -127,7 +166,33 @@ class SalesService {
         throw AuthException('Sign in before deleting sales records.');
       }
 
-      await _salesRef(user.uid, farmId, batchId).doc(recordId).delete();
+      final salesDocRef = _salesRef(user.uid, farmId, batchId).doc(recordId);
+      final salesSnap = await salesDocRef.get();
+      if (salesSnap.exists) {
+        final sold = (salesSnap.data()?['birdsSold'] as num?)?.toInt() ?? 0;
+        if (sold > 0) {
+          final batchRef = _db
+              .collection('users')
+              .doc(user.uid)
+              .collection('farms')
+              .doc(farmId)
+              .collection('batches')
+              .doc(batchId);
+          try {
+            final batchSnap = await batchRef.get();
+            if (batchSnap.exists) {
+              final current =
+                  (batchSnap.data()?['currentBirds'] as num?)?.toInt() ?? 0;
+              await batchRef.set({
+                'currentBirds': current + sold,
+                'updatedAt': FieldValue.serverTimestamp(),
+              }, SetOptions(merge: true));
+            }
+          } catch (_) {}
+        }
+      }
+
+      await salesDocRef.delete();
     } catch (e) {
       debugPrint('SalesService.deleteSalesRecord failed: $e');
       throw ExceptionMapper.mapException(e);

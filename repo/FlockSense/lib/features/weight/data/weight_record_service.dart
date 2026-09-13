@@ -74,6 +74,34 @@ class WeightRecordService {
     );
 
     await recordRef.set(record.toJson());
+
+    // Merge average weight into dailyRecords for seamless growth analytics
+    try {
+      final weightInGrams = unit.toLowerCase().startsWith('k')
+          ? averageWeight * 1000.0
+          : averageWeight;
+
+      final dailyRef = _db
+          .collection('users')
+          .doc(user.uid)
+          .collection('farms')
+          .doc(farmId)
+          .collection('batches')
+          .doc(batchId)
+          .collection('dailyRecords')
+          .doc(recordId);
+
+      final dailySnap = await dailyRef.get();
+      if (dailySnap.exists) {
+        await dailyRef.set({
+          'avgWeightGrams': weightInGrams,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+    } catch (e) {
+      debugPrint('[WeightRecordService] Sync to dailyRecord error: $e');
+    }
+
     return record;
   }
 
@@ -88,9 +116,17 @@ class WeightRecordService {
         .orderBy('recordDate', descending: true)
         .snapshots()
         .map(
-          (snap) => snap.docs
-              .map((doc) => WeightRecordModel.fromJson(doc.data()))
-              .toList(),
+          (snap) {
+            final seen = <String>{};
+            final list = <WeightRecordModel>[];
+            for (final doc in snap.docs) {
+              final r = WeightRecordModel.fromJson(doc.data());
+              if (seen.add(r.id)) {
+                list.add(r);
+              }
+            }
+            return list;
+          },
         );
   }
 

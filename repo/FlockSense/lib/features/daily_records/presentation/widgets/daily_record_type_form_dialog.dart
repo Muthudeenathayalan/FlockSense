@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
+import 'package:flock_sense/features/batches/data/batch_service.dart';
 import 'package:flock_sense/features/daily_records/data/daily_record_service.dart';
 import 'package:flock_sense/features/daily_records/domain/daily_record_model.dart';
 
@@ -25,6 +26,7 @@ class DailyRecordTypeFormDialog extends StatefulWidget {
     required this.initialType,
     this.existingRecord,
     this.currentBirds = 1000,
+    this.placementDate,
   });
 
   final String farmId;
@@ -32,6 +34,7 @@ class DailyRecordTypeFormDialog extends StatefulWidget {
   final RecordFormType initialType;
   final DailyRecordModel? existingRecord;
   final int currentBirds;
+  final DateTime? placementDate;
 
   @override
   State<DailyRecordTypeFormDialog> createState() =>
@@ -250,11 +253,29 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
       final vacName = _vaccineNameController.text.trim();
       final hasVac = vacName.isNotEmpty || (existing?.vaccineGiven ?? false);
 
+      int calculatedAge = existing?.batchAgeDay ?? 1;
+      if (existing == null) {
+        DateTime? pDate = widget.placementDate;
+        if (pDate == null) {
+          try {
+            final batch = await BatchService.getBatchById(
+              widget.farmId,
+              widget.batchId,
+            );
+            pDate = batch?.placementDate;
+          } catch (_) {}
+        }
+        if (pDate != null) {
+          calculatedAge = _selectedDate.difference(pDate).inDays + 1;
+          if (calculatedAge < 1) calculatedAge = 1;
+        }
+      }
+
       await DailyRecordService.createOrUpdateDailyRecord(
         farmId: widget.farmId,
         batchId: widget.batchId,
         recordDate: _selectedDate,
-        batchAgeDay: existing?.batchAgeDay ?? 1,
+        batchAgeDay: calculatedAge,
         openingBirds: opening,
         mortalityCount: currentMortality,
         cullCount: existing?.cullCount ?? 0,
