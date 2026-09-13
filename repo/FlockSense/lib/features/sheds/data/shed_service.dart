@@ -35,7 +35,17 @@ class ShedService {
         .orderBy('createdAt', descending: false)
         .snapshots()
         .map(
-          (snap) => snap.docs.map((d) => ShedModel.fromJson(d.data())).toList(),
+          (snap) {
+            final seen = <String>{};
+            final list = <ShedModel>[];
+            for (final d in snap.docs) {
+              final s = ShedModel.fromJson(d.data());
+              if (seen.add(s.id)) {
+                list.add(s);
+              }
+            }
+            return list;
+          },
         );
   }
 
@@ -53,8 +63,15 @@ class ShedService {
       for (final list in farmSheds.values) {
         all.addAll(list);
       }
-      all.sort((a, b) => a.shedName.compareTo(b.shedName));
-      controller.add(all);
+      final seen = <String>{};
+      final uniqueSheds = <ShedModel>[];
+      for (final s in all) {
+        if (seen.add(s.id)) {
+          uniqueSheds.add(s);
+        }
+      }
+      uniqueSheds.sort((a, b) => a.shedName.compareTo(b.shedName));
+      controller.add(uniqueSheds);
     }
 
     farmsSub = _db
@@ -243,7 +260,15 @@ class ShedService {
     if (user == null) return [];
 
     final snapshot = await _shedsRef(user.uid, farmId).get();
-    return snapshot.docs.map((doc) => ShedModel.fromJson(doc.data())).toList();
+    final seen = <String>{};
+    final list = <ShedModel>[];
+    for (final doc in snapshot.docs) {
+      final s = ShedModel.fromJson(doc.data());
+      if (seen.add(s.id)) {
+        list.add(s);
+      }
+    }
+    return list;
   }
 
   static Future<void> deleteShed(String farmId, String shedId) async {

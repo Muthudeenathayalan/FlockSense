@@ -306,10 +306,14 @@ class FarmService {
           .orderBy('createdAt', descending: true)
           .get();
 
-      final farms = snapshot.docs.map((doc) {
-        final data = doc.data();
-        return FarmModel.fromJson({'id': doc.id, ...data, 'userId': user.uid});
-      }).toList();
+      final seen = <String>{};
+      final farms = <FarmModel>[];
+      for (final doc in snapshot.docs) {
+        if (seen.add(doc.id)) {
+          final data = doc.data();
+          farms.add(FarmModel.fromJson({'id': doc.id, ...data, 'userId': user.uid}));
+        }
+      }
 
       // Update cache
       await _cacheService.cacheFarms(user.uid, farms);
@@ -359,15 +363,22 @@ class FarmService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map(
-          (snapshot) => snapshot.docs
-              .map(
-                (doc) => FarmModel.fromJson({
-                  'id': doc.id,
-                  ...doc.data(),
-                  'userId': uid,
-                }),
-              )
-              .toList(),
+          (snapshot) {
+            final seen = <String>{};
+            final list = <FarmModel>[];
+            for (final doc in snapshot.docs) {
+              if (seen.add(doc.id)) {
+                list.add(
+                  FarmModel.fromJson({
+                    'id': doc.id,
+                    ...doc.data(),
+                    'userId': uid,
+                  }),
+                );
+              }
+            }
+            return list;
+          },
         );
   }
 

@@ -105,9 +105,13 @@ class GrowthAnalyticsService {
           .snapshots()
           .listen(
             (snap) {
-              currentRecords = snap.docs
-                  .map((doc) => DailyRecordModel.fromJson(doc.data()))
-                  .toList();
+              final seen = <String>{};
+              final list = <DailyRecordModel>[];
+              for (final doc in snap.docs) {
+                final r = DailyRecordModel.fromJson(doc.data());
+                if (seen.add(r.id)) list.add(r);
+              }
+              currentRecords = list;
               emitData();
             },
             onError: (e) {
@@ -126,9 +130,13 @@ class GrowthAnalyticsService {
           .snapshots()
           .listen(
             (snap) {
-              currentMedicine = snap.docs
-                  .map((doc) => MedicineRecordModel.fromJson(doc.data()))
-                  .toList();
+              final seen = <String>{};
+              final list = <MedicineRecordModel>[];
+              for (final doc in snap.docs) {
+                final m = MedicineRecordModel.fromJson(doc.data());
+                if (seen.add(m.id)) list.add(m);
+              }
+              currentMedicine = list;
               emitData();
             },
             onError: (e) {
@@ -147,9 +155,13 @@ class GrowthAnalyticsService {
           .snapshots()
           .listen(
             (snap) {
-              currentVaccine = snap.docs
-                  .map((doc) => VaccineRecordModel.fromJson(doc.data()))
-                  .toList();
+              final seen = <String>{};
+              final list = <VaccineRecordModel>[];
+              for (final doc in snap.docs) {
+                final v = VaccineRecordModel.fromJson(doc.data());
+                if (seen.add(v.id)) list.add(v);
+              }
+              currentVaccine = list;
               emitData();
             },
             onError: (e) {
@@ -168,9 +180,13 @@ class GrowthAnalyticsService {
           .snapshots()
           .listen(
             (snap) {
-              currentSales = snap.docs
-                  .map((doc) => SalesRecordModel.fromJson(doc.data()))
-                  .toList();
+              final seen = <String>{};
+              final list = <SalesRecordModel>[];
+              for (final doc in snap.docs) {
+                final s = SalesRecordModel.fromJson(doc.data());
+                if (seen.add(s.id)) list.add(s);
+              }
+              currentSales = list;
               emitData();
             },
             onError: (e) {
@@ -190,10 +206,15 @@ class GrowthAnalyticsService {
           .snapshots()
           .listen(
             (snap) {
-              currentBatches = snap.docs
-                  .map((doc) => BatchModel.fromJson(doc.data()))
-                  .where((b) => b.status.toLowerCase() != 'deleted')
-                  .toList();
+              final seen = <String>{};
+              final list = <BatchModel>[];
+              for (final doc in snap.docs) {
+                final b = BatchModel.fromJson(doc.data());
+                if (b.status.toLowerCase() != 'deleted' && seen.add(b.id)) {
+                  list.add(b);
+                }
+              }
+              currentBatches = list;
               currentBatches.sort((a, b) {
                 if (a.isActive != b.isActive) {
                   return a.isActive ? -1 : 1;
@@ -236,10 +257,15 @@ class GrowthAnalyticsService {
         .snapshots()
         .listen(
           (snap) {
-            currentFarms = snap.docs
-                .map((doc) => FarmModel.fromJson(doc.data()))
-                .where((f) => f.id.trim().isNotEmpty)
-                .toList();
+            final seen = <String>{};
+            final list = <FarmModel>[];
+            for (final doc in snap.docs) {
+              final f = FarmModel.fromJson(doc.data());
+              if (f.id.trim().isNotEmpty && seen.add(f.id)) {
+                list.add(f);
+              }
+            }
+            currentFarms = list;
 
             if (currentFarms.isEmpty) {
               selectedFarm = null;

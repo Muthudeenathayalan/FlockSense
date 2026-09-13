@@ -32,15 +32,19 @@ class BatchService {
         .snapshots()
         .map(
           (snap) {
-            final list = snap.docs
-                .map(
-                  (d) => BatchModel.fromJson({
+            final seen = <String>{};
+            final list = <BatchModel>[];
+            for (final d in snap.docs) {
+              if (seen.add(d.id)) {
+                list.add(
+                  BatchModel.fromJson({
                     'id': d.id,
                     'farmId': farmId,
                     ...d.data(),
                   }),
-                )
-                .toList();
+                );
+              }
+            }
             list.sort((a, b) => b.placementDate.compareTo(a.placementDate));
             return list;
           },
@@ -61,12 +65,19 @@ class BatchService {
       for (final list in farmBatches.values) {
         all.addAll(list);
       }
-      all.sort((a, b) {
+      final seen = <String>{};
+      final uniqueBatches = <BatchModel>[];
+      for (final b in all) {
+        if (seen.add(b.id)) {
+          uniqueBatches.add(b);
+        }
+      }
+      uniqueBatches.sort((a, b) {
         if (a.isActive && !b.isActive) return -1;
         if (!a.isActive && b.isActive) return 1;
         return b.placementDate.compareTo(a.placementDate);
       });
-      controller.add(all);
+      controller.add(uniqueBatches);
     }
 
     farmsSub = _db
@@ -146,12 +157,16 @@ class BatchService {
     if (user == null) return [];
 
     final snap = await _batchesRef(user.uid, farmId).get();
-    return snap.docs
-        .map(
-          (d) =>
-              BatchModel.fromJson({'id': d.id, 'farmId': farmId, ...d.data()}),
-        )
-        .toList();
+    final seen = <String>{};
+    final list = <BatchModel>[];
+    for (final d in snap.docs) {
+      if (seen.add(d.id)) {
+        list.add(
+          BatchModel.fromJson({'id': d.id, 'farmId': farmId, ...d.data()}),
+        );
+      }
+    }
+    return list;
   }
 
   /// Returns the total number of active batches for the current user.
@@ -461,7 +476,14 @@ class BatchService {
       user.uid,
       farmId,
     ).orderBy('createdAt', descending: true).get();
-    return snapshot.docs.map((d) => BatchModel.fromJson(d.data())).toList();
+    final seen = <String>{};
+    final list = <BatchModel>[];
+    for (final d in snapshot.docs) {
+      if (seen.add(d.id)) {
+        list.add(BatchModel.fromJson(d.data()));
+      }
+    }
+    return list;
   }
 
   static Future<Map<String, List<BatchModel>>> getBatchesGroupedByFarm(
@@ -471,9 +493,14 @@ class BatchService {
     final result = <String, List<BatchModel>>{};
     for (final farmId in farmIds) {
       final snapshot = await _batchesRef(uid, farmId).get();
-      result[farmId] = snapshot.docs
-          .map((d) => BatchModel.fromJson(d.data()))
-          .toList();
+      final seen = <String>{};
+      final list = <BatchModel>[];
+      for (final d in snapshot.docs) {
+        if (seen.add(d.id)) {
+          list.add(BatchModel.fromJson(d.data()));
+        }
+      }
+      result[farmId] = list;
     }
     return result;
   }

@@ -343,9 +343,14 @@ class DailyRecordService {
       ).orderBy('recordDate', descending: true).snapshots();
 
       await for (final snap in stream) {
-        final list = snap.docs
-            .map((doc) => DailyRecordModel.fromJson(doc.data()))
-            .toList();
+        final seen = <String>{};
+        final list = <DailyRecordModel>[];
+        for (final doc in snap.docs) {
+          final rec = DailyRecordModel.fromJson(doc.data());
+          if (seen.add(rec.id)) {
+            list.add(rec);
+          }
+        }
         yield list;
       }
     } catch (e) {
@@ -368,8 +373,16 @@ class DailyRecordService {
       for (final list in batchRecords.values) {
         all.addAll(list);
       }
-      all.sort((a, b) => b.recordDate.compareTo(a.recordDate));
-      controller.add(all);
+      final seenKeys = <String>{};
+      final uniqueRecords = <DailyRecordModel>[];
+      for (final r in all) {
+        final key = '${r.batchId}_${r.id}';
+        if (seenKeys.add(key)) {
+          uniqueRecords.add(r);
+        }
+      }
+      uniqueRecords.sort((a, b) => b.recordDate.compareTo(a.recordDate));
+      controller.add(uniqueRecords);
     }
 
     batchesSub = BatchService.watchAllUserBatches(uid).listen(
@@ -436,9 +449,15 @@ class DailyRecordService {
     if (user == null) return [];
 
     final snapshot = await _dailyRecordsRef(user.uid, farmId, batchId).get();
-    return snapshot.docs
-        .map((doc) => DailyRecordModel.fromJson(doc.data()))
-        .toList();
+    final seen = <String>{};
+    final list = <DailyRecordModel>[];
+    for (final doc in snapshot.docs) {
+      final rec = DailyRecordModel.fromJson(doc.data());
+      if (seen.add(rec.id)) {
+        list.add(rec);
+      }
+    }
+    return list;
   }
 
   static Future<DailyRecordModel?> getDailyRecordByDate({
