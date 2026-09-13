@@ -25,6 +25,7 @@ This document tracks all completed engineering tasks, bug fixes, refactorings, t
 | 2026-08-27 | FS-061..FS-065 | Vaccine & Medicine | Add dosage validation, application date bounds relative to placement, and model test suite | `vaccine_record_model.dart`, `medicine_record_model.dart`, `vaccine_medicine_models_test.dart` | `flutter test test/features/vaccine_medicine/vaccine_medicine_models_test.dart` (4/4 passed) | `2be3604` |
 | 2026-08-27 | FS-071..FS-075 | Reports | Add date range filter validation, sanitized file naming helper, and report domain unit tests | `report_types.dart`, `report_types_test.dart` | `flutter test test/features/reports/report_types_test.dart` (3/3 passed) | `448a5ad` |
 | 2026-08-27 | FS-105..FS-112 | Documentation | Create comprehensive documentation suite (README, Architecture, Firebase Schema, Setup, Testing, Contributing, Changelog) | `README.md`, `docs/*.md` | Markdown verification | - |
+| 2026-09-13 | FS-120..FS-126 | Analytics | Eliminate fabricated telemetry data, standardize commercial FCR, add Cobb/SKM benchmark curves, and add growth analytics unit test suite | `growth_analytics_service.dart`, `growth_analytics_model.dart`, charts, `growth_analytics_service_test.dart` | `flutter test` (55/55 passed) | - |
 
 
 
