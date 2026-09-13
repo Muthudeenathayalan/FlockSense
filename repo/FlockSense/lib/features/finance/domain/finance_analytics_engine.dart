@@ -145,38 +145,47 @@ class FinanceAnalyticsEngine {
               ? ((totalRevenueAllTime - totalExpenseAllTime) /
                         totalRevenueAllTime) *
                     100.0
-              : 18.5);
+              : 0.0);
 
     final roiPct = totalExpenseAllTime > 0
         ? ((totalRevenueAllTime - totalExpenseAllTime) / totalExpenseAllTime) *
               100.0
-        : 24.2;
+        : 0.0;
 
     // Unit Economics
-    final birds = activeBirdCount > 0 ? activeBirdCount : 5000;
-    final costPerBird =
-        (monthlyExpenses > 0 ? monthlyExpenses : 210000.0) / birds;
-    final revenuePerBird =
-        (monthlyRevenue > 0 ? monthlyRevenue : 280000.0) / birds;
+    final costPerBird = (activeBirdCount > 0 && monthlyExpenses > 0)
+        ? (monthlyExpenses / activeBirdCount)
+        : (activeBirdCount > 0 && totalExpenseAllTime > 0
+              ? (totalExpenseAllTime / activeBirdCount)
+              : 0.0);
+    final revenuePerBird = (activeBirdCount > 0 && monthlyRevenue > 0)
+        ? (monthlyRevenue / activeBirdCount)
+        : (activeBirdCount > 0 && totalRevenueAllTime > 0
+              ? (totalRevenueAllTime / activeBirdCount)
+              : 0.0);
 
     final feedExpenses = monthlyTxs
         .where(
           (t) =>
-              t.type == FinanceTransactionType.expense && t.category == 'Feed',
+              t.type == FinanceTransactionType.expense &&
+              t.category.toLowerCase().contains('feed'),
         )
         .fold(0.0, (sum, t) => sum + t.totalAmount);
-    final feedCostPerBird =
-        (feedExpenses > 0 ? feedExpenses : 150000.0) / birds;
+    final feedCostPerBird = (activeBirdCount > 0 && feedExpenses > 0)
+        ? (feedExpenses / activeBirdCount)
+        : 0.0;
 
     final medExpenses = monthlyTxs
         .where(
           (t) =>
               t.type == FinanceTransactionType.expense &&
-              (t.category == 'Medicine' || t.category == 'Vaccination'),
+              (t.category.toLowerCase().contains('med') ||
+                  t.category.toLowerCase().contains('vaccin')),
         )
         .fold(0.0, (sum, t) => sum + t.totalAmount);
-    final medicineCostPerBird =
-        (medExpenses > 0 ? medExpenses : 15000.0) / birds;
+    final medicineCostPerBird = (activeBirdCount > 0 && medExpenses > 0)
+        ? (medExpenses / activeBirdCount)
+        : 0.0;
 
     // Business Insights (Highest Expense Category)
     final categoryTotals = <String, double>{};
@@ -187,7 +196,7 @@ class FinanceAnalyticsEngine {
           (categoryTotals[t.category] ?? 0.0) + t.totalAmount;
     }
 
-    var highestCat = 'Feed';
+    var highestCat = 'None';
     var highestAmt = 0.0;
     categoryTotals.forEach((cat, amt) {
       if (amt > highestAmt) {
@@ -195,6 +204,79 @@ class FinanceAnalyticsEngine {
         highestCat = cat;
       }
     });
+
+    // Dynamic Batch & Farm Performance Analysis
+    final batchProfits = <String, double>{};
+    final batchFeedCosts = <String, double>{};
+    final batchMedCosts = <String, double>{};
+    final farmProfits = <String, double>{};
+    final farmExpenses = <String, double>{};
+
+    for (final t in transactions) {
+      final sign = t.type == FinanceTransactionType.income ? 1.0 : -1.0;
+      if (t.batchId.isNotEmpty) {
+        batchProfits[t.batchId] =
+            (batchProfits[t.batchId] ?? 0.0) + (t.totalAmount * sign);
+        if (t.type == FinanceTransactionType.expense) {
+          final cat = t.category.toLowerCase();
+          if (cat.contains('feed')) {
+            batchFeedCosts[t.batchId] =
+                (batchFeedCosts[t.batchId] ?? 0.0) + t.totalAmount;
+          } else if (cat.contains('med') || cat.contains('vaccin')) {
+            batchMedCosts[t.batchId] =
+                (batchMedCosts[t.batchId] ?? 0.0) + t.totalAmount;
+          }
+        }
+      }
+      if (t.farmId.isNotEmpty) {
+        farmProfits[t.farmId] =
+            (farmProfits[t.farmId] ?? 0.0) + (t.totalAmount * sign);
+        if (t.type == FinanceTransactionType.expense) {
+          farmExpenses[t.farmId] =
+              (farmExpenses[t.farmId] ?? 0.0) + t.totalAmount;
+        }
+      }
+    }
+
+    String getTopKey(Map<String, double> map, {bool highest = true}) {
+      if (map.isEmpty) return 'No Data';
+      var bestKey = map.keys.first;
+      var bestVal = map.values.first;
+      map.forEach((k, v) {
+        if (highest ? v > bestVal : v < bestVal) {
+          bestVal = v;
+          bestKey = k;
+        }
+      });
+      return bestKey;
+    }
+
+    final mostProfitableBatch = getTopKey(batchProfits, highest: true);
+    final leastProfitableBatch = getTopKey(batchProfits, highest: false);
+    final highestFeedCostBatch = getTopKey(batchFeedCosts, highest: true);
+    final highestMedCostBatch = getTopKey(batchMedCosts, highest: true);
+    final mostExpensiveFarm = getTopKey(farmExpenses, highest: true);
+    final bestPerformingFarm = getTopKey(farmProfits, highest: true);
+
+    // Predictions
+    final expectedHarvestRevenue = (revenuePerBird > 0 && activeBirdCount > 0)
+        ? (revenuePerBird * activeBirdCount * 1.05)
+        : 0.0;
+    final expectedProfit =
+        (revenuePerBird > 0 && costPerBird > 0 && activeBirdCount > 0)
+            ? (revenuePerBird * activeBirdCount * 1.05) -
+                (costPerBird * activeBirdCount)
+            : 0.0;
+    final expectedFeedCost = (feedCostPerBird > 0 && activeBirdCount > 0)
+        ? (feedCostPerBird * activeBirdCount * 1.02)
+        : 0.0;
+    final expectedMedicineCost =
+        (medicineCostPerBird > 0 && activeBirdCount > 0)
+            ? (medicineCostPerBird * activeBirdCount)
+            : 0.0;
+    final expectedMonthlyIncome = monthlyRevenue > 0
+        ? monthlyRevenue * 1.05
+        : 0.0;
 
     // Budget Warnings
     final monthlyBudgetPct = budget.monthlyBudget > 0
@@ -207,17 +289,22 @@ class FinanceAnalyticsEngine {
         ? (medExpenses / budget.medicineBudget) * 100.0
         : 0.0;
 
+    final isMonthlyBudgetExceeded =
+        budget.monthlyBudget > 0 && monthlyExpenses > budget.monthlyBudget;
+    final isFeedBudgetExceeded =
+        budget.feedBudget > 0 && feedExpenses > budget.feedBudget;
+    final isMedicineBudgetExceeded =
+        budget.medicineBudget > 0 && medExpenses > budget.medicineBudget;
+
     return FinanceAnalyticsResult(
-      todayIncome: todayIncome > 0 ? todayIncome : 14500.0,
-      todayExpense: todayExpense > 0 ? todayExpense : 6200.0,
-      todayProfit: todayProfit != 0 ? todayProfit : 8300.0,
-      monthlyRevenue: monthlyRevenue > 0 ? monthlyRevenue : 320000.0,
-      monthlyExpenses: monthlyExpenses > 0 ? monthlyExpenses : 235000.0,
-      monthlyProfit: monthlyProfit != 0 ? monthlyProfit : 85000.0,
-      currentCashFlow: currentCashFlow != 0 ? currentCashFlow : 145000.0,
-      outstandingPayments: outstandingPayments > 0
-          ? outstandingPayments
-          : 18500.0,
+      todayIncome: todayIncome,
+      todayExpense: todayExpense,
+      todayProfit: todayProfit,
+      monthlyRevenue: monthlyRevenue,
+      monthlyExpenses: monthlyExpenses,
+      monthlyProfit: monthlyProfit,
+      currentCashFlow: currentCashFlow,
+      outstandingPayments: outstandingPayments,
       profitMarginPct: profitMarginPct,
       roiPct: roiPct,
       costPerBird: costPerBird,
@@ -225,25 +312,23 @@ class FinanceAnalyticsEngine {
       feedCostPerBird: feedCostPerBird,
       medicineCostPerBird: medicineCostPerBird,
       highestExpenseCategory: highestCat,
-      highestExpenseAmount: highestAmt > 0 ? highestAmt : 165000.0,
-      mostProfitableBatch: 'Cobb 500 Batch #4',
-      leastProfitableBatch: 'Batch #2 (Early Sell)',
-      highestFeedCostBatch: 'Cobb 500 Batch #4',
-      highestMedCostBatch: 'Batch #1 (Monsoon)',
-      mostExpensiveFarm: 'Green Valley Poultry (Farm #1)',
-      bestPerformingFarm: 'Green Valley Poultry (Farm #1)',
-      expectedHarvestRevenue: (revenuePerBird * birds * 1.05),
-      expectedProfit: (revenuePerBird * birds * 1.05) - (costPerBird * birds),
-      expectedFeedCost: feedCostPerBird * birds * 1.02,
-      expectedMedicineCost: medicineCostPerBird * birds,
-      expectedMonthlyIncome: monthlyRevenue > 0
-          ? monthlyRevenue * 1.1
-          : 350000.0,
-      isMonthlyBudgetExceeded: monthlyExpenses > budget.monthlyBudget,
+      highestExpenseAmount: highestAmt,
+      mostProfitableBatch: mostProfitableBatch,
+      leastProfitableBatch: leastProfitableBatch,
+      highestFeedCostBatch: highestFeedCostBatch,
+      highestMedCostBatch: highestMedCostBatch,
+      mostExpensiveFarm: mostExpensiveFarm,
+      bestPerformingFarm: bestPerformingFarm,
+      expectedHarvestRevenue: expectedHarvestRevenue,
+      expectedProfit: expectedProfit,
+      expectedFeedCost: expectedFeedCost,
+      expectedMedicineCost: expectedMedicineCost,
+      expectedMonthlyIncome: expectedMonthlyIncome,
+      isMonthlyBudgetExceeded: isMonthlyBudgetExceeded,
       monthlyBudgetPct: monthlyBudgetPct,
-      isFeedBudgetExceeded: feedExpenses > budget.feedBudget,
+      isFeedBudgetExceeded: isFeedBudgetExceeded,
       feedBudgetPct: feedBudgetPct,
-      isMedicineBudgetExceeded: medExpenses > budget.medicineBudget,
+      isMedicineBudgetExceeded: isMedicineBudgetExceeded,
       medicineBudgetPct: medicineBudgetPct,
     );
   }

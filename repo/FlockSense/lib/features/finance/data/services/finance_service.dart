@@ -7,6 +7,7 @@ import 'package:flock_sense/features/finance/data/models/finance_budget_model.da
 import 'package:flock_sense/features/finance/data/models/finance_transaction_model.dart';
 import 'package:flock_sense/features/sales/data/sales_service.dart';
 import 'package:flock_sense/features/medicine/data/medicine_service.dart';
+import 'package:flock_sense/features/feed/data/feed_service.dart';
 
 class FinanceService {
   FinanceService._();
@@ -61,50 +62,143 @@ class FinanceService {
         debugPrint('[FinanceService] Fetch Firestore transactions failed: $e');
       }
 
-      // Automatically convert Bird Sales into Income Transactions
+      // Automatically integrate Bird Sales, Feed Purchases, and Medicine into Finance Transactions
       try {
         final farms = await FarmService.getUserFarms();
         for (final farm in farms) {
           final batches = await BatchService.getBatchesForFarm(farm.id);
           for (final batch in batches) {
-            final meds = await MedicineService.getMedicineRecords(
-              farmId: farm.id,
-              batchId: batch.id,
-            );
-            for (final m in meds) {
-              final txId = 'med_${m.id}';
-              if (!list.any((t) => t.id == txId)) {
-                final cost = m.valueRs ?? 500.0;
-                list.add(
-                  FinanceTransactionModel(
-                    id: txId,
-                    farmId: m.farmId,
-                    batchId: m.batchId,
-                    ownerId: m.ownerId,
-                    type: FinanceTransactionType.expense,
-                    category: 'Medicine',
-                    date: m.date,
-                    customerOrSupplier: 'Vet Pharmacy',
-                    quantity: m.quantity,
-                    unitPrice: cost / (m.quantity > 0 ? m.quantity : 1.0),
-                    totalAmount: cost,
-                    paymentMethod: 'Cash',
-                    paymentStatus: PaymentStatus.paid,
-                    paidAmount: cost,
-                    invoiceNumber:
-                        'INV-MED-${m.id.length > 5 ? m.id.substring(0, 5) : m.id}',
-                    notes:
-                        '${m.medicineName} (${m.notes ?? "Routine treatment"})',
-                    createdAt: m.createdAt,
-                    updatedAt: m.updatedAt,
-                  ),
-                );
+            // 1. Bird Sales -> Income
+            try {
+              final sales = await SalesService.getBirdSales(
+                farmId: farm.id,
+                batchId: batch.id,
+              );
+              for (final s in sales) {
+                final txId = 'sale_${s.id}';
+                if (!list.any((t) => t.id == txId)) {
+                  list.add(
+                    FinanceTransactionModel(
+                      id: txId,
+                      farmId: s.farmId,
+                      batchId: s.batchId,
+                      ownerId: s.ownerId,
+                      type: FinanceTransactionType.income,
+                      category: 'Bird Sales',
+                      date: s.date,
+                      customerOrSupplier: s.customerName.trim().isNotEmpty
+                          ? s.customerName.trim()
+                          : 'Trader / Buyer',
+                      quantity: s.birdsSold.toDouble(),
+                      unitPrice: s.pricePerBird,
+                      totalAmount: s.totalValue,
+                      paymentMethod: 'Cash',
+                      paymentStatus: PaymentStatus.paid,
+                      paidAmount: s.totalValue,
+                      invoiceNumber:
+                          'INV-SALE-${s.id.length > 5 ? s.id.substring(0, 5) : s.id}',
+                      notes:
+                          'Sold ${s.birdsSold} birds (${s.averageWeightKg} kg avg weight)',
+                      createdAt: s.createdAt,
+                      updatedAt: s.updatedAt,
+                    ),
+                  );
+                }
               }
+            } catch (e) {
+              debugPrint('[FinanceService] Sales integration error: $e');
+            }
+
+            // 2. Feed Purchases -> Expense
+            try {
+              final feeds = await FeedService.getFeedTransactions(
+                farmId: farm.id,
+                batchId: batch.id,
+              );
+              for (final f in feeds) {
+                if (f.totalCost > 0 ||
+                    f.transactionType.toLowerCase().contains('purchase')) {
+                  final txId = 'feed_${f.id}';
+                  if (!list.any((t) => t.id == txId)) {
+                    list.add(
+                      FinanceTransactionModel(
+                        id: txId,
+                        farmId: f.farmId,
+                        batchId: f.batchId,
+                        ownerId: f.ownerId,
+                        type: FinanceTransactionType.expense,
+                        category: 'Feed',
+                        date: f.transactionDate,
+                        customerOrSupplier:
+                            f.supplierOrSource?.trim().isNotEmpty == true
+                                ? f.supplierOrSource!.trim()
+                                : 'Feed Supplier',
+                        quantity: f.totalKg,
+                        unitPrice: f.costPerKg > 0
+                            ? f.costPerKg
+                            : (f.totalKg > 0 ? f.totalCost / f.totalKg : 0.0),
+                        totalAmount: f.totalCost,
+                        paymentMethod: 'Cash',
+                        paymentStatus: PaymentStatus.paid,
+                        paidAmount: f.totalCost,
+                        invoiceNumber:
+                            'INV-FEED-${f.id.length > 5 ? f.id.substring(0, 5) : f.id}',
+                        notes:
+                            '${f.feedType} (${f.bags} bags, ${f.totalKg.toStringAsFixed(0)} kg)',
+                        createdAt: f.createdAt,
+                        updatedAt: f.updatedAt,
+                      ),
+                    );
+                  }
+                }
+              }
+            } catch (e) {
+              debugPrint('[FinanceService] Feed integration error: $e');
+            }
+
+            // 3. Medicine Records -> Expense
+            try {
+              final meds = await MedicineService.getMedicineRecords(
+                farmId: farm.id,
+                batchId: batch.id,
+              );
+              for (final m in meds) {
+                final txId = 'med_${m.id}';
+                if (!list.any((t) => t.id == txId)) {
+                  final cost = m.valueRs ?? 0.0;
+                  list.add(
+                    FinanceTransactionModel(
+                      id: txId,
+                      farmId: m.farmId,
+                      batchId: m.batchId,
+                      ownerId: m.ownerId,
+                      type: FinanceTransactionType.expense,
+                      category: 'Medicine',
+                      date: m.date,
+                      customerOrSupplier: 'Vet Pharmacy',
+                      quantity: m.quantity,
+                      unitPrice: cost / (m.quantity > 0 ? m.quantity : 1.0),
+                      totalAmount: cost,
+                      paymentMethod: 'Cash',
+                      paymentStatus: PaymentStatus.paid,
+                      paidAmount: cost,
+                      invoiceNumber:
+                          'INV-MED-${m.id.length > 5 ? m.id.substring(0, 5) : m.id}',
+                      notes:
+                          '${m.medicineName} (${m.notes ?? "Routine treatment"})',
+                      createdAt: m.createdAt,
+                      updatedAt: m.updatedAt,
+                    ),
+                  );
+                }
+              }
+            } catch (e) {
+              debugPrint('[FinanceService] Medicine integration error: $e');
             }
           }
         }
       } catch (e) {
-        debugPrint('[FinanceService] Medicine records integration error: $e');
+        debugPrint('[FinanceService] Farm batch integration error: $e');
       }
     }
 
