@@ -10,33 +10,68 @@ class ThiChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (data.dailyRecords.isEmpty) {
+    if (data.dailyRecords.isEmpty || !data.hasEnvironmentalData) {
       return const SizedBox(
-        height: 180,
+        height: 200,
         child: Center(
-          child: Text(
-            'No environmental THI telemetry available',
-            style: TextStyle(color: AppColors.textSecondary),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.thermostat_outlined,
+                color: AppColors.textSecondary,
+                size: 32,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'No environmental telemetry recorded',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'Record shed temperature (°C) and humidity (%) in daily logs to monitor heat index.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 11,
+                ),
+              ),
+            ],
           ),
         ),
       );
     }
 
-    final records = data.dailyRecords;
+    final sortedRecords = [...data.dailyRecords]
+      ..sort((a, b) => a.batchAgeDay.compareTo(b.batchAgeDay));
+
     final spotsTemp = <FlSpot>[];
     final spotsHumid = <FlSpot>[];
 
-    for (int i = 0; i < records.length; i++) {
-      // Brooding target temperature curve: Starts ~32°C on Day 1, reduces gradually to ~20°C
-      final temp = (32.0 - (i * 0.28)).clamp(20.0, 34.0);
-      final humid = (60.0 + (i % 7 * 1.5)).clamp(50.0, 75.0);
-
-      spotsTemp.add(FlSpot(i.toDouble(), temp));
-      spotsHumid.add(FlSpot(i.toDouble(), humid));
+    for (final r in sortedRecords) {
+      final day = r.batchAgeDay.toDouble();
+      if (r.temperature != null && r.temperature! > 0) {
+        spotsTemp.add(FlSpot(day, r.temperature!));
+      }
+      if (r.humidity != null && r.humidity! > 0) {
+        spotsHumid.add(FlSpot(day, r.humidity!));
+      }
     }
 
+    final allDays = [
+      ...spotsTemp.map((s) => s.x.toInt()),
+      ...spotsHumid.map((s) => s.x.toInt()),
+    ];
+
+    final minDay = allDays.isEmpty ? 1 : allDays.reduce((a, b) => a < b ? a : b);
+    final maxDay = allDays.isEmpty ? 7 : (allDays.reduce((a, b) => a > b ? a : b) < 7 ? 7 : allDays.reduce((a, b) => a > b ? a : b));
+
     return SizedBox(
-      height: 220,
+      height: 230,
       child: Column(
         children: [
           Row(
@@ -52,22 +87,43 @@ class ThiChart extends StatelessWidget {
           Expanded(
             child: LineChart(
               LineChartData(
+                minX: minDay.toDouble(),
+                maxX: maxDay.toDouble(),
                 minY: 10.0,
-                maxY: 90.0,
+                maxY: 100.0,
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (val) => FlLine(
-                    color: AppColors.border.withValues(alpha: 0.5),
-                    strokeWidth: 1,
-                    dashArray: [4, 4],
+                    color: AppColors.border.withValues(alpha: 0.6),
+                    strokeWidth: 0.8,
+                  ),
+                ),
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    getTooltipItems: (touchedSpots) {
+                      return touchedSpots.map((spot) {
+                        final isTemp = spot.barIndex == 0;
+                        final label = isTemp ? 'Temperature' : 'Humidity';
+                        final unit = isTemp ? '°C' : '%';
+                        return LineTooltipItem(
+                          'D${spot.x.toInt()} $label: ${spot.y.toStringAsFixed(1)}$unit',
+                          TextStyle(
+                            color: isTemp ? const Color(0xFFFCA5A5) : const Color(0xFFBAE6FD),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
+                        );
+                      }).toList();
+                    },
                   ),
                 ),
                 titlesData: FlTitlesData(
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 32,
+                      reservedSize: 34,
+                      interval: 20.0,
                       getTitlesWidget: (val, meta) => Text(
                         '${val.toInt()}°',
                         style: const TextStyle(
@@ -80,15 +136,16 @@ class ThiChart extends StatelessWidget {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: (records.length / 5).clamp(1.0, 10.0),
+                      interval: (maxDay - minDay <= 14) ? 2.0 : 7.0,
                       getTitlesWidget: (val, meta) {
-                        final idx = val.toInt();
-                        if (idx >= 0 && idx < records.length) {
+                        final d = val.toInt();
+                        if (d >= minDay && d <= maxDay) {
                           return Text(
-                            'D${idx + 1}',
+                            'D$d',
                             style: const TextStyle(
                               fontSize: 10,
                               color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w600,
                             ),
                           );
                         }
@@ -108,20 +165,40 @@ class ThiChart extends StatelessWidget {
                   // Temperature Line
                   LineChartBarData(
                     spots: spotsTemp,
-                    isCurved: true,
+                    isCurved: spotsTemp.length > 2,
+                    curveSmoothness: 0.3,
                     color: const Color(0xFFE53935),
                     barWidth: 3,
                     isStrokeCapRound: true,
-                    dotData: const FlDotData(show: false),
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) =>
+                          FlDotCirclePainter(
+                            radius: 3.5,
+                            color: const Color(0xFFE53935),
+                            strokeWidth: 2,
+                            strokeColor: Colors.white,
+                          ),
+                    ),
                   ),
                   // Humidity Line
                   LineChartBarData(
                     spots: spotsHumid,
-                    isCurved: true,
+                    isCurved: spotsHumid.length > 2,
+                    curveSmoothness: 0.3,
                     color: const Color(0xFF0284C7),
-                    barWidth: 2,
+                    barWidth: 2.2,
                     dashArray: [5, 4],
-                    dotData: const FlDotData(show: false),
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) =>
+                          FlDotCirclePainter(
+                            radius: 3,
+                            color: const Color(0xFF0284C7),
+                            strokeWidth: 1.5,
+                            strokeColor: Colors.white,
+                          ),
+                    ),
                   ),
                 ],
               ),
@@ -134,6 +211,7 @@ class ThiChart extends StatelessWidget {
 
   Widget _legendDot(Color color, String label) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 8,
@@ -145,7 +223,7 @@ class ThiChart extends StatelessWidget {
           label,
           style: const TextStyle(
             fontSize: 11,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: AppColors.textSecondary,
           ),
         ),

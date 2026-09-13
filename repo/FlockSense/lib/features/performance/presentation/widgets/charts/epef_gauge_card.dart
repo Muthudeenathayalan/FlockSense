@@ -9,20 +9,56 @@ class EpefGaugeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ageDays = data.batchAgeDays > 0 ? data.batchAgeDays : 35;
+    final epef = data.pef;
+    final hasWeight = data.averageWeightGrams > 0 &&
+        data.dailyRecords.any((r) => r.avgWeightGrams > 0);
+    final hasFeed = data.totalFeedConsumedKg > 0;
+
+    if (epef == null || epef <= 0) {
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        child: Column(
+          children: [
+            const Icon(
+              Icons.speed_rounded,
+              color: AppColors.textSecondary,
+              size: 36,
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Awaiting Weight & Feed Data',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              !hasWeight
+                  ? 'Record flock weigh-ins in daily telemetry to calculate European Production Efficiency Factor (EPEF).'
+                  : (!hasFeed
+                      ? 'Record cumulative feed intake to calculate FCR and EPEF.'
+                      : 'EPEF will calculate as batch progresses with live telemetry.'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final ageDays = data.batchAgeDays > 0 ? data.batchAgeDays : 1;
     final livability = data.totalInitialBirds > 0
         ? ((data.totalInitialBirds - data.totalMortality) /
               data.totalInitialBirds *
               100)
-        : 97.0;
-    final avgWeightKg = data.averageWeightGrams > 0
-        ? (data.averageWeightGrams / 1000.0)
-        : 2.0;
-    final fcr = data.fcr > 0 ? data.fcr : 1.55;
-
-    final epef = (ageDays * fcr) > 0
-        ? ((livability * avgWeightKg) / (ageDays * fcr) * 100)
-        : 0.0;
+        : 100.0;
+    final avgWeightKg = data.averageWeightGrams / 1000.0;
+    final fcr = data.fcr;
 
     String tierLabel;
     Color tierColor;

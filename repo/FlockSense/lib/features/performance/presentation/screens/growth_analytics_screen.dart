@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:flock_sense/config/routes/app_routes.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
+import 'package:flock_sense/features/batches/presentation/screens/batch_form_screen.dart';
 import 'package:flock_sense/features/daily_records/presentation/screens/daily_record_form_screen.dart';
 import 'package:flock_sense/features/performance/domain/growth_analytics_model.dart';
 import 'package:flock_sense/features/performance/presentation/providers/growth_analytics_providers.dart';
@@ -36,15 +38,6 @@ class GrowthAnalyticsScreen extends ConsumerWidget {
       locale: 'en_IN',
     );
 
-    final data = analyticsAsync.when(
-      data: (d) => !d.isEmpty
-          ? d
-          : ref.read(growthAnalyticsServiceProvider).getFallbackData(),
-      loading: () => ref.read(growthAnalyticsServiceProvider).getFallbackData(),
-      error: (_, __) =>
-          ref.read(growthAnalyticsServiceProvider).getFallbackData(),
-    );
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -62,266 +55,468 @@ class GrowthAnalyticsScreen extends ConsumerWidget {
           ),
         ),
         actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.download_rounded, color: Colors.white),
-            onSelected: (val) {
-              switch (val) {
-                case 'pdf':
-                  AnalyticsExportService.printOrPreviewPdf(context, data);
-                  break;
-                case 'csv':
-                  _showCsvDialog(context, data);
-                  break;
-                case 'share':
-                  AnalyticsExportService.shareReport(context, data);
-                  break;
-              }
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(
-                value: 'pdf',
-                child: Row(
-                  children: [
-                    Icon(Icons.picture_as_pdf, color: Colors.red, size: 20),
-                    SizedBox(width: 10),
-                    Text('Export PDF Report'),
-                  ],
+          analyticsAsync.maybeWhen(
+            data: (data) => PopupMenuButton<String>(
+              icon: const Icon(Icons.download_rounded, color: Colors.white),
+              onSelected: (val) {
+                switch (val) {
+                  case 'pdf':
+                    AnalyticsExportService.printOrPreviewPdf(context, data);
+                    break;
+                  case 'csv':
+                    _showCsvDialog(context, data);
+                    break;
+                  case 'share':
+                    AnalyticsExportService.shareReport(context, data);
+                    break;
+                }
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(
+                  value: 'pdf',
+                  child: Row(
+                    children: [
+                      Icon(Icons.picture_as_pdf, color: Colors.red, size: 20),
+                      SizedBox(width: 10),
+                      Text('Export PDF Report'),
+                    ],
+                  ),
                 ),
-              ),
-              PopupMenuItem(
-                value: 'csv',
-                child: Row(
-                  children: [
-                    Icon(Icons.table_chart, color: Colors.green, size: 20),
-                    SizedBox(width: 10),
-                    Text('Export CSV Report'),
-                  ],
+                PopupMenuItem(
+                  value: 'csv',
+                  child: Row(
+                    children: [
+                      Icon(Icons.table_chart, color: Colors.green, size: 20),
+                      SizedBox(width: 10),
+                      Text('Export CSV Report'),
+                    ],
+                  ),
                 ),
-              ),
-              PopupMenuItem(
-                value: 'share',
-                child: Row(
-                  children: [
-                    Icon(Icons.share, color: Colors.blue, size: 20),
-                    SizedBox(width: 10),
-                    Text('Share Telemetry Report'),
-                  ],
+                PopupMenuItem(
+                  value: 'share',
+                  child: Row(
+                    children: [
+                      Icon(Icons.share, color: Colors.blue, size: 20),
+                      SizedBox(width: 10),
+                      Text('Share Telemetry Report'),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
+            orElse: () => const SizedBox.shrink(),
           ),
           const SizedBox(width: 4),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => DailyRecordFormScreen(
-                farmId: data.activeFarm?.id ?? '',
-                batchId: data.activeBatch?.id ?? '',
-              ),
-            ),
-          );
-        },
-        icon: const Icon(Icons.add_chart_rounded),
-        label: const Text(
-          'Log Telemetry',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-        ),
-      ),
-      body: Column(
-        children: [
-          // Analytics Filter Bar
-          AnalyticsFilterBar(
-            farms: data.availableFarms,
-            batches: data.availableBatches,
-            activeFarm: data.activeFarm,
-            activeBatch: data.activeBatch,
-          ),
-          const Divider(height: 1, color: AppColors.border),
-
-          // Scrollable Analytics Body
-          Expanded(
-            child: RefreshIndicator(
-              color: AppColors.primary,
-              onRefresh: () async {
-                ref.invalidate(growthAnalyticsStreamProvider);
-              },
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  top: 14,
-                  bottom: 85,
+      floatingActionButton: analyticsAsync.maybeWhen(
+        data: (data) => (data.hasFarms && data.hasBatches)
+            ? FloatingActionButton.extended(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                elevation: 4,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DailyRecordFormScreen(
+                        farmId: data.activeFarm?.id ?? '',
+                        batchId: data.activeBatch?.id ?? '',
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.add_chart_rounded),
+                label: const Text(
+                  'Log Telemetry',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
+              )
+            : null,
+        orElse: () => null,
+      ),
+      body: analyticsAsync.when(
+        loading: () => const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: AppColors.primary),
+              SizedBox(height: 14),
+              Text(
+                'Loading growth telemetry...',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+        error: (err, _) => _buildErrorState(context, ref, err),
+        data: (data) {
+          if (!data.hasFarms) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // 1. KPI Summary Cards Horizontal Strip
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      child: Row(
-                        children: [
-                          AnalyticsSummaryCard(
-                            title: 'Total Birds',
-                            value: '${data.totalBirdsRemaining}',
-                            subtitle: '${data.totalMortality} mortality',
-                            icon: Icons.pets_rounded,
-                            color: AppColors.primary,
-                          ),
-                          const SizedBox(width: 10),
-                          AnalyticsSummaryCard(
-                            title: 'Avg Weight',
-                            value:
-                                '${data.averageWeightGrams.toStringAsFixed(0)}g',
-                            subtitle: 'Day ${data.batchAgeDays}',
-                            icon: Icons.monitor_weight_rounded,
-                            color: const Color(0xFF0284C7),
-                          ),
-                          const SizedBox(width: 10),
-                          AnalyticsSummaryCard(
-                            title: 'FCR Index',
-                            value: data.fcr.toStringAsFixed(2),
-                            subtitle: data.fcr <= 1.55
-                                ? 'Optimal range'
-                                : 'High feed ratio',
-                            icon: Icons.tune_rounded,
-                            color: data.fcr <= 1.55
-                                ? const Color(0xFF10B981)
-                                : AppColors.danger,
-                          ),
-                          const SizedBox(width: 10),
-                          AnalyticsSummaryCard(
-                            title: 'Total Feed',
-                            value:
-                                '${data.totalFeedConsumedKg.toStringAsFixed(0)} kg',
-                            subtitle: 'Cumulative intake',
-                            icon: Icons.rice_bowl_rounded,
-                            color: const Color(0xFFE49B25),
-                          ),
-                          const SizedBox(width: 10),
-                          AnalyticsSummaryCard(
-                            title: 'Net Profit',
-                            value: currencyFormat.format(data.netProfit),
-                            subtitle:
-                                'Margin ${data.profitMarginPercentage.toStringAsFixed(1)}%',
-                            icon: Icons.payments_rounded,
-                            color: data.netProfit >= 0
-                                ? const Color(0xFF10B981)
-                                : AppColors.danger,
-                          ),
-                        ],
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.agriculture_rounded,
+                        size: 48,
+                        color: AppColors.primary,
                       ),
                     ),
                     const SizedBox(height: 18),
-
-                    // 2. Lag & Bottleneck Diagnostic Card (CRITICAL REQUIREMENT)
-                    LagAnalysisCard(data: data),
-
-                    // 3. EPEF Efficiency Score Gauge Card
-                    AnalyticsChartCard(
-                      title: 'European Production Efficiency (EPEF)',
-                      subtitle:
-                          'Comprehensive performance index combining growth, FCR & livability',
-                      child: EpefGaugeCard(data: data),
-                    ),
-
-                    // 4. Weight Growth Curve Chart
-                    AnalyticsChartCard(
-                      title: 'Weight Growth Curve (g)',
-                      subtitle:
-                          'Actual weight trajectory vs standard target curve',
-                      child: WeightGrowthChart(points: data.weightGrowthPoints),
-                    ),
-
-                    // 5. FCR Benchmark Trend Chart
-                    AnalyticsChartCard(
-                      title: 'Feed Conversion Ratio (FCR) Trend',
-                      subtitle: 'Actual FCR vs target benchmark (1.50)',
-                      child: FcrTrendChart(data: data),
-                    ),
-
-                    // 6. Average Daily Weight Gain (ADG) Chart
-                    AnalyticsChartCard(
-                      title: 'Average Daily Gain (ADG - g/day)',
-                      subtitle:
-                          'Daily growth rate velocity to identify stagnation days',
-                      child: AdgChart(data: data),
-                    ),
-
-                    // 7. Daily Feed Consumption Chart
-                    AnalyticsChartCard(
-                      title: 'Daily Feed Consumption (kg)',
-                      subtitle: 'Daily feed intake progression per bird',
-                      child: FeedConsumptionChart(
-                        bars: data.feedConsumptionBars,
+                    const Text(
+                      'No Farms Found',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
                       ),
                     ),
-
-                    // 8. Daily Water Consumption Chart
-                    AnalyticsChartCard(
-                      title: 'Water Intake & Feed Ratio',
-                      subtitle:
-                          'Daily water consumption (L) and hydration ratio',
-                      child: WaterConsumptionChart(
-                        points: data.waterConsumptionPoints,
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Please create a farm and add a flock batch to view growth analytics.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
                       ),
                     ),
-
-                    // 9. Mortality & Livability Rate Chart
-                    AnalyticsChartCard(
-                      title: 'Mortality & Livability %',
-                      subtitle:
-                          'Daily mortality count & cumulative survival rate',
-                      child: MortalityChart(bars: data.mortalityBars),
-                    ),
-
-                    // 10. Environmental THI Heat Stress Chart
-                    AnalyticsChartCard(
-                      title: 'Temperature & Humidity Index (THI)',
-                      subtitle:
-                          'Daily shed temperature (°C) & relative humidity (%)',
-                      child: ThiChart(data: data),
-                    ),
-
-                    // 11. Expense Breakdown Pie Chart
-                    AnalyticsChartCard(
-                      title: 'Cost Structure Breakdown',
-                      subtitle:
-                          'Distribution of feed, medicine, vaccine & operational costs',
-                      child: ExpenseBreakdownChart(
-                        categories: data.expenseBreakdown,
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
+                      onPressed: () => Navigator.pushNamed(context, AppRoutes.farmSetup),
+                      icon: const Icon(Icons.add_rounded),
+                      label: const Text('Add Farm'),
                     ),
-
-                    // 12. Revenue vs Profit Margin Chart
-                    AnalyticsChartCard(
-                      title: 'Financial Profit Trend',
-                      subtitle: 'Cumulative revenue vs net profit margin',
-                      child: ProfitTrendChart(points: data.profitTrendPoints),
-                    ),
-
-                    // 13. Smart Telemetry AI Insights Card
-                    InsightsCard(insights: data.aiInsights),
-                    const SizedBox(height: 16),
-
-                    // 14. Timelines: Vaccination & Medicine
-                    VaccinationTimelineWidget(vaccines: data.vaccineTimeline),
-                    const SizedBox(height: 14),
-                    MedicineUsageTimeline(medicines: data.medicineTimeline),
                   ],
                 ),
               ),
-            ),
-          ),
-        ],
+            );
+          }
+
+          if (!data.hasBatches) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0284C7).withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.layers_outlined,
+                        size: 48,
+                        color: Color(0xFF0284C7),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      'No Batches in "${data.activeFarm?.farmName ?? 'Farm'}"',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Please add a flock batch to this farm to start tracking performance.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        if (data.activeFarm != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => BatchFormScreen(farmId: data.activeFarm!.id),
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.add_rounded),
+                      label: const Text('Add Flock Batch'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return Column(
+            children: [
+              // Analytics Filter Bar
+              AnalyticsFilterBar(
+                farms: data.availableFarms,
+                batches: data.availableBatches,
+                activeFarm: data.activeFarm,
+                activeBatch: data.activeBatch,
+              ),
+              const Divider(height: 1, color: AppColors.border),
+
+              // Scrollable Analytics Body
+              Expanded(
+                child: RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: () async {
+                    ref.invalidate(growthAnalyticsStreamProvider);
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      top: 14,
+                      bottom: 85,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 1. KPI Summary Cards Horizontal Strip
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          child: Row(
+                            children: [
+                              AnalyticsSummaryCard(
+                                title: 'Total Birds',
+                                value: '${data.totalBirdsRemaining}',
+                                subtitle: '${data.totalMortality} mortality',
+                                icon: Icons.pets_rounded,
+                                color: AppColors.primary,
+                              ),
+                              const SizedBox(width: 10),
+                              AnalyticsSummaryCard(
+                                title: 'Avg Weight',
+                                value: data.dailyRecords.any((r) => r.avgWeightGrams > 0)
+                                    ? '${data.averageWeightGrams.toStringAsFixed(0)}g'
+                                    : (data.activeBatch?.chickAvgWeight != null
+                                        ? '${(data.activeBatch!.chickAvgWeight! <= 1.0 ? data.activeBatch!.chickAvgWeight! * 1000.0 : data.activeBatch!.chickAvgWeight!).toInt()}g'
+                                        : '--'),
+                                subtitle: data.dailyRecords.any((r) => r.avgWeightGrams > 0)
+                                    ? 'Day ${data.batchAgeDays}'
+                                    : 'Starting weight',
+                                icon: Icons.monitor_weight_rounded,
+                                color: const Color(0xFF0284C7),
+                              ),
+                              const SizedBox(width: 10),
+                              AnalyticsSummaryCard(
+                                title: 'FCR Index',
+                                value: data.fcr > 0 ? data.fcr.toStringAsFixed(2) : '--',
+                                subtitle: data.fcr > 0
+                                    ? (data.fcr <= 1.55 ? 'Optimal range' : 'High feed ratio')
+                                    : 'Awaiting data',
+                                icon: Icons.tune_rounded,
+                                color: (data.fcr > 0 && data.fcr <= 1.55)
+                                    ? const Color(0xFF10B981)
+                                    : AppColors.textSecondary,
+                              ),
+                              const SizedBox(width: 10),
+                              AnalyticsSummaryCard(
+                                title: 'Total Feed',
+                                value: '${data.totalFeedConsumedKg.toStringAsFixed(0)} kg',
+                                subtitle: 'Cumulative intake',
+                                icon: Icons.rice_bowl_rounded,
+                                color: const Color(0xFFE49B25),
+                              ),
+                              const SizedBox(width: 10),
+                              AnalyticsSummaryCard(
+                                title: 'Net Profit',
+                                value: currencyFormat.format(data.netProfit),
+                                subtitle: 'Margin ${data.profitMarginPercentage.toStringAsFixed(1)}%',
+                                icon: Icons.payments_rounded,
+                                color: data.netProfit >= 0
+                                    ? const Color(0xFF10B981)
+                                    : AppColors.danger,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        if (!data.hasRecords)
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEFF6FF),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: const Color(0xFFBFDBFE)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.info_outline_rounded,
+                                  color: Color(0xFF2563EB),
+                                  size: 26,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'No Daily Telemetry Recorded Yet',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13.5,
+                                          color: Color(0xFF1E3A8A),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 3),
+                                      Text(
+                                        'Flock "${data.activeBatch?.batchName ?? ''}" has ${data.totalBirdsRemaining} live birds at Day ${data.batchAgeDays}. Log daily feed, water, weight, and mortality to populate analytics curves.',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xFF1E40AF),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                        // 2. Lag & Bottleneck Diagnostic Card
+                        LagAnalysisCard(data: data),
+
+                        // 3. EPEF Efficiency Score Gauge Card
+                        AnalyticsChartCard(
+                          title: 'European Production Efficiency (EPEF)',
+                          subtitle:
+                              'Comprehensive performance index combining growth, FCR & livability',
+                          child: EpefGaugeCard(data: data),
+                        ),
+
+                        // 4. Weight Growth Curve Chart
+                        AnalyticsChartCard(
+                          title: 'Weight Growth Curve (g)',
+                          subtitle:
+                              'Actual weight trajectory vs standard target curve',
+                          child: WeightGrowthChart(points: data.weightGrowthPoints),
+                        ),
+
+                        // 5. FCR Benchmark Trend Chart
+                        AnalyticsChartCard(
+                          title: 'Feed Conversion Ratio (FCR) Trend',
+                          subtitle: 'Actual FCR vs target benchmark (1.50)',
+                          child: FcrTrendChart(data: data),
+                        ),
+
+                        // 6. Average Daily Weight Gain (ADG) Chart
+                        AnalyticsChartCard(
+                          title: 'Average Daily Gain (ADG - g/day)',
+                          subtitle:
+                              'Daily growth rate velocity to identify stagnation days',
+                          child: AdgChart(data: data),
+                        ),
+
+                        // 7. Daily Feed Consumption Chart
+                        AnalyticsChartCard(
+                          title: 'Daily Feed Consumption (kg)',
+                          subtitle: 'Daily feed intake progression per bird',
+                          child: FeedConsumptionChart(
+                            bars: data.feedConsumptionBars,
+                          ),
+                        ),
+
+                        // 8. Daily Water Consumption Chart
+                        AnalyticsChartCard(
+                          title: 'Water Intake & Feed Ratio',
+                          subtitle:
+                              'Daily water consumption (L) and hydration ratio',
+                          child: WaterConsumptionChart(
+                            points: data.waterConsumptionPoints,
+                          ),
+                        ),
+
+                        // 9. Mortality & Livability Rate Chart
+                        AnalyticsChartCard(
+                          title: 'Mortality & Livability %',
+                          subtitle:
+                              'Daily mortality count & cumulative survival rate',
+                          child: MortalityChart(bars: data.mortalityBars),
+                        ),
+
+                        // 10. Environmental THI Heat Stress Chart
+                        AnalyticsChartCard(
+                          title: 'Temperature & Humidity Index (THI)',
+                          subtitle:
+                              'Daily shed temperature (°C) & relative humidity (%)',
+                          child: ThiChart(data: data),
+                        ),
+
+                        // 11. Expense Breakdown Pie Chart
+                        AnalyticsChartCard(
+                          title: 'Cost Structure Breakdown',
+                          subtitle:
+                              'Distribution of feed, medicine, vaccine & operational costs',
+                          child: ExpenseBreakdownChart(
+                            categories: data.expenseBreakdown,
+                          ),
+                        ),
+
+                        // 12. Revenue vs Profit Margin Chart
+                        AnalyticsChartCard(
+                          title: 'Financial Profit Trend',
+                          subtitle: 'Cumulative revenue vs net profit margin',
+                          child: ProfitTrendChart(points: data.profitTrendPoints),
+                        ),
+
+                        // 13. Smart Telemetry AI Insights Card
+                        InsightsCard(insights: data.aiInsights),
+                        const SizedBox(height: 16),
+
+                        // 14. Timelines: Vaccination & Medicine
+                        VaccinationTimelineWidget(vaccines: data.vaccineTimeline),
+                        const SizedBox(height: 14),
+                        MedicineUsageTimeline(medicines: data.medicineTimeline),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

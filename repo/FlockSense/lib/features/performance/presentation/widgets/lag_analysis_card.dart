@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/features/performance/domain/growth_analytics_model.dart';
+import 'package:flock_sense/features/performance/domain/performance_calculator.dart';
 
 class LagAnalysisCard extends StatelessWidget {
   const LagAnalysisCard({super.key, required this.data});
@@ -10,6 +11,7 @@ class LagAnalysisCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lags = _computeLags();
+    final hasRecords = data.dailyRecords.isNotEmpty;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -84,9 +86,11 @@ class LagAnalysisCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        lags.isEmpty
-                            ? 'All key performance indicators are on target'
-                            : '${lags.length} performance bottlenecks detected',
+                        !hasRecords
+                            ? 'Awaiting telemetry to detect bottlenecks'
+                            : (lags.isEmpty
+                                ? 'All key performance indicators are on target'
+                                : '${lags.length} performance bottlenecks detected'),
                         style: TextStyle(
                           fontSize: 12,
                           color: lags.any((l) => l.isCritical)
@@ -104,23 +108,27 @@ class LagAnalysisCard extends StatelessWidget {
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: lags.isEmpty
-                        ? const Color(0xFF10B981)
-                        : (lags.any((l) => l.isCritical)
-                              ? AppColors.danger
-                              : const Color(0xFFE49B25)),
+                    color: !hasRecords
+                        ? AppColors.surfaceSoft
+                        : (lags.isEmpty
+                            ? const Color(0xFF10B981)
+                            : (lags.any((l) => l.isCritical)
+                                ? AppColors.danger
+                                : const Color(0xFFE49B25))),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    lags.isEmpty
-                        ? 'HEALTHY'
-                        : (lags.any((l) => l.isCritical)
-                              ? 'ATTENTION'
-                              : 'WARNING'),
-                    style: const TextStyle(
+                    !hasRecords
+                        ? 'PENDING'
+                        : (lags.isEmpty
+                            ? 'HEALTHY'
+                            : (lags.any((l) => l.isCritical)
+                                ? 'ATTENTION'
+                                : 'WARNING')),
+                    style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
+                      color: !hasRecords ? AppColors.textSecondary : Colors.white,
                       letterSpacing: 0.3,
                     ),
                   ),
@@ -133,28 +141,48 @@ class LagAnalysisCard extends StatelessWidget {
           // Lag Items List
           Padding(
             padding: const EdgeInsets.all(16),
-            child: lags.isEmpty
+            child: !hasRecords
                 ? const Row(
                     children: [
                       Icon(
-                        Icons.check_circle_rounded,
-                        color: Color(0xFF10B981),
+                        Icons.info_outline_rounded,
+                        color: AppColors.textSecondary,
                         size: 20,
                       ),
                       SizedBox(width: 10),
-                      Text(
-                        'Flock performance meets or exceeds target benchmarks.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                      Expanded(
+                        child: Text(
+                          'No daily records logged for this flock yet. Log telemetry to activate bottleneck diagnostics.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ),
                     ],
                   )
-                : Column(
-                    children: lags.map((lag) => _buildLagTile(lag)).toList(),
-                  ),
+                : (lags.isEmpty
+                    ? const Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle_rounded,
+                            color: Color(0xFF10B981),
+                            size: 20,
+                          ),
+                          SizedBox(width: 10),
+                          Text(
+                            'Flock performance meets or exceeds target benchmarks.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        children: lags.map((lag) => _buildLagTile(lag)).toList(),
+                      )),
           ),
         ],
       ),
@@ -162,10 +190,13 @@ class LagAnalysisCard extends StatelessWidget {
   }
 
   List<_LagMetric> _computeLags() {
+    if (data.dailyRecords.isEmpty) return const [];
+
     final list = <_LagMetric>[];
+    final hasWeightRecord = data.dailyRecords.any((r) => r.avgWeightGrams > 0);
 
     // 1. FCR Check (Target: ~1.50)
-    if (data.fcr > 1.55) {
+    if (data.fcr > 0 && hasWeightRecord && data.fcr > 1.55) {
       final fcrDiff = ((data.fcr - 1.50) / 1.50 * 100).toStringAsFixed(1);
       list.add(
         _LagMetric(
@@ -180,20 +211,22 @@ class LagAnalysisCard extends StatelessWidget {
       );
     }
 
-    // 2. Average Weight Check
-    if (data.averageWeightGrams > 0) {
-      const targetWeightGrams = 2000.0;
-      if (data.averageWeightGrams < 1850) {
+    // 2. Average Weight Check (Age-adjusted benchmark based on Cobb500 / SKM)
+    if (hasWeightRecord && data.averageWeightGrams > 0) {
+      final age = data.batchAgeDays.clamp(1, 45);
+      final targetWeightGrams = PerformanceCalculator.skmBodyWeightStd[age] ??
+          (42.0 + (age * 18.0) + (age * age * 1.05));
+      if (data.averageWeightGrams < targetWeightGrams * 0.85) {
         final gapGrams = (targetWeightGrams - data.averageWeightGrams)
             .toStringAsFixed(0);
         list.add(
           _LagMetric(
             title: 'Body Weight Growth Deficit',
-            metric: '${data.averageWeightGrams.toStringAsFixed(0)}g',
+            metric: '${data.averageWeightGrams.toStringAsFixed(0)}g (Day $age)',
             target: 'Target: ${targetWeightGrams.toInt()}g',
             description:
-                'Flock average weight is lagging by ${gapGrams}g. Inspect brooding temperatures and feed intake per bird.',
-            isCritical: data.averageWeightGrams < 1700,
+                'Flock average weight is lagging by ${gapGrams}g for Day $age. Inspect brooding temperatures and feed intake per bird.',
+            isCritical: data.averageWeightGrams < targetWeightGrams * 0.70,
             icon: Icons.monitor_weight_rounded,
           ),
         );
