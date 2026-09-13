@@ -1,46 +1,73 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/core/theme/app_design.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
 import 'package:flock_sense/features/farms/presentation/screens/farm_setup_screen.dart';
 
-/// Sliver AppBar header for Farm Command Center with identity, type, area, and actions.
+/// Sliver AppBar header for Farm Command Center matching the reference design:
+/// lush green gradient, ambient circular glow, status chips, and 4 key header stats.
 class FarmIdentityHeader extends StatelessWidget {
   const FarmIdentityHeader({
     super.key,
     required this.farm,
+    required this.liveBirds,
+    required this.activeBatchesCount,
+    required this.shedsCount,
     required this.onFarmUpdated,
     required this.onDeleteFarm,
+    this.onRefresh,
   });
 
   final FarmModel farm;
+  final int liveBirds;
+  final int activeBatchesCount;
+  final int shedsCount;
   final ValueChanged<FarmModel> onFarmUpdated;
   final VoidCallback onDeleteFarm;
+  final VoidCallback? onRefresh;
+
+  String get _fmtDate {
+    final d = farm.createdAt;
+    return '${d.day}/${d.month}/${d.year}';
+  }
+
+  String get _typePill {
+    if (farm.farmType.trim().isNotEmpty) return farm.farmType.trim();
+    if (farm.flockType.trim().isNotEmpty) return farm.flockType.trim();
+    return 'Broiler';
+  }
+
+  String get _areaOrFlockPill {
+    if (farm.totalSqFt > 0) {
+      return '${farm.totalSqFt.toInt()} ft²';
+    } else if (farm.lengthFt > 0 && farm.widthFt > 0) {
+      return '${(farm.lengthFt * farm.widthFt).toInt()} ft²';
+    }
+    return farm.flockType.trim().isNotEmpty ? farm.flockType.trim() : 'Standard';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final locationText = (farm.areaName != null && farm.areaName!.isNotEmpty)
-        ? farm.areaName!
-        : (farm.address.isNotEmpty ? farm.address : 'No location specified');
-    final formattedType = _formatFarmType(farm.farmType);
-    final areaText = farm.totalSqFt > 0
-        ? '${NumberFormat('#,###').format(farm.totalSqFt.toInt())} ft²'
-        : (farm.lengthFt > 0 && farm.widthFt > 0
-              ? '${NumberFormat('#,###').format((farm.lengthFt * farm.widthFt).toInt())} ft²'
-              : '');
-
     return SliverAppBar(
-      expandedHeight: 180,
+      expandedHeight: 220,
       pinned: true,
-      elevation: 0,
-      backgroundColor: const Color(0xFF1B5E20),
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-        onPressed: () => Navigator.of(context).pop(),
+      backgroundColor: AppColors.primary,
+      foregroundColor: Colors.white,
+      titleTextStyle: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w800,
+        color: Colors.white,
       ),
+      title: Text(farm.farmName),
       actions: [
+        if (onRefresh != null)
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+            tooltip: 'Refresh',
+            onPressed: onRefresh,
+          ),
         IconButton(
-          icon: const Icon(Icons.edit_outlined, color: Colors.white, size: 22),
+          icon: const Icon(Icons.edit_outlined, color: Colors.white, size: 20),
           tooltip: 'Edit Farm',
           onPressed: () async {
             final updated = await Navigator.of(context).push<FarmModel>(
@@ -54,11 +81,7 @@ class FarmIdentityHeader extends StatelessWidget {
           },
         ),
         IconButton(
-          icon: const Icon(
-            Icons.delete_outline_rounded,
-            color: Colors.white,
-            size: 22,
-          ),
+          icon: const Icon(Icons.delete_outline_rounded, color: Colors.white),
           tooltip: 'Delete Farm',
           onPressed: onDeleteFarm,
         ),
@@ -70,130 +93,94 @@ class FarmIdentityHeader extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              // Ambient circular glow decorations
               Positioned(
+                top: -40,
                 right: -40,
-                top: -30,
                 child: Container(
-                  width: 170,
-                  height: 170,
-                  decoration: BoxDecoration(
+                  width: 200,
+                  height: 200,
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.06),
+                    color: Color(0x1AFFFFFF),
                   ),
                 ),
               ),
               Positioned(
-                left: -20,
                 bottom: -20,
+                left: -10,
                 child: Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
+                  width: 100,
+                  height: 100,
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.04),
+                    color: Color(0x12FFFFFF),
                   ),
                 ),
               ),
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 48, 20, 16),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Farm Name and Status
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              farm.farmName,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.5,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+              Positioned(
+                bottom: 16,
+                left: 16,
+                right: 16,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        AppDesign.statusChip(
+                          _typePill,
+                          const Color(0x28000000),
+                          textColor: Colors.white,
+                        ),
+                        const SizedBox(width: 8),
+                        AppDesign.statusChip(
+                          _areaOrFlockPill,
+                          const Color(0x33D4A017),
+                          textColor: Colors.white,
+                        ),
+                        const Spacer(),
+                        AppDesign.statusChip(
+                          farm.isActive ? 'ACTIVE' : 'INACTIVE',
+                          farm.isActive
+                              ? const Color(0x1A10B981)
+                              : const Color(0x1AD4A017),
+                          textColor: Colors.white,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppDesign.headerStat(
+                            'Live Birds',
+                            '$liveBirds',
+                            Icons.pets_rounded,
                           ),
-                          const SizedBox(width: 8),
-                          // Active status pill
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: farm.isActive
-                                  ? const Color(
-                                      0xFF22C55E,
-                                    ).withValues(alpha: 0.25)
-                                  : Colors.white.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: farm.isActive
-                                    ? const Color(
-                                        0xFF86EFAC,
-                                      ).withValues(alpha: 0.5)
-                                    : Colors.white30,
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 6,
-                                  height: 6,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: farm.isActive
-                                        ? const Color(0xFF4ADE80)
-                                        : Colors.white70,
-                                  ),
-                                ),
-                                const SizedBox(width: 5),
-                                Text(
-                                  farm.isActive ? 'ACTIVE' : 'INACTIVE',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.4,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        ),
+                        Expanded(
+                          child: AppDesign.headerStat(
+                            'Batches',
+                            '$activeBatchesCount',
+                            Icons.layers_rounded,
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Location & specs chips
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 4,
-                        children: [
-                          _buildHeaderMetaChip(
-                            Icons.location_on_outlined,
-                            locationText,
-                          ),
-                          _buildHeaderMetaChip(
+                        ),
+                        Expanded(
+                          child: AppDesign.headerStat(
+                            'Sheds',
+                            '$shedsCount',
                             Icons.domain_rounded,
-                            formattedType,
                           ),
-                          if (areaText.isNotEmpty)
-                            _buildHeaderMetaChip(
-                              Icons.square_foot_rounded,
-                              areaText,
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                        Expanded(
+                          child: AppDesign.headerStat(
+                            'Created',
+                            _fmtDate,
+                            Icons.calendar_today_rounded,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -202,31 +189,5 @@ class FarmIdentityHeader extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildHeaderMetaChip(IconData icon, String text) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: Colors.white70),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12.5,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _formatFarmType(String type) {
-    if (type.isEmpty) return 'Standard';
-    final lower = type.toLowerCase();
-    if (lower.contains('ec') || lower.contains('environment')) return 'EC Farm';
-    if (lower.contains('open')) return 'Open Farm';
-    if (lower.contains('semi')) return 'Semi-Closed';
-    return type.substring(0, 1).toUpperCase() + type.substring(1);
-  }
 }
+
