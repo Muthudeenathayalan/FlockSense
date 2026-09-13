@@ -29,6 +29,7 @@ This document tracks all completed engineering tasks, bug fixes, refactorings, t
 | 2026-09-13 | FS-026 | Batches | Add farm and shed capacity validation helper (`isWithinCapacity`) and unit tests | `batch_model.dart`, `batch_model_test.dart` | `flutter test test/features/batches/batch_model_test.dart` (6/6 passed) | `ed411bb` |
 | 2026-09-13 | FS-032..FS-034, FS-037 | Daily Records | Add bird weight validation, safe closing calculation, negative closing clamping in fromJson, and test suite | `daily_record_model.dart`, `daily_records_validation_test.dart` | `flutter test test/features/daily_records/daily_records_validation_test.dart` (6/6 passed) | `cb6b4d6` |
 | 2026-09-13 | FS-068 | Finance | Add paid amount validation, isFullyPaid & isPartiallyPaid status helpers, and unit tests | `finance_transaction_model.dart`, `finance_analytics_test.dart` | `flutter test test/features/finance/finance_analytics_test.dart` (4/4 passed) | `82085a4` |
+| 2026-09-13 | FS-066..FS-070 | Finance | Eliminate synthetic fallbacks, integrate live bird sales and feed transactions, extract FinanceSummaryCards (FS-069), render authentic dynamic charts with empty states, replace obsolete screen, and add comprehensive unit tests | `finance_service.dart`, `finance_analytics_engine.dart`, `finance_summary_cards.dart`, `finance_charts.dart`, `finance_dashboard_screen.dart`, `finance_screen.dart`, `transaction_form_dialog.dart`, `finance_analytics_test.dart` | `flutter test` (61/61 passed) | `e930eb4..cca21bd` |
 
 
 
