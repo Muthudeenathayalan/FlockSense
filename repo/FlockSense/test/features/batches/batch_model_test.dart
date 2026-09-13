@@ -12,6 +12,33 @@ void main() {
       expect(BatchModel.isValidBirdCount(-10), isFalse);
     });
 
+    test('validates bird counts within farm and shed capacity', () {
+      expect(
+        BatchModel.isWithinCapacity(birdCount: 4500, maxCapacity: 5000),
+        isTrue,
+      );
+      expect(
+        BatchModel.isWithinCapacity(birdCount: 5000, maxCapacity: 5000),
+        isTrue,
+      );
+      expect(
+        BatchModel.isWithinCapacity(birdCount: 5001, maxCapacity: 5000),
+        isFalse,
+      );
+      expect(
+        BatchModel.isWithinCapacity(birdCount: 0, maxCapacity: 5000),
+        isFalse,
+      );
+      expect(
+        BatchModel.isWithinCapacity(birdCount: 1000, maxCapacity: 0),
+        isFalse,
+      );
+      expect(
+        BatchModel.isWithinCapacity(birdCount: -500, maxCapacity: 5000),
+        isFalse,
+      );
+    });
+
     test('validates placement dates', () {
       expect(BatchModel.isValidPlacementDate(DateTime(2026, 1, 1)), isTrue);
       expect(BatchModel.isValidPlacementDate(DateTime.now()), isTrue);

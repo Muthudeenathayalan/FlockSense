@@ -66,6 +66,16 @@ class BatchModel {
   /// Validates placement bird count (must be positive).
   static bool isValidBirdCount(int birds) => birds > 0;
 
+  /// Validates whether a bird placement fits within farm or shed capacity.
+  /// Returns false if capacity <= 0, birdCount <= 0, or birdCount > maxCapacity.
+  static bool isWithinCapacity({
+    required int birdCount,
+    required int maxCapacity,
+  }) {
+    if (birdCount <= 0 || maxCapacity <= 0) return false;
+    return birdCount <= maxCapacity;
+  }
+
   /// Validates placement date (cannot be in the far future, max +1 day for timezone buffer).
   static bool isValidPlacementDate(DateTime placementDate) {
     final tomorrow = DateTime.now().add(const Duration(days: 1));
