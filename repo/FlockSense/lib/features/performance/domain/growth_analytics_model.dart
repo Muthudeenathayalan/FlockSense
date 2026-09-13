@@ -40,11 +40,13 @@ class ChartPointData {
   final DateTime date;
   final double value;
   final String label;
+  final int? day;
 
   const ChartPointData({
     required this.date,
     required this.value,
     required this.label,
+    this.day,
   });
 }
 
@@ -89,6 +91,7 @@ class GrowthAnalyticsData {
   final double feedConsumedKg;
   final double waterConsumedLiters;
   final double fcr;
+  final double? pef;
   final double medicineCost;
   final int currentAgeDays;
   final DateTime? expectedHarvestDate;
@@ -132,6 +135,7 @@ class GrowthAnalyticsData {
     required this.feedConsumedKg,
     required this.waterConsumedLiters,
     required this.fcr,
+    this.pef,
     required this.medicineCost,
     required this.currentAgeDays,
     this.expectedHarvestDate,
@@ -156,7 +160,14 @@ class GrowthAnalyticsData {
     required this.aiInsights,
   });
 
-  bool get isEmpty => filteredRecords.isEmpty && (activeBatch == null);
+  bool get isEmpty => farms.isEmpty;
+  bool get hasFarms => farms.isNotEmpty;
+  bool get hasBatches => batches.isNotEmpty;
+  bool get hasRecords => filteredRecords.isNotEmpty;
+  bool get hasEnvironmentalData => filteredRecords.any(
+    (r) => (r.temperature != null && r.temperature! > 0) ||
+           (r.humidity != null && r.humidity! > 0),
+  );
 
   static const empty = GrowthAnalyticsData(
     farms: [],
@@ -172,6 +183,7 @@ class GrowthAnalyticsData {
     feedConsumedKg: 0,
     waterConsumedLiters: 0,
     fcr: 0,
+    pef: null,
     medicineCost: 0,
     currentAgeDays: 0,
     expectedHarvestDate: null,
