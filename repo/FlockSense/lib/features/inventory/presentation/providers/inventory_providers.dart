@@ -44,10 +44,24 @@ final inventorySortProvider =
       InventorySortNotifier.new,
     );
 
+class InventoryFarmNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+  void selectFarm(String? farmId) => state = farmId;
+}
+
+final inventorySelectedFarmIdProvider =
+    NotifierProvider<InventoryFarmNotifier, String?>(
+      InventoryFarmNotifier.new,
+    );
+
 final inventoryStreamProvider =
     StreamProvider.autoDispose<List<InventoryItemModel>>((ref) {
       final authState = ref.watch(authStateProvider);
-      final activeFarmId = ref.watch(activeFarmIdProvider).value;
+      final explicitFarmId = ref.watch(inventorySelectedFarmIdProvider);
+      final activeFarmId = ref.watch(selectedDashboardFarmIdProvider) ??
+          ref.watch(activeFarmIdProvider).value;
+      final targetFarmId = explicitFarmId ?? activeFarmId;
       final service = ref.watch(inventoryServiceProvider);
 
       return authState.when(
@@ -55,13 +69,14 @@ final inventoryStreamProvider =
           if (user == null) return Stream.value([]);
           return service.watchInventoryItems(
             uid: user.uid,
-            farmId: activeFarmId,
+            farmId: targetFarmId,
           );
         },
         loading: () => Stream.value([]),
         error: (_, __) => Stream.value([]),
       );
     });
+
 
 final filteredInventoryListProvider =
     Provider.autoDispose<List<InventoryItemModel>>((ref) {

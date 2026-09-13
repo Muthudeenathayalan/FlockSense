@@ -13,6 +13,8 @@ import 'package:flock_sense/features/notifications/data/services/notification_fi
 class SmartAlertEvaluator {
   SmartAlertEvaluator._();
 
+  static final Set<String> _recentlyNotifiedPushKeys = {};
+
   static Future<List<NotificationModel>> evaluateSmartAlerts() async {
     final alerts = <NotificationModel>[];
 
@@ -175,7 +177,13 @@ class SmartAlertEvaluator {
       // Persist alerts to Firestore & local cache
       for (final alert in alerts) {
         await NotificationFirestoreService.saveNotification(alert);
-        if (alert.priority == NotificationPriority.critical) {
+        final now = DateTime.now();
+        final pushKey =
+            '${alert.id}_${now.year}_${now.month}_${now.day}';
+
+        if (alert.priority == NotificationPriority.critical &&
+            !_recentlyNotifiedPushKeys.contains(pushKey)) {
+          _recentlyNotifiedPushKeys.add(pushKey);
           await FcmLocalNotificationService.showLocalNotification(
             title: alert.title,
             body: alert.body,
@@ -183,6 +191,9 @@ class SmartAlertEvaluator {
           );
         }
       }
+
+      // Automatically clean up any duplicate documents in Firestore
+      await NotificationFirestoreService.cleanupDuplicateNotifications();
     } catch (e) {
       debugPrint('[SmartAlertEvaluator] Evaluation error: $e');
     }

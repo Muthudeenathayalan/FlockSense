@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flock_sense/features/auth/presentation/providers/auth_provider.dart';
 import 'package:flock_sense/features/batches/data/batch_service.dart';
 import 'package:flock_sense/features/batches/domain/batch_model.dart';
+import 'package:flock_sense/features/farms/data/farm_service.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
 import 'package:flock_sense/features/farms/presentation/providers/farm_providers.dart';
 import 'package:flock_sense/features/daily_records/data/daily_record_service.dart';
@@ -101,19 +102,41 @@ class HomeDashboardData {
   );
 }
 
+class SelectedDashboardFarmNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void selectFarm(String? farmId) {
+    state = farmId;
+  }
+}
+
+final selectedDashboardFarmIdProvider =
+    NotifierProvider<SelectedDashboardFarmNotifier, String?>(
+      SelectedDashboardFarmNotifier.new,
+    );
+
+Future<void> switchDashboardFarm(WidgetRef ref, String farmId) async {
+  ref.read(selectedDashboardFarmIdProvider.notifier).selectFarm(farmId);
+  try {
+    await FarmService.setActiveFarm(farmId);
+  } catch (_) {
+    // Offline resilience: local state is already applied
+  }
+}
+
 final homeDashboardDataProvider =
     Provider.autoDispose<AsyncValue<HomeDashboardData>>((ref) {
       final farmsValue = ref.watch(farmListProvider);
       final activeFarmIdValue = ref.watch(activeFarmIdProvider);
+      final explicitSelectedFarmId = ref.watch(selectedDashboardFarmIdProvider);
       final batchesValue = ref.watch(allUserBatchesProvider);
-      final mortalityValue = ref.watch(todayMortalityProvider);
       final recordsValue = ref.watch(recentDailyRecordsProvider);
 
       final farms = farmsValue.value ?? <FarmModel>[];
-      final activeFarmId = activeFarmIdValue.value;
-      final batches = batchesValue.value ?? <BatchModel>[];
-      final todayMortality = mortalityValue.value ?? 0;
-      final recentRecords = recordsValue.value ?? <DailyRecordModel>[];
+      final activeFarmId = explicitSelectedFarmId ?? activeFarmIdValue.value;
+      final allBatches = batchesValue.value ?? <BatchModel>[];
+      final allRecords = recordsValue.value ?? <DailyRecordModel>[];
 
       FarmModel? activeFarm;
       if (activeFarmId != null) {
@@ -128,12 +151,31 @@ final homeDashboardDataProvider =
         activeFarm = farms.first;
       }
 
-      final activeBatchCount = batches
+      // Filter telemetry & batches to active farm if present
+      final scopedBatches = activeFarm != null
+          ? allBatches.where((b) => b.farmId == activeFarm!.id).toList()
+          : allBatches;
+
+      final scopedRecords = activeFarm != null
+          ? allRecords.where((r) => r.farmId == activeFarm!.id).toList()
+          : allRecords;
+
+      final activeBatchCount = scopedBatches
           .where((batch) => batch.isActive)
           .length;
-      final liveBirds = batches
+      final liveBirds = scopedBatches
           .where((batch) => batch.isActive)
           .fold<int>(0, (total, batch) => total + batch.currentBirds);
+
+      final now = DateTime.now();
+      var todayMortality = 0;
+      for (final doc in scopedRecords) {
+        if (doc.recordDate.year == now.year &&
+            doc.recordDate.month == now.month &&
+            doc.recordDate.day == now.day) {
+          todayMortality += doc.mortalityCount.toInt();
+        }
+      }
 
       return AsyncValue.data(
         HomeDashboardData(
@@ -142,7 +184,8 @@ final homeDashboardDataProvider =
           activeBatchCount: activeBatchCount,
           liveBirds: liveBirds,
           todayMortality: todayMortality,
-          recentRecords: recentRecords,
+          recentRecords: scopedRecords,
         ),
       );
     });
+

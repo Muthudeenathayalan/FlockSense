@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
+import 'package:flock_sense/features/farms/presentation/providers/farm_providers.dart';
 import 'package:flock_sense/features/inventory/domain/inventory_item_model.dart';
 import 'package:flock_sense/features/inventory/presentation/providers/inventory_providers.dart';
 import 'package:flock_sense/features/inventory/presentation/screens/inventory_item_detail_screen.dart';
@@ -18,10 +19,13 @@ class InventoryDashboardScreen extends ConsumerWidget {
     final inventoryAsync = ref.watch(inventoryStreamProvider);
     final filteredItems = ref.watch(filteredInventoryListProvider);
     final stats = ref.watch(inventoryStatsProvider);
+    final farms = ref.watch(farmListProvider).value ?? [];
+    final selectedFarmId = ref.watch(inventorySelectedFarmIdProvider);
 
     final selectedCategory = ref.watch(inventoryCategoryFilterProvider);
     final selectedSort = ref.watch(inventorySortProvider);
     final searchQuery = ref.watch(inventorySearchQueryProvider);
+
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -176,6 +180,92 @@ class InventoryDashboardScreen extends ConsumerWidget {
         error: (error, stack) => _buildErrorState(context, ref, error),
         data: (allRawItems) => Column(
           children: [
+            // Facility / Farm Filter Strip
+            if (farms.isNotEmpty)
+              Container(
+                color: Colors.white,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.warehouse_rounded,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Facility:',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            ChoiceChip(
+                              label: const Text('All Facilities'),
+                              selected: selectedFarmId == null ||
+                                  selectedFarmId.isEmpty,
+                              onSelected: (_) => ref
+                                  .read(
+                                    inventorySelectedFarmIdProvider.notifier,
+                                  )
+                                  .selectFarm(null),
+                              selectedColor: AppColors.primary,
+                              labelStyle: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: (selectedFarmId == null ||
+                                        selectedFarmId.isEmpty)
+                                    ? Colors.white
+                                    : AppColors.textSecondary,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            const SizedBox(width: 6),
+                            ...farms.map((f) {
+                              final isSelected = selectedFarmId == f.id;
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 6),
+                                child: ChoiceChip(
+                                  label: Text(f.farmName),
+                                  selected: isSelected,
+                                  onSelected: (_) => ref
+                                      .read(
+                                        inventorySelectedFarmIdProvider.notifier,
+                                      )
+                                      .selectFarm(f.id),
+                                  selectedColor: AppColors.primary,
+                                  labelStyle: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : AppColors.textSecondary,
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             // Top Summary KPIs Section
             Container(
               color: Colors.white,
@@ -193,8 +283,9 @@ class InventoryDashboardScreen extends ConsumerWidget {
                   Expanded(
                     child: TextField(
                       onChanged: (val) {
-                        ref.read(inventorySearchQueryProvider.notifier).state =
-                            val;
+                        ref
+                            .read(inventorySearchQueryProvider.notifier)
+                            .setQuery(val);
                       },
                       decoration: InputDecoration(
                         hintText: 'Search items, suppliers, brand...',
@@ -207,12 +298,10 @@ class InventoryDashboardScreen extends ConsumerWidget {
                                 icon: const Icon(Icons.clear, size: 18),
                                 onPressed: () {
                                   ref
-                                          .read(
-                                            inventorySearchQueryProvider
-                                                .notifier,
-                                          )
-                                          .state =
-                                      '';
+                                      .read(
+                                        inventorySearchQueryProvider.notifier,
+                                      )
+                                      .setQuery('');
                                 },
                               )
                             : null,
@@ -289,8 +378,9 @@ class InventoryDashboardScreen extends ConsumerWidget {
                         ],
                         onChanged: (val) {
                           if (val != null) {
-                            ref.read(inventorySortProvider.notifier).state =
-                                val;
+                            ref
+                                .read(inventorySortProvider.notifier)
+                                .setSort(val);
                           }
                         },
                       ),
@@ -442,7 +532,9 @@ class InventoryDashboardScreen extends ConsumerWidget {
       ),
       selected: selected,
       onSelected: (_) {
-        ref.read(inventoryCategoryFilterProvider.notifier).state = label;
+        ref
+            .read(inventoryCategoryFilterProvider.notifier)
+            .setCategory(label);
       },
       selectedColor: AppColors.primary,
       backgroundColor: AppColors.surface,

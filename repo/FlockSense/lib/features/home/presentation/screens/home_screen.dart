@@ -84,7 +84,9 @@ class HomeScreen extends ConsumerWidget {
         ref
             .watch(allUserBatchesProvider)
             .value
-            ?.where((b) => b.isActive)
+            ?.where((b) =>
+                b.isActive &&
+                (data.activeFarm == null || b.farmId == data.activeFarm!.id))
             .toList() ??
         const <BatchModel>[];
 
@@ -126,7 +128,7 @@ class HomeScreen extends ConsumerWidget {
                 builder: (_) => const NotificationCenterScreen(),
               ),
             ),
-            onFarmTap: () => Navigator.pushNamed(context, AppRoutes.farms),
+            onFarmTap: () => _showFarmSwitcherBottomSheet(context, ref, data),
           ),
 
           // Content body
@@ -358,10 +360,30 @@ class HomeScreen extends ConsumerWidget {
                                 type: farm.farmType,
                                 status: farm.status,
                                 address: farm.address,
-                                onTap: () => Navigator.pushNamed(
-                                  context,
-                                  AppRoutes.farms,
-                                ),
+                                onTap: () async {
+                                  await switchDashboardFarm(ref, farm.id);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Row(
+                                          children: [
+                                            const Icon(
+                                              Icons.check_circle_rounded,
+                                              color: Colors.white,
+                                              size: 18,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'Switched active facility to ${farm.farmName}',
+                                            ),
+                                          ],
+                                        ),
+                                        backgroundColor: _kPrimaryDark,
+                                        duration: const Duration(seconds: 2),
+                                      ),
+                                    );
+                                  }
+                                },
                               ),
                             ),
                           ),
@@ -376,6 +398,259 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 }
+
+void _showFarmSwitcherBottomSheet(
+  BuildContext context,
+  WidgetRef ref,
+  HomeDashboardData data,
+) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (ctx) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _kGreenTint,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.warehouse_rounded,
+                    color: _kPrimary,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Switch Active Facility',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: _kTextPrimary,
+                        ),
+                      ),
+                      Text(
+                        'Select which farm to monitor in Command Center',
+                        style: TextStyle(fontSize: 12, color: _kTextSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Divider(height: 1, color: _kBorder),
+            const SizedBox(height: 12),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(ctx).size.height * 0.45,
+              ),
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: data.farms.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final farm = data.farms[index];
+                  final isSelected = farm.id == data.activeFarm?.id;
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      await switchDashboardFarm(ref, farm.id);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                const Icon(
+                                  Icons.check_circle_rounded,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                Text('Active facility: ${farm.farmName}'),
+                              ],
+                            ),
+                            backgroundColor: _kPrimaryDark,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? _kGreenTint.withValues(alpha: 0.5)
+                            : _kSurface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isSelected ? _kPrimary : _kBorder,
+                          width: isSelected ? 1.5 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isSelected
+                                ? Icons.radio_button_checked_rounded
+                                : Icons.radio_button_off_rounded,
+                            color: isSelected ? _kPrimary : Colors.grey,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      farm.farmName,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w800
+                                            : FontWeight.w600,
+                                        color: _kTextPrimary,
+                                      ),
+                                    ),
+                                    if (isSelected) ...[
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: _kPrimary,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'ACTIVE',
+                                          style: TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  '${farm.farmType} • ${farm.totalSqFt.toStringAsFixed(0)} sq ft • ${farm.address.isNotEmpty ? farm.address : 'Operational'}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: _kTextSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Divider(height: 1, color: _kBorder),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _kTextPrimary,
+                      side: const BorderSide(color: _kBorder),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      Navigator.pushNamed(context, AppRoutes.farms);
+                    },
+                    icon: const Icon(Icons.tune_rounded, size: 16),
+                    label: const Text(
+                      'All Facilities',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _kPrimary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      Navigator.pushNamed(context, AppRoutes.farmSetup);
+                    },
+                    icon: const Icon(Icons.add_rounded, size: 16),
+                    label: const Text(
+                      'Add Facility',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HEADER COMPONENT

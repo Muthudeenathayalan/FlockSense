@@ -35,6 +35,7 @@ class _InventoryItemFormScreenState
 
   String _category = 'Feed';
   String _unit = 'kg';
+  String? _selectedFarmId;
   DateTime _purchaseDate = DateTime.now();
   DateTime? _expiryDate;
   bool _isSaving = false;
@@ -70,6 +71,7 @@ class _InventoryItemFormScreenState
     _notesController = TextEditingController(text: item?.notes ?? '');
 
     if (item != null) {
+      _selectedFarmId = item.farmId;
       _category = item.category;
       _unit = item.unit;
       _purchaseDate = item.purchaseDate;
@@ -95,6 +97,13 @@ class _InventoryItemFormScreenState
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.existingItem != null;
+    final farms = ref.watch(farmListProvider).value ?? [];
+    final activeFarmId = ref.watch(selectedDashboardFarmIdProvider) ??
+        ref.watch(activeFarmIdProvider).value;
+    final currentFarmId = _selectedFarmId ??
+        ref.watch(inventorySelectedFarmIdProvider) ??
+        activeFarmId ??
+        (farms.isNotEmpty ? farms.first.id : null);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -110,6 +119,43 @@ class _InventoryItemFormScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Facility / Farm Selector
+              if (farms.isNotEmpty) ...[
+                const Text(
+                  'Facility / Farm *',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                const SizedBox(height: 6),
+                DropdownButtonFormField<String>(
+                  value: farms.any((f) => f.id == currentFarmId)
+                      ? currentFarmId
+                      : farms.first.id,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(
+                      Icons.warehouse_rounded,
+                      color: AppColors.primary,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                  items: farms.map((f) {
+                    return DropdownMenuItem(
+                      value: f.id,
+                      child: Text(f.farmName),
+                    );
+                  }).toList(),
+                  onChanged: isEdit
+                      ? null
+                      : (val) {
+                          setState(() => _selectedFarmId = val);
+                        },
+                ),
+                const SizedBox(height: 16),
+              ],
+
               // Category Selection
               const Text(
                 'Item Category *',
@@ -519,17 +565,27 @@ class _InventoryItemFormScreenState
 
     try {
       final user = ref.read(authStateProvider).value;
-      final activeFarmId = ref.read(activeFarmIdProvider).value;
+      final farms = ref.read(farmListProvider).value ?? [];
+      final resolvedFarmId = _selectedFarmId ??
+          ref.read(inventorySelectedFarmIdProvider) ??
+          ref.read(selectedDashboardFarmIdProvider) ??
+          ref.read(activeFarmIdProvider).value ??
+          (farms.isNotEmpty ? farms.first.id : null);
 
-      if (user == null || activeFarmId == null) {
-        throw Exception('User or farm session not found.');
+      if (user == null) {
+        throw Exception('Please sign in to save inventory items.');
+      }
+      if (resolvedFarmId == null || resolvedFarmId.isEmpty) {
+        throw Exception(
+          'Please create a facility or farm first before adding inventory items.',
+        );
       }
 
       final service = ref.read(inventoryServiceProvider);
 
       final item = InventoryItemModel(
         id: widget.existingItem?.id ?? '',
-        farmId: activeFarmId,
+        farmId: resolvedFarmId,
         ownerId: user.uid,
         itemName: _nameController.text.trim(),
         category: _category,

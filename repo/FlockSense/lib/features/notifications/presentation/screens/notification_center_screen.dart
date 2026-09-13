@@ -78,31 +78,59 @@ class _NotificationCenterScreenState
 
     final searchQuery = filter.searchQuery.toLowerCase();
 
-    // Filter Notifications
-    final filteredNotifs = notifications.where((n) {
+    // Filter & Deduplicate Notifications
+    final filteredNotifs = <NotificationModel>[];
+    final seenKeys = <String>{};
+    for (final n in notifications) {
       if (filter.statusFilter == 'unread' &&
-          n.status != NotificationStatus.unread)
-        return false;
+          n.status != NotificationStatus.unread) {
+        continue;
+      }
       if (filter.statusFilter == 'critical' &&
-          n.priority != NotificationPriority.critical)
-        return false;
-      if (filter.statusFilter == 'ai' && !n.isAiAlert) return false;
-      if (filter.typeFilter != null && n.type != filter.typeFilter)
-        return false;
+          n.priority != NotificationPriority.critical) {
+        continue;
+      }
+      if (filter.statusFilter == 'ai' && !n.isAiAlert) continue;
+      if (filter.typeFilter != null && n.type != filter.typeFilter) continue;
 
       if (searchQuery.isNotEmpty) {
         final matchesTitle = n.title.toLowerCase().contains(searchQuery);
         final matchesBody = n.body.toLowerCase().contains(searchQuery);
-        return matchesTitle || matchesBody;
+        if (!matchesTitle && !matchesBody) continue;
       }
-      return true;
-    }).toList();
+
+      final key =
+          '${n.type.name}_${n.title.trim().toLowerCase()}_${n.body.trim().toLowerCase()}';
+      if (seenKeys.add(key)) {
+        filteredNotifs.add(n);
+      }
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text('Notification Center'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.cleaning_services_rounded),
+            tooltip: 'Remove Duplicates',
+            onPressed: () async {
+              final count =
+                  await NotificationFirestoreService.cleanupDuplicateNotifications();
+              ref.invalidate(notificationsStreamProvider);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      count > 0
+                          ? 'Cleaned up $count duplicate notifications'
+                          : 'No duplicate notifications detected',
+                    ),
+                  ),
+                );
+              }
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.done_all),
             tooltip: 'Mark All as Read',

@@ -14,12 +14,23 @@ class NotificationFirestoreService {
   static NotificationSettingsModel _localSettings =
       const NotificationSettingsModel();
 
+  static String _notificationKey(NotificationModel n) {
+    return '${n.type.name}_${n.title.trim().toLowerCase()}_${n.body.trim().toLowerCase()}';
+  }
+
   // --- Notifications Stream & CRUD ---
   static Stream<List<NotificationModel>> streamNotifications() {
     final user = _auth.currentUser;
     if (user == null) {
+      final deduplicated = <NotificationModel>[];
+      final seenKeys = <String>{};
+      for (final n in _localNotifications) {
+        if (seenKeys.add(_notificationKey(n))) {
+          deduplicated.add(n);
+        }
+      }
       return Stream<List<NotificationModel>>.value(
-        List<NotificationModel>.unmodifiable(_localNotifications),
+        List<NotificationModel>.unmodifiable(deduplicated),
       );
     }
 
@@ -30,12 +41,22 @@ class NotificationFirestoreService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map<List<NotificationModel>>((snap) {
-          final list = snap.docs
-              .map((doc) => NotificationModel.fromJson(doc.data()))
-              .toList();
-          return list.isEmpty
-              ? List<NotificationModel>.unmodifiable(_localNotifications)
-              : list;
+          final deduplicated = <NotificationModel>[];
+          final seenIds = <String>{};
+          final seenKeys = <String>{};
+
+          for (final doc in snap.docs) {
+            final data = Map<String, dynamic>.from(doc.data());
+            data['id'] = doc.id;
+            final notif = NotificationModel.fromJson(data);
+            final key = _notificationKey(notif);
+
+            if (seenIds.add(notif.id) && seenKeys.add(key)) {
+              deduplicated.add(notif);
+            }
+          }
+
+          return deduplicated;
         })
         .handleError((err) {
           debugPrint(
@@ -45,10 +66,58 @@ class NotificationFirestoreService {
         });
   }
 
+  /// Scans Firestore notifications and removes duplicate documents
+  static Future<int> cleanupDuplicateNotifications() async {
+    final user = _auth.currentUser;
+    if (user == null) return 0;
+
+    try {
+      final snap = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('notifications')
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      final seenKeys = <String>{};
+      final duplicateRefs = <DocumentReference>[];
+
+      for (final doc in snap.docs) {
+        final data = Map<String, dynamic>.from(doc.data());
+        data['id'] = doc.id;
+        final notif = NotificationModel.fromJson(data);
+        final key = _notificationKey(notif);
+
+        if (!seenKeys.add(key)) {
+          duplicateRefs.add(doc.reference);
+        }
+      }
+
+      if (duplicateRefs.isNotEmpty) {
+        final batch = _firestore.batch();
+        for (final ref in duplicateRefs) {
+          batch.delete(ref);
+        }
+        await batch.commit();
+        debugPrint(
+          '[NotificationFirestoreService] Removed ${duplicateRefs.length} duplicate notifications',
+        );
+      }
+
+      return duplicateRefs.length;
+    } catch (e) {
+      debugPrint(
+        '[NotificationFirestoreService] cleanupDuplicateNotifications error: $e',
+      );
+      return 0;
+    }
+  }
+
   static Future<void> saveNotification(NotificationModel notification) async {
     final user = _auth.currentUser;
+    final key = _notificationKey(notification);
     final index = _localNotifications.indexWhere(
-      (n) => n.id == notification.id,
+      (n) => n.id == notification.id || _notificationKey(n) == key,
     );
     if (index >= 0) {
       _localNotifications[index] = notification;
@@ -63,7 +132,7 @@ class NotificationFirestoreService {
             .doc(user.uid)
             .collection('notifications')
             .doc(notification.id)
-            .set(notification.toJson());
+            .set(notification.toJson(), SetOptions(merge: true));
       } catch (e) {
         debugPrint(
           '[NotificationFirestoreService] saveNotification failed: $e',

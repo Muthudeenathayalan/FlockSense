@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flock_sense/features/inventory/domain/inventory_item_model.dart';
@@ -14,27 +15,123 @@ class InventoryService {
     required String uid,
     String? farmId,
   }) {
-    Query<Map<String, dynamic>> query = _firestore
-        .collectionGroup('inventoryItems')
-        .where('ownerId', isEqualTo: uid);
-
     if (farmId != null && farmId.isNotEmpty) {
-      query = _firestore
+      return _firestore
           .collection('users')
           .doc(uid)
           .collection('farms')
           .doc(farmId)
-          .collection('inventoryItems');
+          .collection('inventoryItems')
+          .snapshots()
+          .map((snapshot) {
+            final items = snapshot.docs
+                .map((doc) => InventoryItemModel.fromJson({
+                      'id': doc.id,
+                      'farmId': farmId,
+                      ...doc.data(),
+                    }))
+                .toList();
+            items.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+            return items;
+          });
     }
 
-    return query.snapshots().map((snapshot) {
-      final items = snapshot.docs
-          .map((doc) => InventoryItemModel.fromJson(doc.data()))
-          .toList();
-      items.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-      return items;
-    });
+    // When farmId is null, dynamically stream and merge across all user farms
+    late StreamController<List<InventoryItemModel>> controller;
+    StreamSubscription? farmsSub;
+    final farmItemSubs = <String, StreamSubscription>{};
+    final farmItems = <String, List<InventoryItemModel>>{};
+
+    void emit() {
+      final merged = <InventoryItemModel>[];
+      final seenIds = <String>{};
+      for (final list in farmItems.values) {
+        for (final item in list) {
+          if (seenIds.add(item.id)) {
+            merged.add(item);
+          }
+        }
+      }
+      merged.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      if (!controller.isClosed) {
+        controller.add(merged);
+      }
+    }
+
+    controller = StreamController<List<InventoryItemModel>>.broadcast(
+      onListen: () {
+        farmsSub = _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('farms')
+            .snapshots()
+            .listen(
+          (farmSnapshot) {
+            final currentFarmIds = farmSnapshot.docs.map((d) => d.id).toSet();
+
+            final removedFarmIds = farmItemSubs.keys
+                .where((id) => !currentFarmIds.contains(id))
+                .toList();
+            for (final id in removedFarmIds) {
+              farmItemSubs[id]?.cancel();
+              farmItemSubs.remove(id);
+              farmItems.remove(id);
+            }
+
+            if (currentFarmIds.isEmpty) {
+              farmItems.clear();
+              emit();
+              return;
+            }
+
+            for (final fId in currentFarmIds) {
+              if (!farmItemSubs.containsKey(fId)) {
+                farmItemSubs[fId] = _firestore
+                    .collection('users')
+                    .doc(uid)
+                    .collection('farms')
+                    .doc(fId)
+                    .collection('inventoryItems')
+                    .snapshots()
+                    .listen(
+                  (itemSnap) {
+                    farmItems[fId] = itemSnap.docs.map((doc) {
+                      return InventoryItemModel.fromJson({
+                        'id': doc.id,
+                        'farmId': fId,
+                        ...doc.data(),
+                      });
+                    }).toList();
+                    emit();
+                  },
+                  onError: (e) {
+                    debugPrint(
+                      '[watchInventoryItems] Error on farm $fId: $e',
+                    );
+                  },
+                );
+              }
+            }
+            emit();
+          },
+          onError: (e) {
+            debugPrint('[watchInventoryItems] Error watching farms: $e');
+          },
+        );
+      },
+      onCancel: () {
+        farmsSub?.cancel();
+        for (final sub in farmItemSubs.values) {
+          sub.cancel();
+        }
+        farmItemSubs.clear();
+        farmItems.clear();
+      },
+    );
+
+    return controller.stream;
   }
+
 
   /// Stream stock movement history for a specific item
   Stream<List<StockMovementModel>> watchStockMovements({
