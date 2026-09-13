@@ -13,7 +13,9 @@ import 'package:flock_sense/features/reports/presentation/widgets/report_history
 import 'package:flock_sense/features/reports/presentation/widgets/report_preview_modal.dart';
 
 class ReportsDashboardScreen extends ConsumerStatefulWidget {
-  const ReportsDashboardScreen({super.key});
+  const ReportsDashboardScreen({super.key, this.initialFarmId});
+
+  final String? initialFarmId;
 
   @override
   ConsumerState<ReportsDashboardScreen> createState() =>
@@ -23,6 +25,18 @@ class ReportsDashboardScreen extends ConsumerStatefulWidget {
 class _ReportsDashboardScreenState
     extends ConsumerState<ReportsDashboardScreen> {
   final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialFarmId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref
+            .read(reportsFilterProvider.notifier)
+            .setFarmId(widget.initialFarmId);
+      });
+    }
+  }
 
   @override
   void dispose() {

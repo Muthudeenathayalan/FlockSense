@@ -177,7 +177,7 @@ class _AllBatchesScreenState extends ConsumerState<AllBatchesScreen> {
     final batchesAsync = ref.watch(allUserBatchesProvider);
     final farmsAsync = ref.watch(farmListProvider);
 
-    final farms = farmsAsync.valueOrNull ?? [];
+    final farms = farmsAsync.asData?.value ?? [];
     final farmMap = {for (final f in farms) f.id: f.farmName};
 
     return Scaffold(

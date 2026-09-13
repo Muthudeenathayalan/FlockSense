@@ -400,6 +400,7 @@ class _FarmCommandCenterScreenState extends State<FarmCommandCenterScreen> {
                 farmId: _farm.id,
                 batchId: batch.id,
                 batchName: batch.batchName,
+                batch: batch,
               ),
               featureName: 'Performance',
             );
