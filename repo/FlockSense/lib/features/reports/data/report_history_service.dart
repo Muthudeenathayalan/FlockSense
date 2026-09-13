@@ -42,38 +42,6 @@ class ReportHistoryService {
   }
 
   static List<ReportHistoryItem> _getInitialDefaultHistory() {
-    final now = DateTime.now();
-    return [
-      ReportHistoryItem(
-        id: 'rec_101',
-        reportType: ReportType.completeFarm,
-        reportTitle: 'Complete Farm Report',
-        farmName: 'Green Valley Poultry',
-        batchName: 'Batch 12 - Broiler',
-        format: ExportFormat.pdf,
-        generatedAt: now.subtract(const Duration(hours: 2)),
-        fileSizeKb: 485.2,
-      ),
-      ReportHistoryItem(
-        id: 'rec_102',
-        reportType: ReportType.growth,
-        reportTitle: 'Growth Report',
-        farmName: 'Green Valley Poultry',
-        batchName: 'Batch 12 - Broiler',
-        format: ExportFormat.excel,
-        generatedAt: now.subtract(const Duration(days: 1, hours: 4)),
-        fileSizeKb: 124.5,
-      ),
-      ReportHistoryItem(
-        id: 'rec_103',
-        reportType: ReportType.finance,
-        reportTitle: 'Finance Report',
-        farmName: 'Sunrise Agro Farm',
-        batchName: 'Batch 09 - Layer',
-        format: ExportFormat.csv,
-        generatedAt: now.subtract(const Duration(days: 2)),
-        fileSizeKb: 68.1,
-      ),
-    ];
+    return const [];
   }
 }

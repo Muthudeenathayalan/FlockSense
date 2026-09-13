@@ -53,7 +53,22 @@ class ReportService {
             )
           : (batches.isNotEmpty
                 ? batches.first
-                : _createFallbackBatch(targetFarm.id));
+                : BatchModel(
+                    id: '',
+                    farmId: targetFarm.id,
+                    ownerId: user.uid,
+                    batchName: 'No Batch Selected',
+                    breedOrFlockType: 'Broiler',
+                    maleCount: 0,
+                    femaleCount: 0,
+                    totalBirds: 0,
+                    currentBirds: 0,
+                    hatchDate: DateTime.now(),
+                    placementDate: DateTime.now(),
+                    status: 'active',
+                    createdAt: DateTime.now(),
+                    updatedAt: DateTime.now(),
+                  ));
 
       final sheds = await ShedService.getShedsByFarmId(targetFarm.id);
 
@@ -64,40 +79,42 @@ class ReportService {
       List<SalesRecordModel> sales = [];
       List<InventoryItemModel> inventory = [];
 
-      try {
-        records = await DailyRecordService.getAllDailyRecords(
-          farmId: targetFarm.id,
-          batchId: targetBatch.id,
-        );
-      } catch (_) {}
+      if (targetBatch.id.isNotEmpty) {
+        try {
+          records = await DailyRecordService.getAllDailyRecords(
+            farmId: targetFarm.id,
+            batchId: targetBatch.id,
+          );
+        } catch (_) {}
 
-      try {
-        feeds = await FeedService.getFeedTransactions(
-          farmId: targetFarm.id,
-          batchId: targetBatch.id,
-        );
-      } catch (_) {}
+        try {
+          feeds = await FeedService.getFeedTransactions(
+            farmId: targetFarm.id,
+            batchId: targetBatch.id,
+          );
+        } catch (_) {}
 
-      try {
-        meds = await MedicineService.getMedicineRecords(
-          farmId: targetFarm.id,
-          batchId: targetBatch.id,
-        );
-      } catch (_) {}
+        try {
+          meds = await MedicineService.getMedicineRecords(
+            farmId: targetFarm.id,
+            batchId: targetBatch.id,
+          );
+        } catch (_) {}
 
-      try {
-        vaccines = await VaccineService.getVaccineRecords(
-          farmId: targetFarm.id,
-          batchId: targetBatch.id,
-        );
-      } catch (_) {}
+        try {
+          vaccines = await VaccineService.getVaccineRecords(
+            farmId: targetFarm.id,
+            batchId: targetBatch.id,
+          );
+        } catch (_) {}
 
-      try {
-        sales = await SalesService.getBirdSales(
-          farmId: targetFarm.id,
-          batchId: targetBatch.id,
-        );
-      } catch (_) {}
+        try {
+          sales = await SalesService.getBirdSales(
+            farmId: targetFarm.id,
+            batchId: targetBatch.id,
+          );
+        } catch (_) {}
+      }
 
       try {
         final invSnapshot = await FirebaseFirestore.instance
@@ -112,24 +129,14 @@ class ReportService {
             .toList();
       } catch (_) {}
 
-      if (records.isEmpty) {
-        records = _generateFallbackDailyRecords(
-          targetFarm.id,
-          targetBatch.id,
-          user.uid,
-        );
-      }
-      if (inventory.isEmpty) {
-        inventory = _generateFallbackInventoryItems(targetFarm.id, user.uid);
-      }
-
       final startDate = filter.effectiveStartDate;
       final endDate = filter.effectiveEndDate;
 
       if (startDate != null || endDate != null) {
         records = records.where((r) {
-          if (startDate != null && r.recordDate.isBefore(startDate))
+          if (startDate != null && r.recordDate.isBefore(startDate)) {
             return false;
+          }
           if (endDate != null && r.recordDate.isAfter(endDate)) return false;
           return true;
         }).toList();
@@ -172,284 +179,51 @@ class ReportService {
   static ReportData getFallbackReportData({ReportFilterState? filter}) {
     final now = DateTime.now();
     final farm = FarmModel(
-      id: 'farm_gv_01',
-      userId: 'user_demo',
-      ownerId: 'user_demo',
-      farmName: 'Green Valley Broiler Farm',
-      farmerName: 'Ramesh Kumar',
+      id: '',
+      userId: '',
+      ownerId: '',
+      farmName: 'No Farm Selected',
+      farmerName: '',
       farmType: 'EC',
       flockType: 'Broiler',
-      address: 'Palladam Road, Coimbatore, TN',
-      lengthFt: 200,
-      widthFt: 50,
-      totalSqFt: 10000,
-      capacity: 10000,
-      areaName: 'Coimbatore',
-      district: 'Coimbatore',
-      state: 'Tamil Nadu',
-      country: 'India',
+      address: '',
+      lengthFt: 0,
+      widthFt: 0,
+      totalSqFt: 0,
       createdAt: now,
       updatedAt: now,
     );
 
-    final batch = _createFallbackBatch(farm.id);
-    final records = _generateFallbackDailyRecords(
-      farm.id,
-      batch.id,
-      'user_demo',
-    );
-    final inventory = _generateFallbackInventoryItems(farm.id, 'user_demo');
-
-    final startDate = filter?.effectiveStartDate;
-    final endDate = filter?.effectiveEndDate;
-
-    final filteredRecords = records.where((r) {
-      if (startDate != null && r.recordDate.isBefore(startDate)) return false;
-      if (endDate != null && r.recordDate.isAfter(endDate)) return false;
-      return true;
-    }).toList();
-
-    return ReportData(
-      farm: farm,
-      batch: batch,
-      farms: [farm],
-      batches: [batch],
-      sheds: [
-        ShedModel(
-          id: 'shed_01',
-          farmId: 'farm_gv_01',
-          ownerId: 'user_demo',
-          name: 'Shed Alpha',
-          lengthFt: 100,
-          widthFt: 50,
-          totalSqFt: 5000,
-          capacity: 5000,
-          createdAt: now,
-          updatedAt: now,
-        ),
-        ShedModel(
-          id: 'shed_02',
-          farmId: 'farm_gv_01',
-          ownerId: 'user_demo',
-          name: 'Shed Beta',
-          lengthFt: 100,
-          widthFt: 50,
-          totalSqFt: 5000,
-          capacity: 5000,
-          createdAt: now,
-          updatedAt: now,
-        ),
-      ],
-      dailyRecords: filteredRecords.isNotEmpty ? filteredRecords : records,
-      feedTransactions: [
-        FeedTransactionModel(
-          id: 'ft_01',
-          farmId: farm.id,
-          batchId: batch.id,
-          ownerId: 'user_demo',
-          createdAt: now,
-          updatedAt: now,
-          date: now.subtract(const Duration(days: 35)),
-          feedType: 'Starter Crumbs',
-          bags: 50,
-          weightKg: 2500,
-          totalCost: 105000,
-          supplierName: 'SKM Feeds',
-        ),
-      ],
-      medicineRecords: [
-        MedicineRecordModel(
-          id: 'med_01',
-          farmId: farm.id,
-          batchId: batch.id,
-          ownerId: 'user_demo',
-          createdAt: now,
-          updatedAt: now,
-          date: now.subtract(const Duration(days: 25)),
-          batchAgeDay: 13,
-          medicineName: 'Vimeral Vitamin Tonic',
-          quantity: 5,
-          unit: 'Liters',
-          valueRs: 1850,
-          route: 'Drinking Water',
-        ),
-      ],
-      vaccineRecords: [
-        VaccineRecordModel(
-          id: 'vac_01',
-          farmId: farm.id,
-          batchId: batch.id,
-          ownerId: 'user_demo',
-          createdAt: now,
-          updatedAt: now,
-          date: now.subtract(const Duration(days: 31)),
-          batchAgeDay: 7,
-          vaccineName: 'Lasota (ND) Booster',
-          vaccineType: 'Live Vaccine',
-          quantity: 5000,
-          unit: 'Doses',
-          route: 'Drinking Water',
-          doneBy: 'Dr. Ramesh DVM',
-        ),
-      ],
-      birdSales: [
-        SalesRecordModel(
-          id: 'sale_01',
-          farmId: farm.id,
-          batchId: batch.id,
-          ownerId: 'user_demo',
-          createdAt: now,
-          updatedAt: now,
-          date: now.subtract(const Duration(days: 1)),
-          batchAgeDay: 37,
-          customerName: 'Coimbatore Wholesale Poultry Trading',
-          birdsSold: 2000,
-          averageWeightKg: 2.25,
-          pricePerBird: 303.75,
-          totalValue: 607500.0,
-        ),
-      ],
-      inventoryItems: inventory,
-      generatedAt: now,
-    );
-  }
-
-  static BatchModel _createFallbackBatch(String farmId) {
-    final now = DateTime.now();
-    return BatchModel(
-      id: 'batch_b12',
-      farmId: farmId,
-      ownerId: 'user_demo',
-      batchName: 'Batch 12 - Cobb 500',
-      breedOrFlockType: 'Cobb 500 Broiler',
-      maleCount: 2500,
-      femaleCount: 2500,
-      totalBirds: 5000,
-      currentBirds: 4880,
-      hatchDate: now.subtract(const Duration(days: 39)),
-      placementDate: now.subtract(const Duration(days: 38)),
+    final batch = BatchModel(
+      id: '',
+      farmId: '',
+      ownerId: '',
+      batchName: 'No Batch Selected',
+      breedOrFlockType: 'Broiler',
+      maleCount: 0,
+      femaleCount: 0,
+      totalBirds: 0,
+      currentBirds: 0,
+      hatchDate: now,
+      placementDate: now,
       status: 'active',
       createdAt: now,
       updatedAt: now,
     );
-  }
 
-  static List<DailyRecordModel> _generateFallbackDailyRecords(
-    String farmId,
-    String batchId,
-    String uid,
-  ) {
-    final now = DateTime.now();
-    return List.generate(38, (index) {
-      final day = index + 1;
-      final date = now.subtract(Duration(days: 38 - day));
-      final weightGrams = (42 + day * 55 + (day > 20 ? day * 4 : 0)).toDouble();
-      final feedKg = (180 + day * 18).toDouble();
-      final waterL = feedKg * 1.8;
-      final mortality = (day % 7 == 0) ? 3 : (day % 4 == 0 ? 2 : 1);
-
-      return DailyRecordModel(
-        id: 'dr_$day',
-        farmId: farmId,
-        batchId: batchId,
-        recordDate: date,
-        batchAgeDay: day,
-        mortalityCount: mortality,
-        cullCount: 0,
-        adjustmentCount: 0,
-        feedConsumedKg: feedKg,
-        waterConsumedLiters: waterL,
-        avgWeightGrams: weightGrams,
-        openingBirds: 5000 - (day * 3),
-        closingBirds: 5000 - (day * 3) - mortality,
-        medicineGiven: false,
-        vaccineGiven: false,
-        ownerId: uid,
-        createdAt: date,
-        updatedAt: date,
-        notes: day == 7
-            ? 'Lasota vaccine given'
-            : (day == 14 ? 'IBD vaccine completed' : null),
-      );
-    });
-  }
-
-  static List<InventoryItemModel> _generateFallbackInventoryItems(
-    String farmId,
-    String uid,
-  ) {
-    final now = DateTime.now();
-    return [
-      InventoryItemModel(
-        id: 'inv_01',
-        farmId: farmId,
-        ownerId: uid,
-        itemName: 'Starter Feed (SKM Crumbs)',
-        category: 'Feed',
-        brand: 'SKM',
-        supplier: 'SKM Feeds',
-        quantityAvailable: 45,
-        unit: 'Bags',
-        minStockLevel: 20,
-        purchaseDate: now.subtract(const Duration(days: 40)),
-        purchasePrice: 2100,
-        storageLocation: 'Main Store',
-        createdAt: now,
-        updatedAt: now,
-      ),
-      InventoryItemModel(
-        id: 'inv_02',
-        farmId: farmId,
-        ownerId: uid,
-        itemName: 'Finisher Feed (SKM Pellets)',
-        category: 'Feed',
-        brand: 'SKM',
-        supplier: 'SKM Feeds',
-        quantityAvailable: 12,
-        unit: 'Bags',
-        minStockLevel: 30, // Low stock
-        purchaseDate: now.subtract(const Duration(days: 20)),
-        purchasePrice: 2100,
-        storageLocation: 'Main Store',
-        createdAt: now,
-        updatedAt: now,
-      ),
-      InventoryItemModel(
-        id: 'inv_03',
-        farmId: farmId,
-        ownerId: uid,
-        itemName: 'Vimeral Vitamin Tonic',
-        category: 'Medicine',
-        brand: 'VetCare',
-        supplier: 'VetCare India',
-        quantityAvailable: 8,
-        unit: 'Liters',
-        minStockLevel: 5,
-        purchaseDate: now.subtract(const Duration(days: 60)),
-        expiryDate: now.add(const Duration(days: 15)), // Expiring soon
-        purchasePrice: 450,
-        storageLocation: 'Med Store',
-        createdAt: now,
-        updatedAt: now,
-      ),
-      InventoryItemModel(
-        id: 'inv_04',
-        farmId: farmId,
-        ownerId: uid,
-        itemName: 'Lasota ND Vaccine',
-        category: 'Vaccine',
-        brand: 'Hester',
-        supplier: 'Hester Biosciences',
-        quantityAvailable: 15,
-        unit: 'Vials',
-        minStockLevel: 10,
-        purchaseDate: now.subtract(const Duration(days: 10)),
-        expiryDate: now.add(const Duration(days: 90)),
-        purchasePrice: 120,
-        storageLocation: 'Cold Storage',
-        createdAt: now,
-        updatedAt: now,
-      ),
-    ];
+    return ReportData(
+      farm: farm,
+      batch: batch,
+      farms: const [],
+      batches: const [],
+      sheds: const [],
+      dailyRecords: const [],
+      feedTransactions: const [],
+      medicineRecords: const [],
+      vaccineRecords: const [],
+      birdSales: const [],
+      inventoryItems: const [],
+      generatedAt: now,
+    );
   }
 }
