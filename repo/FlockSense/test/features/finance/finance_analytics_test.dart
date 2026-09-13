@@ -14,9 +14,15 @@ void main() {
 
       expect(FinanceTransactionModel.isValidQuantity(5.0), isTrue);
       expect(FinanceTransactionModel.isValidQuantity(0.0), isFalse);
+
+      expect(FinanceTransactionModel.isValidPaidAmount(500.0, 1000.0), isTrue);
+      expect(FinanceTransactionModel.isValidPaidAmount(1000.0, 1000.0), isTrue);
+      expect(FinanceTransactionModel.isValidPaidAmount(0.0, 1000.0), isTrue);
+      expect(FinanceTransactionModel.isValidPaidAmount(-50.0, 1000.0), isFalse);
+      expect(FinanceTransactionModel.isValidPaidAmount(1500.0, 1000.0), isFalse);
     });
 
-    test('calculates pending amounts accurately', () {
+    test('calculates pending amounts accurately and determines payment completion', () {
       final tx = FinanceTransactionModel(
         id: 'tx-1',
         farmId: 'f-1',
@@ -35,6 +41,29 @@ void main() {
       );
 
       expect(tx.pendingAmount, 3000.0);
+      expect(tx.isFullyPaid, isFalse);
+      expect(tx.isPartiallyPaid, isTrue);
+
+      final fullyPaidTx = FinanceTransactionModel(
+        id: 'tx-2',
+        farmId: 'f-1',
+        batchId: 'b-1',
+        ownerId: 'u-1',
+        type: FinanceTransactionType.income,
+        category: 'Bird Sales',
+        date: now,
+        customerOrSupplier: 'Wholesaler',
+        totalAmount: 50000.0,
+        paidAmount: 50000.0,
+        paymentStatus: PaymentStatus.paid,
+        invoiceNumber: 'INV-102',
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      expect(fullyPaidTx.pendingAmount, 0.0);
+      expect(fullyPaidTx.isFullyPaid, isTrue);
+      expect(fullyPaidTx.isPartiallyPaid, isFalse);
     });
 
     test('calculates today income, expenses and profit', () {

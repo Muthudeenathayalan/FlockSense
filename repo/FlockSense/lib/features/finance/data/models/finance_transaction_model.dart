@@ -47,12 +47,21 @@ class FinanceTransactionModel {
   });
 
   double get pendingAmount => totalAmount - paidAmount;
+  bool get isFullyPaid => paidAmount >= totalAmount && totalAmount > 0;
+  bool get isPartiallyPaid => paidAmount > 0 && paidAmount < totalAmount;
 
   /// Validates transaction amount (must be positive).
   static bool isValidAmount(double amount) => amount > 0;
 
   /// Validates item quantity (must be positive).
   static bool isValidQuantity(double quantity) => quantity > 0;
+
+  /// Validates paid amount against total invoice amount.
+  /// Paid amount cannot be negative and cannot exceed total transaction amount.
+  static bool isValidPaidAmount(double paid, double total) {
+    if (paid < 0 || total < 0) return false;
+    return paid <= total;
+  }
 
   Map<String, dynamic> toJson() {
     return {
