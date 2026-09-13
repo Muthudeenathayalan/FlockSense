@@ -15,12 +15,10 @@ class FinanceService {
   static final _firestore = FirebaseFirestore.instance;
   static final _auth = FirebaseAuth.instance;
 
-  static final List<FinanceTransactionModel> _localTransactions = [];
-
   static Stream<List<FinanceTransactionModel>> streamTransactions() {
     final user = _auth.currentUser;
     if (user == null) {
-      return Stream.value(List.unmodifiable(_localTransactions));
+      return Stream.value(<FinanceTransactionModel>[]);
     }
 
     return _firestore
@@ -29,20 +27,27 @@ class FinanceService {
         .collection('finance_transactions')
         .orderBy('date', descending: true)
         .snapshots()
-        .map(
-          (snap) => snap.docs
-              .map((doc) => FinanceTransactionModel.fromJson(doc.data()))
-              .toList(),
-        )
+        .map((snap) {
+          final seen = <String>{};
+          final list = <FinanceTransactionModel>[];
+          for (final doc in snap.docs) {
+            final tx = FinanceTransactionModel.fromJson(doc.data());
+            if (seen.add(tx.id)) {
+              list.add(tx);
+            }
+          }
+          return list;
+        })
         .handleError((err) {
           debugPrint('[FinanceService] Stream transactions error: $err');
-          return List.unmodifiable(_localTransactions);
+          return <FinanceTransactionModel>[];
         });
   }
 
   static Future<List<FinanceTransactionModel>> getCombinedTransactions() async {
     final user = _auth.currentUser;
-    final list = <FinanceTransactionModel>[..._localTransactions];
+    final list = <FinanceTransactionModel>[];
+    final seenIds = <String>{};
 
     if (user != null) {
       try {
@@ -54,7 +59,7 @@ class FinanceService {
 
         for (final doc in snap.docs) {
           final tx = FinanceTransactionModel.fromJson(doc.data());
-          if (!list.any((t) => t.id == tx.id)) {
+          if (seenIds.add(tx.id)) {
             list.add(tx);
           }
         }
@@ -210,7 +215,6 @@ class FinanceService {
     FinanceTransactionModel transaction,
   ) async {
     final user = _auth.currentUser;
-    _localTransactions.insert(0, transaction);
 
     if (user != null) {
       try {
@@ -230,7 +234,6 @@ class FinanceService {
 
   static Future<void> deleteTransaction(String transactionId) async {
     final user = _auth.currentUser;
-    _localTransactions.removeWhere((t) => t.id == transactionId);
 
     if (user != null) {
       try {
