@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/features/daily_records/presentation/screens/daily_records_dashboard_screen.dart';
+import 'package:flock_sense/features/batches/presentation/screens/all_batches_screen.dart';
 import 'package:flock_sense/features/farms/presentation/screens/farm_list_screen.dart';
 import 'package:flock_sense/features/performance/presentation/screens/growth_analytics_screen.dart';
 
@@ -175,7 +176,7 @@ class _MoreCard extends StatelessWidget {
           case 'Flocks & Batches':
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const FarmListScreen()),
+              MaterialPageRoute(builder: (_) => const AllBatchesScreen()),
             );
             return;
           case 'Farms & Sheds':
