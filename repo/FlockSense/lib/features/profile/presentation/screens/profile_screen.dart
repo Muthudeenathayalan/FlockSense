@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flock_sense/config/routes/app_routes.dart';
+import 'package:flock_sense/features/auth/presentation/providers/auth_provider.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:flock_sense/features/profile/presentation/screens/notification_settings_screen.dart';
@@ -62,7 +63,12 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = FirebaseAuth.instance.currentUser;
+    final authUser = ref.watch(authStateProvider).value;
+    User? firebaseUser;
+    try {
+      firebaseUser = FirebaseAuth.instance.currentUser;
+    } catch (_) {}
+    final user = authUser ?? firebaseUser;
     final name = user?.displayName?.isNotEmpty == true
         ? user!.displayName!
         : 'Farmer';

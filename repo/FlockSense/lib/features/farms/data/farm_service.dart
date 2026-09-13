@@ -303,17 +303,28 @@ class FarmService {
           .collection('users')
           .doc(user.uid)
           .collection('farms')
-          .orderBy('createdAt', descending: true)
           .get();
 
       final seen = <String>{};
       final farms = <FarmModel>[];
       for (final doc in snapshot.docs) {
         if (seen.add(doc.id)) {
-          final data = doc.data();
-          farms.add(FarmModel.fromJson({'id': doc.id, ...data, 'userId': user.uid}));
+          try {
+            final data = doc.data();
+            farms.add(FarmModel.fromJson({'id': doc.id, ...data, 'userId': user.uid}));
+          } catch (e) {
+            debugPrint('[FarmService.getUserFarms] Error parsing ${doc.id}: $e');
+          }
         }
       }
+      farms.sort((a, b) {
+        final aTime = a.createdAt;
+        final bTime = b.createdAt;
+        if (aTime == null && bTime == null) return a.farmName.compareTo(b.farmName);
+        if (aTime == null) return 1;
+        if (bTime == null) return -1;
+        return bTime.compareTo(aTime);
+      });
 
       // Update cache
       await _cacheService.cacheFarms(user.uid, farms);
@@ -360,7 +371,6 @@ class FarmService {
         .collection('users')
         .doc(uid)
         .collection('farms')
-        .orderBy('createdAt', descending: true)
         .snapshots()
         .map(
           (snapshot) {
@@ -368,15 +378,27 @@ class FarmService {
             final list = <FarmModel>[];
             for (final doc in snapshot.docs) {
               if (seen.add(doc.id)) {
-                list.add(
-                  FarmModel.fromJson({
-                    'id': doc.id,
-                    ...doc.data(),
-                    'userId': uid,
-                  }),
-                );
+                try {
+                  list.add(
+                    FarmModel.fromJson({
+                      'id': doc.id,
+                      ...doc.data(),
+                      'userId': uid,
+                    }),
+                  );
+                } catch (e) {
+                  debugPrint('[FarmService.watchFarms] Error parsing ${doc.id}: $e');
+                }
               }
             }
+            list.sort((a, b) {
+              final aTime = a.createdAt;
+              final bTime = b.createdAt;
+              if (aTime == null && bTime == null) return a.farmName.compareTo(b.farmName);
+              if (aTime == null) return 1;
+              if (bTime == null) return -1;
+              return bTime.compareTo(aTime);
+            });
             return list;
           },
         );

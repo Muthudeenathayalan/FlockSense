@@ -12,6 +12,7 @@ import 'package:flock_sense/features/farms/domain/farm_model.dart';
 import 'package:flock_sense/features/home/presentation/screens/home_screen.dart';
 import 'package:flock_sense/features/more/presentation/screens/more_screen.dart';
 import 'package:flock_sense/features/profile/presentation/screens/profile_screen.dart';
+import 'package:flock_sense/config/routes/app_routes.dart';
 import 'package:flock_sense/features/farms/presentation/screens/farm_list_screen.dart';
 
 class MainShellScreen extends ConsumerStatefulWidget {
@@ -53,17 +54,31 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openingRecordFlow ? null : _openQuickRecordFlow,
-        backgroundColor: const Color(0xFF1B5E20),
-        foregroundColor: Colors.white,
-        elevation: 4,
-        icon: const Icon(Icons.post_add),
-        label: const Text(
-          'Add Records',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
+      floatingActionButton: _currentIndex == 1
+          ? FloatingActionButton.extended(
+              onPressed: () => Navigator.pushNamed(context, AppRoutes.farmSetup),
+              backgroundColor: const Color(0xFF16A34A),
+              foregroundColor: Colors.white,
+              elevation: 4,
+              icon: const Icon(Icons.add_business_rounded),
+              label: const Text(
+                'Add Farm',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            )
+          : (_currentIndex == 0
+              ? FloatingActionButton.extended(
+                  onPressed: _openingRecordFlow ? null : _openQuickRecordFlow,
+                  backgroundColor: const Color(0xFF1B5E20),
+                  foregroundColor: Colors.white,
+                  elevation: 4,
+                  icon: const Icon(Icons.post_add),
+                  label: const Text(
+                    'Add Records',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                )
+              : null),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flock_sense/config/routes/app_routes.dart';
-import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/core/widgets/app_dialog.dart';
-import 'package:flock_sense/core/widgets/app_empty_state.dart';
 import 'package:flock_sense/core/widgets/app_loading_indicator.dart';
 import 'package:flock_sense/features/batches/presentation/screens/all_batches_screen.dart';
 import 'package:flock_sense/features/farms/data/farm_service.dart';
@@ -121,49 +119,146 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text(
-          'Facilities & Sheds',
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+          'My Facilities',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 20,
+            color: Color(0xFF0F172A),
+          ),
         ),
-        backgroundColor: const Color(0xFF0F172A),
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF0F172A),
         elevation: 0,
+        scrolledUnderElevation: 1,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: const Color(0xFFE2E8F0), height: 1),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add_rounded, color: Colors.white),
-            tooltip: 'Add Facility',
-            onPressed: () => Navigator.pushNamed(context, AppRoutes.farmSetup),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF16A34A),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                elevation: 0,
+              ),
+              icon: const Icon(Icons.add_rounded, size: 16),
+              label: const Text(
+                'New Farm',
+                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
+              ),
+              onPressed: () => Navigator.pushNamed(context, AppRoutes.farmSetup),
+            ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: const Color(0xFF16A34A),
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text(
-          'New Facility',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        onPressed: () => Navigator.pushNamed(context, AppRoutes.farmSetup),
-      ),
       body: farmsAsync.when(
         loading: () => const AppLoadingIndicator(),
-        error: (err, _) => AppEmptyState(
-          icon: Icons.wifi_off_rounded,
-          title: 'Unable to load farms',
-          message: 'Please check your connection and try again.',
-          buttonLabel: 'Retry',
-          onButtonPressed: () => ref.invalidate(farmListProvider),
+        error: (err, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.wifi_off_rounded,
+                  size: 48,
+                  color: Color(0xFF94A3B8),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Unable to load farms',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF334155),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Please check connection and tap retry.',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                ),
+                const SizedBox(height: 16),
+                FilledButton.tonal(
+                  onPressed: () => ref.invalidate(farmListProvider),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
         ),
         data: (farms) {
           if (farms.isEmpty) {
-            return AppEmptyState(
-              icon: Icons.holiday_village_outlined,
-              title: 'No registered facilities yet',
-              message:
-                  'Create your first poultry farm or shed complex to begin managing flocks, telemetry, and inventory.',
-              buttonLabel: 'Create Facility',
-              onButtonPressed: () =>
-                  Navigator.pushNamed(context, AppRoutes.farmSetup),
+            return Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 48),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFDCFCE7),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.agriculture_rounded,
+                        size: 64,
+                        color: Color(0xFF16A34A),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'No Farms Created Yet',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Register your first poultry farm or shed complex to begin managing flocks, telemetry, and inventory.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        color: Color(0xFF64748B),
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF16A34A),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      icon: const Icon(Icons.add_business_rounded),
+                      label: const Text(
+                        'Create First Farm',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      onPressed: () =>
+                          Navigator.pushNamed(context, AppRoutes.farmSetup),
+                    ),
+                  ],
+                ),
+              ),
             );
           }
 
@@ -207,262 +302,331 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
             return true;
           }).toList();
 
-          return CustomScrollView(
-            physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
-            slivers: [
-              // Executive Summary Banner
-              SliverToBoxAdapter(
-                child: Container(
-                  margin: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Color(0xFF0F172A),
-                        Color(0xFF132E23),
-                        Color(0xFF166534),
-                      ],
+          return ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 88),
+            children: [
+              // Mild Overview Summary Card
+              Container(
+                margin: const EdgeInsets.only(bottom: 14),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF166534).withOpacity(0.2),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(
-                              Icons.apartment_rounded,
-                              color: Color(0xFF4ADE80),
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          const Text(
-                            'Facility Overview',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF16A34A),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              '${farms.length} Total',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _BannerMetric(
-                              label: 'Total Capacity',
-                              value: totalCapacity > 0
-                                  ? '${(totalCapacity / 1000).toStringAsFixed(1)}k birds'
-                                  : '${farms.fold<int>(0, (sum, f) => sum + (f.lengthFt * f.widthFt ~/ 1.2))} cap',
-                              icon: Icons.groups_rounded,
-                            ),
-                          ),
-                          Container(
-                            height: 36,
-                            width: 1,
-                            color: Colors.white.withOpacity(0.15),
-                          ),
-                          Expanded(
-                            child: _BannerMetric(
-                              label: 'Active Flocks',
-                              value: '$activeBatchesCount batches',
-                              icon: Icons.pets_rounded,
-                            ),
-                          ),
-                          Container(
-                            height: 36,
-                            width: 1,
-                            color: Colors.white.withOpacity(0.15),
-                          ),
-                          Expanded(
-                            child: _BannerMetric(
-                              label: 'Total Sheds',
-                              value: '${allSheds.length} sheds',
-                              icon: Icons.warehouse_rounded,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
-              ),
-
-              // Search & Filter Section
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    children: [
-                      // Search Bar
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: 'Search by farm name, location, type...',
-                            hintStyle: const TextStyle(
-                              color: Color(0xFF94A3B8),
-                              fontSize: 13,
-                            ),
-                            prefixIcon: const Icon(
-                              Icons.search_rounded,
-                              color: Color(0xFF64748B),
-                              size: 20,
-                            ),
-                            suffixIcon: _searchQuery.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear, size: 18),
-                                    onPressed: () => _searchController.clear(),
-                                  )
-                                : null,
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                            ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDCFCE7),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.agriculture_rounded,
+                            color: Color(0xFF16A34A),
+                            size: 18,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 10),
-
-                      // Filter Chips
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            _filterChip('All'),
-                            _filterChip('Active'),
-                            _filterChip('Inactive'),
-                            _filterChip('Broiler'),
-                            _filterChip('Layer'),
-                            _filterChip('Breeder'),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Farms List
-              if (filteredFarms.isEmpty)
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.all(32),
-                    child: Center(
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.search_off_rounded,
-                            size: 48,
-                            color: Color(0xFF94A3B8),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Facilities Overview',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0F172A),
                           ),
-                          SizedBox(height: 10),
-                          Text(
-                            'No matching facilities found',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${farms.length} Total',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
                               color: Color(0xFF475569),
                             ),
                           ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Try changing your search term or filter category.',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF94A3B8),
-                            ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _MildBannerStat(
+                            label: 'Capacity',
+                            value: totalCapacity > 0
+                                ? '${(totalCapacity / 1000).toStringAsFixed(1)}k'
+                                : '${farms.fold<int>(0, (sum, f) => sum + (f.totalSqFt > 0 ? (f.totalSqFt / 1.2).round() : 0))}',
+                            unit: 'birds',
+                            icon: Icons.groups_rounded,
+                            iconColor: const Color(0xFF16A34A),
                           ),
-                        ],
-                      ),
+                        ),
+                        Container(
+                          height: 32,
+                          width: 1,
+                          color: const Color(0xFFE2E8F0),
+                        ),
+                        Expanded(
+                          child: _MildBannerStat(
+                            label: 'Flocks',
+                            value: '$activeBatchesCount',
+                            unit: 'active',
+                            icon: Icons.pets_rounded,
+                            iconColor: const Color(0xFF2563EB),
+                          ),
+                        ),
+                        Container(
+                          height: 32,
+                          width: 1,
+                          color: const Color(0xFFE2E8F0),
+                        ),
+                        Expanded(
+                          child: _MildBannerStat(
+                            label: 'Sheds',
+                            value: '${allSheds.length}',
+                            unit: 'total',
+                            icon: Icons.warehouse_rounded,
+                            iconColor: const Color(0xFF8B5CF6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Search Bar
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search by farm name, location, type...',
+                    hintStyle: const TextStyle(
+                      color: Color(0xFF94A3B8),
+                      fontSize: 13,
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.search_rounded,
+                      color: Color(0xFF64748B),
+                      size: 20,
+                    ),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () => _searchController.clear(),
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Filter Chips
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _filterChip('All'),
+                    _filterChip('Active'),
+                    _filterChip('Inactive'),
+                    _filterChip('Broiler'),
+                    _filterChip('Layer'),
+                    _filterChip('Breeder'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // List of Farm Cards
+              if (filteredFarms.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.search_off_rounded,
+                          size: 40,
+                          color: Color(0xFF94A3B8),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'No matching facilities found',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF475569),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 )
               else
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final farm = filteredFarms[index];
-                        final isDashboardActive = farm.id == activeFarmId;
-                        final farmBatches = allBatches
-                            .where((b) => b.farmId == farm.id)
-                            .toList();
-                        final farmActiveBatches =
-                            farmBatches.where((b) => b.isActive).length;
-                        final farmSheds =
-                            allSheds.where((s) => s.farmId == farm.id).length;
+                ...filteredFarms.map((farm) {
+                  final isDashboardActive = farm.id == activeFarmId;
+                  final farmBatches = allBatches
+                      .where((b) => b.farmId == farm.id)
+                      .toList();
+                  final farmActiveBatches =
+                      farmBatches.where((b) => b.isActive).length;
+                  final farmSheds =
+                      allSheds.where((s) => s.farmId == farm.id).length;
 
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 14),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isDashboardActive
-                                  ? const Color(0xFF16A34A)
-                                  : const Color(0xFFE2E8F0),
-                              width: isDashboardActive ? 1.8 : 1.0,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: isDashboardActive
-                                    ? const Color(0xFF16A34A).withOpacity(0.08)
-                                    : Colors.black.withOpacity(0.03),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: isDashboardActive
+                            ? const Color(0xFF16A34A)
+                            : const Color(0xFFE2E8F0),
+                        width: isDashboardActive ? 1.8 : 1.0,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isDashboardActive
+                              ? const Color(0xFF16A34A).withOpacity(0.08)
+                              : Colors.black.withOpacity(0.03),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Column(
+                        children: [
+                          // Top card header with lush green gradient
+                          Container(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: isDashboardActive
+                                    ? const [
+                                        Color(0xFF15803D),
+                                        Color(0xFF166534),
+                                      ]
+                                    : const [
+                                        Color(0xFF16A34A),
+                                        Color(0xFF15803D),
+                                      ],
                               ),
-                            ],
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    farm.farmName,
+                                    style: const TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                if (farm.farmType.isNotEmpty)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 9,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.22),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      farm.farmType,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 9,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: (farm.isActive
+                                            ? const Color(0xFF22C55E)
+                                            : Colors.amber.shade700)
+                                        .withOpacity(0.9),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    farm.isActive ? 'Active' : 'Inactive',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                if (isDashboardActive) ...[
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: const Text(
+                                      '★ ACTIVE',
+                                      style: TextStyle(
+                                        fontSize: 9.5,
+                                        fontWeight: FontWeight.w900,
+                                        color: Color(0xFF15803D),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
-                          child: Material(
-                            color: Colors.transparent,
+
+                          // White card body
+                          Material(
+                            color: Colors.white,
                             child: InkWell(
-                              borderRadius: BorderRadius.circular(16),
                               onTap: () {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
@@ -476,91 +640,135 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // Header row: Farm Name, Badges & Menu
+                                    // Location row
                                     Row(
                                       children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: isDashboardActive
-                                                ? const Color(0xFFDCFCE7)
-                                                : const Color(0xFFF1F5F9),
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                          child: Icon(
-                                            Icons.warehouse_rounded,
-                                            size: 18,
-                                            color: isDashboardActive
-                                                ? const Color(0xFF16A34A)
-                                                : const Color(0xFF64748B),
-                                          ),
+                                        const Icon(
+                                          Icons.location_on_outlined,
+                                          size: 16,
+                                          color: Color(0xFF64748B),
                                         ),
-                                        const SizedBox(width: 10),
+                                        const SizedBox(width: 6),
                                         Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Flexible(
-                                                    child: Text(
-                                                      farm.farmName,
-                                                      style: const TextStyle(
-                                                        fontSize: 16,
-                                                        fontWeight:
-                                                            FontWeight.w800,
-                                                        color:
-                                                            Color(0xFF0F172A),
-                                                      ),
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                  if (isDashboardActive) ...[
-                                                    const SizedBox(width: 6),
-                                                    Container(
-                                                      padding:
-                                                          const EdgeInsets.symmetric(
-                                                        horizontal: 7,
-                                                        vertical: 2,
-                                                      ),
-                                                      decoration: BoxDecoration(
-                                                        color: const Color(
-                                                          0xFF16A34A,
-                                                        ),
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                          20,
-                                                        ),
-                                                      ),
-                                                      child: const Text(
-                                                        'ACTIVE',
-                                                        style: TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize: 9,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ],
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                _locationFor(farm),
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  color: Color(0xFF64748B),
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ],
+                                          child: Text(
+                                            _locationFor(farm),
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              color: Color(0xFF334155),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+
+                                    // Dimensions & Capacity row
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.straighten_rounded,
+                                          size: 16,
+                                          color: Color(0xFF64748B),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            farm.lengthFt > 0 &&
+                                                    farm.widthFt > 0
+                                                ? '${farm.lengthFt.toStringAsFixed(0)}×${farm.widthFt.toStringAsFixed(0)} ft • ${farm.totalSqFt.toStringAsFixed(0)} ft²'
+                                                : (farm.totalSqFt > 0
+                                                    ? '${farm.totalSqFt.toStringAsFixed(0)} ft²'
+                                                    : 'Standard facility layout'),
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              color: Color(0xFF334155),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+
+                                    // Tags & Actions row
+                                    Row(
+                                      children: [
+                                        if (farm.farmType.isNotEmpty)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 3,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFDCFCE7),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                            ),
+                                            child: Text(
+                                              farm.farmType,
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w700,
+                                                color: Color(0xFF15803D),
+                                              ),
+                                            ),
+                                          ),
+                                        const SizedBox(width: 6),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 3,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFE0F2FE),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                          ),
+                                          child: Text(
+                                            farm.flockType.isNotEmpty
+                                                ? farm.flockType
+                                                : 'Broiler',
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFF0369A1),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 3,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFF1F5F9),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                          ),
+                                          child: Text(
+                                            '$farmActiveBatches Flocks • $farmSheds Sheds',
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              color: Color(0xFF475569),
+                                            ),
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        if (!isDashboardActive)
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.radio_button_unchecked_rounded,
+                                              size: 20,
+                                              color: Color(0xFF16A34A),
+                                            ),
+                                            tooltip: 'Set as Dashboard Farm',
+                                            onPressed: () =>
+                                                _setActiveFarm(farm),
+                                          ),
                                         PopupMenuButton<String>(
                                           icon: const Icon(
                                             Icons.more_vert_rounded,
@@ -594,204 +802,34 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
                                             if (!isDashboardActive)
                                               const PopupMenuItem(
                                                 value: 'active',
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.radio_button_checked,
-                                                      size: 16,
-                                                      color: Color(0xFF16A34A),
-                                                    ),
-                                                    SizedBox(width: 8),
-                                                    Text('Set as Dashboard Farm'),
-                                                  ],
+                                                child: Text(
+                                                  'Set as Active Farm',
                                                 ),
                                               ),
                                             const PopupMenuItem(
                                               value: 'command',
-                                              child: Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.tune_rounded,
-                                                    size: 16,
-                                                  ),
-                                                  SizedBox(width: 8),
-                                                  Text('Command Center'),
-                                                ],
-                                              ),
+                                              child: Text('Command Center'),
                                             ),
                                             const PopupMenuItem(
                                               value: 'batches',
-                                              child: Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.pets_rounded,
-                                                    size: 16,
-                                                  ),
-                                                  SizedBox(width: 8),
-                                                  Text('View Batches'),
-                                                ],
-                                              ),
+                                              child: Text('View Batches'),
                                             ),
                                             const PopupMenuDivider(),
                                             const PopupMenuItem(
                                               value: 'delete',
-                                              child: Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.delete_outline_rounded,
-                                                    size: 16,
-                                                    color: Colors.red,
-                                                  ),
-                                                  SizedBox(width: 8),
-                                                  Text(
-                                                    'Delete Facility',
-                                                    style: TextStyle(
-                                                      color: Colors.red,
-                                                    ),
-                                                  ),
-                                                ],
+                                              child: Text(
+                                                'Delete Farm',
+                                                style: TextStyle(
+                                                  color: Colors.red,
+                                                ),
                                               ),
                                             ),
                                           ],
                                         ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 14),
-
-                                    // Metric Pills Row (4 KPIs)
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: _CardMetricPill(
-                                            title: 'Capacity',
-                                            value: (farm.capacity != null &&
-                                                    farm.capacity! > 0)
-                                                ? '${farm.capacity}'
-                                                : '${(farm.totalSqFt / 1.2).toStringAsFixed(0)}',
-                                            unit: 'birds',
-                                            color: const Color(0xFF16A34A),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: _CardMetricPill(
-                                            title: 'Batches',
-                                            value: '$farmActiveBatches',
-                                            unit: 'active',
-                                            color: const Color(0xFF2563EB),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: _CardMetricPill(
-                                            title: 'Sheds',
-                                            value: '$farmSheds',
-                                            unit: 'total',
-                                            color: const Color(0xFF6366F1),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: _CardMetricPill(
-                                            title: 'Area',
-                                            value:
-                                                farm.totalSqFt.toStringAsFixed(0),
-                                            unit: 'sq ft',
-                                            color: const Color(0xFFF59E0B),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 14),
-
-                                    // Action Bar
-                                    Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFF1F5F9),
-                                            borderRadius:
-                                                BorderRadius.circular(20),
-                                          ),
-                                          child: Text(
-                                            '${farm.farmType} • ${farm.flockType.isNotEmpty ? farm.flockType : "Broiler"}',
-                                            style: const TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w600,
-                                              color: Color(0xFF475569),
-                                            ),
-                                          ),
-                                        ),
-                                        const Spacer(),
-                                        if (!isDashboardActive)
-                                          TextButton.icon(
-                                            style: TextButton.styleFrom(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                horizontal: 10,
-                                                vertical: 4,
-                                              ),
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                              foregroundColor:
-                                                  const Color(0xFF16A34A),
-                                            ),
-                                            onPressed: () =>
-                                                _setActiveFarm(farm),
-                                            icon: const Icon(
-                                              Icons.check_circle_outline_rounded,
-                                              size: 15,
-                                            ),
-                                            label: const Text(
-                                              'Set Active',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w700,
-                                              ),
-                                            ),
-                                          ),
-                                        ElevatedButton.icon(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                const Color(0xFF0F172A),
-                                            foregroundColor: Colors.white,
-                                            elevation: 0,
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 12,
-                                              vertical: 6,
-                                            ),
-                                            visualDensity:
-                                                VisualDensity.compact,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                          ),
-                                          onPressed: () {
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder: (_) =>
-                                                    FarmCommandCenterScreen(
-                                                  farm: farm,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                          icon: const Icon(
-                                            Icons.tune_rounded,
-                                            size: 14,
-                                          ),
-                                          label: const Text(
-                                            'Command Center',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
+                                        const Icon(
+                                          Icons.chevron_right_rounded,
+                                          color: Color(0xFF94A3B8),
+                                          size: 22,
                                         ),
                                       ],
                                     ),
@@ -800,12 +838,11 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
                               ),
                             ),
                           ),
-                        );
-                      },
-                      childCount: filteredFarms.length,
+                        ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                }),
             ],
           );
         },
@@ -839,100 +876,50 @@ class _FarmListScreenState extends ConsumerState<FarmListScreen> {
   }
 }
 
-class _BannerMetric extends StatelessWidget {
-  const _BannerMetric({
+class _MildBannerStat extends StatelessWidget {
+  const _MildBannerStat({
     required this.label,
     required this.value,
+    required this.unit,
     required this.icon,
+    required this.iconColor,
   });
 
   final String label;
   final String value;
+  final String unit;
   final IconData icon;
+  final Color iconColor;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(icon, size: 16, color: const Color(0xFF4ADE80)),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w800,
-            fontSize: 13,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 15, color: iconColor),
+            const SizedBox(width: 4),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 1),
+        const SizedBox(height: 2),
         Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
+          '$label ($unit)',
+          style: const TextStyle(
             fontSize: 10.5,
+            color: Color(0xFF64748B),
             fontWeight: FontWeight.w500,
           ),
         ),
       ],
-    );
-  }
-}
-
-class _CardMetricPill extends StatelessWidget {
-  const _CardMetricPill({
-    required this.title,
-    required this.value,
-    required this.unit,
-    required this.color,
-  });
-
-  final String title;
-  final String value;
-  final String unit;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF94A3B8),
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: color,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          Text(
-            unit,
-            style: const TextStyle(
-              fontSize: 9.5,
-              color: Color(0xFF64748B),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
