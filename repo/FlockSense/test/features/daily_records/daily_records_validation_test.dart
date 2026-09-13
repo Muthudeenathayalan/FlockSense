@@ -33,6 +33,42 @@ void main() {
       expect(DailyRecordModel.isValidHumidity(105.0), isFalse);
     });
 
+    test('validates average bird weight within plausible bounds', () {
+      expect(DailyRecordModel.isValidBirdWeight(42.0), isTrue);
+      expect(DailyRecordModel.isValidBirdWeight(2150.5), isTrue);
+      expect(DailyRecordModel.isValidBirdWeight(0.0), isTrue);
+      expect(DailyRecordModel.isValidBirdWeight(10000.0), isTrue);
+
+      expect(DailyRecordModel.isValidBirdWeight(-1.0), isFalse);
+      expect(DailyRecordModel.isValidBirdWeight(10001.0), isFalse);
+    });
+
+    test('calculates closing birds accurately and handles loss exceeding opening', () {
+      final normalClosing = DailyRecordModel.calculateClosingBirds(
+        opening: 5000,
+        mortality: 15,
+        culls: 5,
+        adjustments: 10,
+      );
+      expect(normalClosing, 4990);
+
+      // Excess loss clamps to zero
+      final depleted = DailyRecordModel.calculateClosingBirds(
+        opening: 100,
+        mortality: 120,
+        culls: 10,
+      );
+      expect(depleted, 0);
+
+      // Negative mortality/culls are sanitized to 0
+      final sanitized = DailyRecordModel.calculateClosingBirds(
+        opening: 1000,
+        mortality: -5,
+        culls: -10,
+      );
+      expect(sanitized, 1000);
+    });
+
     test(
       'fromJson prevents negative closing count and clamps negative mortality/culls',
       () {
@@ -45,7 +81,7 @@ void main() {
           'mortalityCount': -10, // negative raw input
           'cullCount': 120, // exceeds opening
           'adjustmentCount': 0,
-          'closingBirds': 0,
+          'closingBirds': -25, // explicit negative in json
           'feedConsumedKg': 50,
           'waterConsumedLiters': 100,
           'avgWeightGrams': 1500,
@@ -53,6 +89,22 @@ void main() {
 
         expect(record.mortalityCount, 0); // clamped to 0
         expect(record.closingBirds, 0); // non-negative clamp
+
+        final autoCalcRecord = DailyRecordModel.fromJson({
+          'id': 'rec-2',
+          'farmId': 'f1',
+          'batchId': 'b1',
+          'recordDate': '2026-01-01',
+          'openingBirds': 1000,
+          'mortalityCount': 10,
+          'cullCount': 5,
+          'adjustmentCount': 0,
+          'closingBirds': 0,
+          'feedConsumedKg': 50,
+          'waterConsumedLiters': 100,
+          'avgWeightGrams': 1500,
+        });
+        expect(autoCalcRecord.closingBirds, 985);
       },
     );
   });

@@ -180,11 +180,17 @@ class DailyRecordModel {
     final rawCull = parseInt(json['cullCount']);
     final cullCount = rawCull < 0 ? 0 : rawCull;
     final adjustmentCount = parseInt(json['adjustmentCount']);
-    final calcClosing =
-        openingBirds - mortalityCount - cullCount + adjustmentCount;
-    final closingBirds = parseInt(json['closingBirds']) != 0
-        ? parseInt(json['closingBirds'])
-        : (calcClosing < 0 ? 0 : calcClosing);
+    final rawClosing = parseInt(json['closingBirds']);
+    final closingBirds = rawClosing > 0
+        ? rawClosing
+        : (rawClosing < 0
+            ? 0
+            : calculateClosingBirds(
+                opening: openingBirds,
+                mortality: mortalityCount,
+                culls: cullCount,
+                adjustments: adjustmentCount,
+              ));
 
     return DailyRecordModel(
       id: json['id'] as String? ?? '',
@@ -405,6 +411,24 @@ class DailyRecordModel {
   /// Validates relative humidity percentage (0% to 100%).
   static bool isValidHumidity(double humidity) =>
       humidity >= 0 && humidity <= 100;
+
+  /// Validates average bird weight in grams (plausible poultry range: 0 to 10,000g).
+  static bool isValidBirdWeight(double weightGrams) =>
+      weightGrams >= 0 && weightGrams <= 10000;
+
+  /// Computes expected closing birds from opening, mortality, culls, and adjustments.
+  /// Safely ensures non-negative lower bound.
+  static int calculateClosingBirds({
+    required int opening,
+    required int mortality,
+    required int culls,
+    int adjustments = 0,
+  }) {
+    final safeMortality = mortality < 0 ? 0 : mortality;
+    final safeCulls = culls < 0 ? 0 : culls;
+    final closing = opening - safeMortality - safeCulls + adjustments;
+    return closing > 0 ? closing : 0;
+  }
 
   static DateTime? _parseDateString(String value) {
     try {
