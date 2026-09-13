@@ -43,18 +43,18 @@ This backlog documents legitimate, verified improvements, refactorings, bug fixe
 | **FS-023** | Farms | Add farm search and status filter in `FarmListScreen` | P1 | Medium | Required | Todo |
 | **FS-024** | Farms | Unit test `FarmModel` serialization and dimension parsing | P2 | Small | Required | Done |
 | **FS-025** | Batches | Validate batch placement bird count (must be positive integer) | P0 | Small | Required | Done |
-| **FS-026** | Batches | Warn when batch bird count exceeds farm or shed capacity | P1 | Medium | Required | Todo |
+| **FS-026** | Batches | Warn when batch bird count exceeds farm or shed capacity | P1 | Medium | Required | Done |
 | **FS-027** | Batches | Calculate remaining live birds (`totalBirds - mortality - culls + adj`) | P0 | Small | Required | Done |
 | **FS-028** | Batches | Support batch status filtering (`active`, `completed`, `all`) | P1 | Small | Required | Todo |
 | **FS-029** | Batches | Prevent placement dates in the far future | P0 | Small | Required | Done |
 | **FS-030** | Batches | Unit test `BatchModel` serialization and copyWith methods | P2 | Small | Required | Done |
 | **FS-031** | Batches | Unit test batch population arithmetic and shed allocations | P2 | Small | Required | Done |
-| **FS-032** | Daily Records | Validate water consumption values (non-negative, realistic bounds) | P0 | Small | Required | Todo |
-| **FS-033** | Daily Records | Validate daily record temperature and humidity numeric ranges | P1 | Small | Required | Todo |
-| **FS-034** | Daily Records | Validate average bird weight input in grams (reasonable poultry range) | P1 | Small | Required | Todo |
+| **FS-032** | Daily Records | Validate water consumption values (non-negative, realistic bounds) | P0 | Small | Required | Done |
+| **FS-033** | Daily Records | Validate daily record temperature and humidity numeric ranges | P1 | Small | Required | Done |
+| **FS-034** | Daily Records | Validate average bird weight input in grams (reasonable poultry range) | P1 | Small | Required | Done |
 | **FS-035** | Daily Records | Prevent duplicate daily records for identical batch and date | P0 | Medium | Required | Todo |
 | **FS-036** | Daily Records | Extract repeated telemetry input card widgets in `add_record_wizard` | P3 | Medium | Optional | Todo |
-| **FS-037** | Daily Records | Unit test daily record closing bird calculation edge cases | P2 | Small | Required | Todo |
+| **FS-037** | Daily Records | Unit test daily record closing bird calculation edge cases | P2 | Small | Required | Done |
 | **FS-038** | Performance | Standardize Feed Conversion Ratio (FCR) formula calculation | P0 | Medium | Required | Done |
 | **FS-039** | Performance | Correct Mortality % formula with proper batch opening denominator | P0 | Small | Required | Done |
 | **FS-040** | Performance | Standardize Average Daily Gain (ADG) calculation across growth charts | P0 | Medium | Required | Done |
