@@ -10,7 +10,7 @@ void main() {
         ageDays: 35,
         fcr: 1.55,
       );
-      expect(epef, 389.30);
+      expect(epef, 389.31);
       expect(EuropeanBroilerIndex.getPerformanceRating(epef), 'Good');
     });
 

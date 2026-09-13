@@ -25,7 +25,7 @@ void main() {
 
       expect(event.title, 'ND Vaccine Booster');
       expect(event.isCompleted, isFalse);
-      expect(event.priorityLabel, 'High');
+      expect(event.priority, 'high');
       expect(event.color, isNotNull);
 
       final completed = event.copyWith(isCompleted: true, completedAt: now);
