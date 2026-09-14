@@ -2,7 +2,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/features/performance/domain/growth_analytics_model.dart';
-import 'package:flock_sense/features/performance/domain/performance_calculator.dart';
 
 class FcrTrendChart extends StatelessWidget {
   const FcrTrendChart({super.key, required this.data});
