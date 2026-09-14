@@ -90,6 +90,8 @@ class FinanceAnalyticsEngine {
     required List<FinanceTransactionModel> transactions,
     required FinanceBudgetModel budget,
     int activeBirdCount = 0,
+    Map<String, String>? batchNames,
+    Map<String, String>? farmNames,
   }) {
     final now = DateTime.now();
 
@@ -238,7 +240,11 @@ class FinanceAnalyticsEngine {
       }
     }
 
-    String getTopKey(Map<String, double> map, {bool highest = true}) {
+    String getTopKey(
+      Map<String, double> map, {
+      bool highest = true,
+      Map<String, String>? nameMap,
+    }) {
       if (map.isEmpty) return 'No Data';
       var bestKey = map.keys.first;
       var bestVal = map.values.first;
@@ -248,15 +254,42 @@ class FinanceAnalyticsEngine {
           bestKey = k;
         }
       });
+      if (nameMap != null && nameMap.containsKey(bestKey)) {
+        return nameMap[bestKey]!;
+      }
       return bestKey;
     }
 
-    final mostProfitableBatch = getTopKey(batchProfits, highest: true);
-    final leastProfitableBatch = getTopKey(batchProfits, highest: false);
-    final highestFeedCostBatch = getTopKey(batchFeedCosts, highest: true);
-    final highestMedCostBatch = getTopKey(batchMedCosts, highest: true);
-    final mostExpensiveFarm = getTopKey(farmExpenses, highest: true);
-    final bestPerformingFarm = getTopKey(farmProfits, highest: true);
+    final mostProfitableBatch = getTopKey(
+      batchProfits,
+      highest: true,
+      nameMap: batchNames,
+    );
+    final leastProfitableBatch = getTopKey(
+      batchProfits,
+      highest: false,
+      nameMap: batchNames,
+    );
+    final highestFeedCostBatch = getTopKey(
+      batchFeedCosts,
+      highest: true,
+      nameMap: batchNames,
+    );
+    final highestMedCostBatch = getTopKey(
+      batchMedCosts,
+      highest: true,
+      nameMap: batchNames,
+    );
+    final mostExpensiveFarm = getTopKey(
+      farmExpenses,
+      highest: true,
+      nameMap: farmNames,
+    );
+    final bestPerformingFarm = getTopKey(
+      farmProfits,
+      highest: true,
+      nameMap: farmNames,
+    );
 
     // Predictions
     final expectedHarvestRevenue = (revenuePerBird > 0 && activeBirdCount > 0)
