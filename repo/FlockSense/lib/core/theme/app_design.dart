@@ -7,7 +7,7 @@ class AppDesign {
   static const LinearGradient headerGreenGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF1B5E20), Color(0xFF2E7D32), Color(0xFF00695C)],
+    colors: [Color(0xFF104422), Color(0xFF14522A), Color(0xFF14532D)],
   );
 
   static const LinearGradient headerGoldGradient = LinearGradient(
@@ -43,13 +43,13 @@ class AppDesign {
   static const LinearGradient actionGreen = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
+    colors: [Color(0xFF104422), Color(0xFF16A34A)],
   );
 
   static const LinearGradient actionTeal = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF00695C), Color(0xFF00897B)],
+    colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
   );
 
   static const LinearGradient actionGold = LinearGradient(
@@ -79,7 +79,7 @@ class AppDesign {
   static const LinearGradient actionDarkTeal = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF004D40), Color(0xFF00695C)],
+    colors: [Color(0xFF134E4A), Color(0xFF0F766E)],
   );
 
   static const LinearGradient actionDarkRed = LinearGradient(
@@ -95,7 +95,7 @@ class AppDesign {
   static BoxDecoration get cardDecoration => BoxDecoration(
     color: Colors.white,
     borderRadius: BorderRadius.circular(16),
-    border: Border.all(color: const Color(0xFFE8F0E8), width: 1),
+    border: Border.all(color: AppColors.border, width: 1),
     boxShadow: const [
       BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 2)),
     ],
@@ -287,7 +287,7 @@ class AppDesign {
           ],
         ),
       ),
-      const Divider(height: 1, color: Color(0xFFE8F0E8)),
+      const Divider(height: 1, color: AppColors.border),
     ],
   );
 }
