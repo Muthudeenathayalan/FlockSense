@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/features/ai/data/models/ai_attachment_model.dart';
 import 'package:flock_sense/features/ai/data/models/ai_message_model.dart';
 import 'package:flock_sense/features/ai/data/services/ai_chat_firestore_service.dart';
@@ -147,7 +148,30 @@ class _AiScreenState extends ConsumerState<AiScreen> {
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Cancel'),
           ),
+          OutlinedButton(
+            onPressed: () async {
+              final testKey = controller.text.trim();
+              final ok = await GeminiService.testApiKey(testKey.isNotEmpty ? testKey : null);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    backgroundColor: ok ? Colors.green.shade800 : Colors.red.shade800,
+                    content: Text(
+                      ok
+                          ? 'Connection Successful! Gemini 3.6 Flash is live.'
+                          : 'Connection failed. Please verify your API key.',
+                    ),
+                  ),
+                );
+              }
+            },
+            child: const Text('Test Connection'),
+          ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF104422),
+              foregroundColor: Colors.white,
+            ),
             onPressed: () async {
               await GeminiService.setStoredApiKey(controller.text.trim());
               if (mounted) {
@@ -177,7 +201,7 @@ class _AiScreenState extends ConsumerState<AiScreen> {
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.background,
       appBar: AiAppBar(
         onOpenHistory: () => _scaffoldKey.currentState?.openEndDrawer(),
         onNewChat: () {
