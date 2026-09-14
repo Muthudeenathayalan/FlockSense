@@ -199,9 +199,7 @@ class _ActiveBatchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final birdsCount = batch.currentBirds > 0
-        ? batch.currentBirds
-        : batch.totalBirds;
+    final birdsCount = batch.currentBirds;
     final ageDays = DateTime.now().difference(batch.placementDate).inDays;
     final breedText = batch.breedOrFlockType.isNotEmpty
         ? batch.breedOrFlockType
