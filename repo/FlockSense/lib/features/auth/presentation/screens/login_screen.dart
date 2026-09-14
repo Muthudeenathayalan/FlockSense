@@ -100,17 +100,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.18),
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                      child: const Icon(
-                        Icons.agriculture,
-                        size: 38,
-                        color: Colors.white,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(22),
+                      child: Image.asset(
+                        'assets/images/flocksense_app_logo.png',
+                        width: 76,
+                        height: 76,
+                        fit: BoxFit.cover,
                       ),
                     ),
                     const SizedBox(height: 14),
