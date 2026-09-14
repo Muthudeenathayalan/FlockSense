@@ -14,7 +14,6 @@ import 'package:flock_sense/features/medicine/domain/medicine_record_model.dart'
 import 'package:flock_sense/features/reports/domain/report_data.dart';
 import 'package:flock_sense/features/reports/domain/report_types.dart';
 import 'package:flock_sense/features/sheds/data/shed_service.dart';
-import 'package:flock_sense/features/sheds/domain/shed_model.dart';
 import 'package:flock_sense/features/sales/data/sales_service.dart';
 import 'package:flock_sense/features/sales/domain/sales_record_model.dart';
 import 'package:flock_sense/features/vaccine/data/vaccine_service.dart';
