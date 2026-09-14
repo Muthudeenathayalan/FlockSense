@@ -37,12 +37,12 @@ void main() {
       expect(find.byIcon(Icons.post_add), findsOneWidget);
 
       // Tap on 'Farms' navigation tab
-      await tester.tap(find.byIcon(Icons.agriculture_outlined));
+      await tester.tap(find.text('Farms'));
       await tester.pumpAndSettle();
 
       // On Farms tab (index 1), FAB switches to 'Add Farm'
       expect(find.widgetWithText(FloatingActionButton, 'Add Farm'), findsOneWidget);
-      expect(find.widgetWithIcon(FloatingActionButton, Icons.add_business_rounded), findsOneWidget);
+      expect(find.widgetWithIcon(FloatingActionButton, Icons.add_rounded), findsOneWidget);
     });
 
     testWidgets('FarmListScreen renders mild header and facility cards with green header', (tester) async {
@@ -76,7 +76,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify mild light AppBar title & New Farm action
-      expect(find.text('My Facilities'), findsOneWidget);
+      expect(find.text('Farms & Facilities'), findsOneWidget);
       expect(find.text('New Farm'), findsOneWidget);
 
       // Verify farm card content
