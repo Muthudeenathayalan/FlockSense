@@ -4,7 +4,7 @@
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%7C%20Auth%20%7C%20Functions-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
 [![Riverpod](https://img.shields.io/badge/State%20Management-Riverpod-blueviolet)](https://riverpod.dev)
-[![Tests](https://img.shields.io/badge/Tests-58%20Passed-16A34A?logo=checkmarx&logoColor=white)](#-testing--quality-assurance)
+[![Tests](https://img.shields.io/badge/Tests-126%20Passed-16A34A?logo=checkmarx&logoColor=white)](#-testing--quality-assurance)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Author](https://img.shields.io/badge/Author-Muthudeenathayalan-orange?logo=github)](https://github.com/Muthudeenathayalan)
 
@@ -191,6 +191,8 @@ flutter test --coverage
 Comprehensive engineering documentation is maintained in the [`docs/`](docs/) directory:
 
 - 📘 [Clean Architecture Guide](docs/ARCHITECTURE.md) — Architectural layers, dependency rules, and folder structure.
+- 🤖 [AI Advisor & Gemini Integration](docs/AI_ADVISOR.md) — Gemini 3.6 Flash chatbot, context injection, and API resolution hierarchy.
+- 💰 [Finance Engine Specification](docs/FINANCE_ENGINE.md) — Multi-source aggregation across bird sales, feed, medicine, and operational telemetry.
 - 📐 [Analytics Formulas & Scientific Specifications](docs/ANALYTICS_FORMULAS.md) — In-depth guide to FCR, ADG, and EPEF calculations.
 - 🗄️ [Firebase & Firestore Schema](docs/FIREBASE_SCHEMA.md) — Document paths, collection structures, and security rules.
 - 🔒 [Security & Credential Guidelines](docs/SECURITY.md) — Authentication flow, OTP architecture, and Firestore rules.
