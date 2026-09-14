@@ -51,14 +51,16 @@ void main() {
         cumulativeMortality: 120,
         cumulativeCulls: 30,
         adjustments: 10,
+        cumulativeSales: 500,
       );
-      expect(remaining, 4860);
+      expect(remaining, 4360);
 
-      // Clamps to 0 if mortality exceeds placed birds
+      // Clamps to 0 if mortality + sales exceeds placed birds
       final depleted = BatchModel.calculateRemainingBirds(
         totalBirds: 100,
         cumulativeMortality: 150,
         cumulativeCulls: 0,
+        cumulativeSales: 50,
       );
       expect(depleted, 0);
     });
