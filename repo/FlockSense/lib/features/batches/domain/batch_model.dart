@@ -88,9 +88,10 @@ class BatchModel {
     required int cumulativeMortality,
     required int cumulativeCulls,
     int adjustments = 0,
+    int cumulativeSales = 0,
   }) {
     final remaining =
-        totalBirds - cumulativeMortality - cumulativeCulls + adjustments;
+        totalBirds - cumulativeMortality - cumulativeCulls - cumulativeSales + adjustments;
     return remaining > 0 ? remaining : 0;
   }
 
