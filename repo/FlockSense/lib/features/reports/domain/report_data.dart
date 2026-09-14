@@ -146,7 +146,12 @@ class ReportData {
     if (lastRec == null || lastRec.avgWeightGrams <= 0 || totalFeedKg <= 0) {
       return null;
     }
-    return totalFeedKg / (lastRec.avgWeightGrams / 1000.0);
+    final liveBirds = lastRec.closingBirds > 0
+        ? lastRec.closingBirds
+        : (batch.totalBirds - totalMortality);
+    final totalBiomassKg = liveBirds * (lastRec.avgWeightGrams / 1000.0);
+    if (totalBiomassKg <= 0) return null;
+    return totalFeedKg / totalBiomassKg;
   }
 
   double? get avgBodyWeightGrams {
