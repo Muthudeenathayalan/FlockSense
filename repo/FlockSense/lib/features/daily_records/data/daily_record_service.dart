@@ -54,6 +54,7 @@ class DailyRecordService {
     required int mortalityCount,
     required int cullCount,
     int adjustmentCount = 0,
+    int birdsSold = 0,
     required double feedConsumedKg,
     required double waterConsumedLiters,
     required double avgWeightGrams,
@@ -128,11 +129,47 @@ class DailyRecordService {
       throw ValidationException('Adjustment count must be a valid number.');
     }
 
-    final closingBirds =
-        openingBirds - mortalityCount - cullCount + adjustmentCount;
-    if (closingBirds < 0) {
-      throw ValidationException('Closing birds cannot be negative.');
-    }
+    final recordId = _formatRecordDate(recordDate);
+    final recordRef = _dailyRecordsRef(uid, farmId, batchId).doc(recordId);
+    final batchRef = _batchesRef(uid, farmId).doc(batchId);
+
+    final existingSnapshot = await recordRef.get();
+    final existingSold = existingSnapshot.exists
+        ? ((existingSnapshot.data()?['birdsSold'] as num?)?.toInt() ?? 0)
+        : 0;
+
+    // Sum any bird sales recorded for this batch on this date
+    int salesOnDate = 0;
+    try {
+      final salesSnap = await _db
+          .collection('users')
+          .doc(uid)
+          .collection('farms')
+          .doc(farmId)
+          .collection('batches')
+          .doc(batchId)
+          .collection('salesRecords')
+          .get();
+      for (final doc in salesSnap.docs) {
+        final d = doc.data();
+        final rawDate = d['date'];
+        final dt = rawDate is Timestamp
+            ? rawDate.toDate()
+            : (rawDate is String ? DateTime.tryParse(rawDate) : null);
+        if (dt != null &&
+            dt.year == recordDate.year &&
+            dt.month == recordDate.month &&
+            dt.day == recordDate.day) {
+          salesOnDate += (d['birdsSold'] as num?)?.toInt() ?? 0;
+        }
+      }
+    } catch (_) {}
+
+    final effectiveBirdsSold =
+        salesOnDate > 0 ? salesOnDate : (birdsSold > 0 ? birdsSold : existingSold);
+
+    final closingBirds = (openingBirds - mortalityCount - cullCount - effectiveBirdsSold + adjustmentCount)
+        .clamp(0, 9999999);
     if (medicineGiven && (medicineName?.trim().isEmpty ?? true)) {
       throw ValidationException(
         'Medicine name is required when medicine is given.',
@@ -144,11 +181,6 @@ class DailyRecordService {
       );
     }
 
-    final recordId = _formatRecordDate(recordDate);
-    final recordRef = _dailyRecordsRef(uid, farmId, batchId).doc(recordId);
-    final batchRef = _batchesRef(uid, farmId).doc(batchId);
-
-    final existingSnapshot = await recordRef.get();
     final createdAt = existingSnapshot.exists
         ? _parseTimestamp(existingSnapshot.data()?['createdAt']) ??
               DateTime.now()
@@ -164,6 +196,7 @@ class DailyRecordService {
       mortalityCount: mortalityCount,
       cullCount: cullCount,
       adjustmentCount: adjustmentCount,
+      birdsSold: effectiveBirdsSold,
       closingBirds: closingBirds,
       feedConsumedKg: feedConsumedKg,
       waterConsumedLiters: waterConsumedLiters,
@@ -576,6 +609,8 @@ class DailyRecordService {
     return DailyRecordModel.fromJson(snapshot.docs.first.data());
   }
 
+  static String formatRecordDate(DateTime date) => _formatRecordDate(date);
+
   static String _formatRecordDate(DateTime date) {
     return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
@@ -622,15 +657,11 @@ class DailyRecordService {
       for (final doc in snapshot.docs) {
         final record = DailyRecordModel.fromJson(doc.data());
         final newClosing =
-            previousClosing -
+            (previousClosing -
             record.mortalityCount -
-            record.cullCount +
-            record.adjustmentCount;
-        if (newClosing < 0) {
-          throw ValidationException(
-            'Recalculation would result in negative bird count on ${record.recordDate}.',
-          );
-        }
+            record.cullCount -
+            record.birdsSold +
+            record.adjustmentCount).clamp(0, 9999999);
 
         batch.set(doc.reference, {
           'openingBirds': previousClosing,
