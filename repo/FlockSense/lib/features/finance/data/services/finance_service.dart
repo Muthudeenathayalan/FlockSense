@@ -9,6 +9,8 @@ import 'package:flock_sense/features/sales/data/sales_service.dart';
 import 'package:flock_sense/features/medicine/data/medicine_service.dart';
 import 'package:flock_sense/features/feed/data/feed_service.dart';
 
+import 'package:flock_sense/features/daily_records/data/daily_record_service.dart';
+
 class FinanceService {
   FinanceService._();
 
@@ -44,18 +46,29 @@ class FinanceService {
         });
   }
 
-  static Future<List<FinanceTransactionModel>> getCombinedTransactions() async {
+  static Future<List<FinanceTransactionModel>> getCombinedTransactions({
+    String? farmId,
+    String? batchId,
+  }) async {
     final user = _auth.currentUser;
     final list = <FinanceTransactionModel>[];
     final seenIds = <String>{};
 
     if (user != null) {
       try {
-        final snap = await _firestore
+        Query<Map<String, dynamic>> query = _firestore
             .collection('users')
             .doc(user.uid)
-            .collection('finance_transactions')
-            .get();
+            .collection('finance_transactions');
+
+        if (farmId != null && farmId.isNotEmpty && farmId != 'all') {
+          query = query.where('farmId', isEqualTo: farmId);
+        }
+        if (batchId != null && batchId.isNotEmpty && batchId != 'all') {
+          query = query.where('batchId', isEqualTo: batchId);
+        }
+
+        final snap = await query.get();
 
         for (final doc in snap.docs) {
           final tx = FinanceTransactionModel.fromJson(doc.data());
@@ -67,11 +80,19 @@ class FinanceService {
         debugPrint('[FinanceService] Fetch Firestore transactions failed: $e');
       }
 
-      // Automatically integrate Bird Sales, Feed Purchases, and Medicine into Finance Transactions
+      // Automatically integrate Bird Sales, Feed Purchases, Medicine, and Daily Record Costs
       try {
-        final farms = await FarmService.getUserFarms();
+        final allFarms = await FarmService.getUserFarms();
+        final farms = (farmId != null && farmId.isNotEmpty && farmId != 'all')
+            ? allFarms.where((f) => f.id == farmId).toList()
+            : allFarms;
+
         for (final farm in farms) {
-          final batches = await BatchService.getBatchesForFarm(farm.id);
+          final allBatches = await BatchService.getBatchesForFarm(farm.id);
+          final batches = (batchId != null && batchId.isNotEmpty && batchId != 'all')
+              ? allBatches.where((b) => b.id == batchId).toList()
+              : allBatches;
+
           for (final batch in batches) {
             // 1. Bird Sales -> Income
             try {
@@ -81,7 +102,7 @@ class FinanceService {
               );
               for (final s in sales) {
                 final txId = 'sale_${s.id}';
-                if (!list.any((t) => t.id == txId)) {
+                if (seenIds.add(txId)) {
                   list.add(
                     FinanceTransactionModel(
                       id: txId,
@@ -124,7 +145,7 @@ class FinanceService {
                 if (f.totalCost > 0 ||
                     f.transactionType.toLowerCase().contains('purchase')) {
                   final txId = 'feed_${f.id}';
-                  if (!list.any((t) => t.id == txId)) {
+                  if (seenIds.add(txId)) {
                     list.add(
                       FinanceTransactionModel(
                         id: txId,
@@ -169,7 +190,7 @@ class FinanceService {
               );
               for (final m in meds) {
                 final txId = 'med_${m.id}';
-                if (!list.any((t) => t.id == txId)) {
+                if (seenIds.add(txId)) {
                   final cost = m.valueRs ?? 0.0;
                   list.add(
                     FinanceTransactionModel(
@@ -199,6 +220,76 @@ class FinanceService {
               }
             } catch (e) {
               debugPrint('[FinanceService] Medicine integration error: $e');
+            }
+
+            // 4. Daily Records with direct Feed or Medicine Costs -> Expense
+            try {
+              final dailyRecords = await DailyRecordService.getAllDailyRecords(
+                farmId: farm.id,
+                batchId: batch.id,
+              );
+              for (final dr in dailyRecords) {
+                // Check if feed cost logged in daily telemetry
+                if (dr.feedCost != null && dr.feedCost! > 0) {
+                  final txId = 'dr_feed_${dr.id}';
+                  if (seenIds.add(txId)) {
+                    list.add(
+                      FinanceTransactionModel(
+                        id: txId,
+                        farmId: dr.farmId,
+                        batchId: dr.batchId,
+                        ownerId: dr.ownerId,
+                        type: FinanceTransactionType.expense,
+                        category: 'Feed',
+                        date: dr.recordDate,
+                        customerOrSupplier: dr.feedSupplier?.trim().isNotEmpty == true
+                            ? dr.feedSupplier!.trim()
+                            : 'Feed Store',
+                        quantity: dr.feedConsumedKg > 0 ? dr.feedConsumedKg : 1.0,
+                        unitPrice: dr.feedConsumedKg > 0 ? dr.feedCost! / dr.feedConsumedKg : dr.feedCost!,
+                        totalAmount: dr.feedCost!,
+                        paymentMethod: 'Cash',
+                        paymentStatus: PaymentStatus.paid,
+                        paidAmount: dr.feedCost!,
+                        invoiceNumber: 'INV-DRF-${dr.id.length > 5 ? dr.id.substring(0, 5) : dr.id}',
+                        notes: 'Feed logged on Day ${dr.batchAgeDay}',
+                        createdAt: dr.createdAt,
+                        updatedAt: dr.updatedAt,
+                      ),
+                    );
+                  }
+                }
+                // Check if medicine cost logged in daily telemetry
+                if (dr.medicineCost != null && dr.medicineCost! > 0) {
+                  final txId = 'dr_med_${dr.id}';
+                  if (seenIds.add(txId)) {
+                    list.add(
+                      FinanceTransactionModel(
+                        id: txId,
+                        farmId: dr.farmId,
+                        batchId: dr.batchId,
+                        ownerId: dr.ownerId,
+                        type: FinanceTransactionType.expense,
+                        category: 'Medicine',
+                        date: dr.recordDate,
+                        customerOrSupplier: 'Vet Pharmacy',
+                        quantity: 1.0,
+                        unitPrice: dr.medicineCost!,
+                        totalAmount: dr.medicineCost!,
+                        paymentMethod: 'Cash',
+                        paymentStatus: PaymentStatus.paid,
+                        paidAmount: dr.medicineCost!,
+                        invoiceNumber: 'INV-DRM-${dr.id.length > 5 ? dr.id.substring(0, 5) : dr.id}',
+                        notes: 'Medicine on Day ${dr.batchAgeDay}: ${dr.medicineName ?? ""}',
+                        createdAt: dr.createdAt,
+                        updatedAt: dr.updatedAt,
+                      ),
+                    );
+                  }
+                }
+              }
+            } catch (e) {
+              debugPrint('[FinanceService] Daily records financial integration error: $e');
             }
           }
         }
