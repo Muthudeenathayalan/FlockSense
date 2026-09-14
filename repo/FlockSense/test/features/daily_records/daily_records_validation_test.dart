@@ -67,6 +67,15 @@ void main() {
         culls: -10,
       );
       expect(sanitized, 1000);
+
+      // birdsSold properly deducts from closing count
+      final withSales = DailyRecordModel.calculateClosingBirds(
+        opening: 5000,
+        mortality: 15,
+        culls: 5,
+        birdsSold: 1200,
+      );
+      expect(withSales, 3780);
     });
 
     test(
