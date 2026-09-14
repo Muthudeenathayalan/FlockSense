@@ -229,7 +229,15 @@ class _DailyRecordTypeFormDialogState extends State<DailyRecordTypeFormDialog> {
     setState(() => _isSaving = true);
     try {
       final existing = widget.existingRecord;
-      final opening = existing?.openingBirds ?? widget.currentBirds;
+      int opening = existing?.openingBirds ?? widget.currentBirds;
+      if (existing == null) {
+        try {
+          final freshBatch = await BatchService.getBatchById(widget.farmId, widget.batchId);
+          if (freshBatch != null) {
+            opening = freshBatch.currentBirds;
+          }
+        } catch (_) {}
+      }
       final currentMortality =
           int.tryParse(_deadBirdsController.text.trim()) ??
           existing?.mortalityCount ??
