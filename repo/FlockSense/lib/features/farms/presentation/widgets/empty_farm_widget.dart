@@ -21,7 +21,7 @@ class EmptyFarmWidget extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.agriculture,
+                Icons.flutter_dash,
                 size: 64,
                 color: Colors.green.shade700,
               ),
