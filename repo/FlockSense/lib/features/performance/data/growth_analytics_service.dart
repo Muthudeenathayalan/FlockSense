@@ -418,15 +418,36 @@ class GrowthAnalyticsService {
       }
     }
 
+    int totalBirdsSold = 0;
+    for (final s in filteredSales) {
+      totalBirdsSold += s.birdsSold;
+    }
+
     final totalBirdLoss = totalMortality + totalCulls;
 
-    final currentBirds = filteredRecords.isNotEmpty && filteredRecords.last.closingBirds > 0
-        ? filteredRecords.last.closingBirds
-        : (activeBatch != null
-            ? (activeBatch.currentBirds > 0
-                ? activeBatch.currentBirds
-                : ((initialBirds - totalBirdLoss) > 0 ? (initialBirds - totalBirdLoss) : 0))
-            : 0);
+    int currentBirds;
+    if (filteredRecords.isNotEmpty) {
+      final lastRecord = filteredRecords.last;
+      int postRecordSales = 0;
+      final lastRecDate = DateTime(
+        lastRecord.recordDate.year,
+        lastRecord.recordDate.month,
+        lastRecord.recordDate.day,
+      );
+      for (final s in filteredSales) {
+        final saleDate = DateTime(s.date.year, s.date.month, s.date.day);
+        if (saleDate.isAfter(lastRecDate)) {
+          postRecordSales += s.birdsSold;
+        }
+      }
+      currentBirds = (lastRecord.closingBirds - postRecordSales).clamp(0, 9999999);
+    } else if (activeBatch != null) {
+      currentBirds = activeBatch.currentBirds;
+    } else {
+      currentBirds = ((initialBirds - totalBirdLoss - totalBirdsSold) > 0
+          ? (initialBirds - totalBirdLoss - totalBirdsSold)
+          : 0);
+    }
 
     final mortalityPct = initialBirds > 0
         ? double.parse(((totalBirdLoss / initialBirds) * 100.0).toStringAsFixed(2))
