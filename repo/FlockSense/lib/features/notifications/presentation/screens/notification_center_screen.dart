@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/features/notifications/data/models/notification_model.dart';
 import 'package:flock_sense/features/notifications/data/services/notification_firestore_service.dart';
 import 'package:flock_sense/features/notifications/data/services/smart_alert_evaluator.dart';
@@ -123,7 +124,7 @@ class _NotificationCenterScreenState
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Notification Center'),
         actions: [
