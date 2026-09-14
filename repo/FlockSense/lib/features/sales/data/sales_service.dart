@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flock_sense/core/exceptions/app_exceptions.dart';
+import 'package:flock_sense/features/daily_records/data/daily_record_service.dart';
 import 'package:flock_sense/features/sales/domain/sales_record_model.dart';
 
 class SalesService {
@@ -144,8 +145,45 @@ class SalesService {
           }
           await batchRef.set(updateMap, SetOptions(merge: true));
         }
+
+        // Synchronize with Daily Record on that sale date if one exists
+        final recordId = DailyRecordService.formatRecordDate(date);
+        final dailyDocRef = _db
+            .collection('users')
+            .doc(user.uid)
+            .collection('farms')
+            .doc(farmId)
+            .collection('batches')
+            .doc(batchId)
+            .collection('dailyRecords')
+            .doc(recordId);
+
+        final dailySnap = await dailyDocRef.get();
+        if (dailySnap.exists) {
+          final data = dailySnap.data()!;
+          final existingSold = (data['birdsSold'] as num?)?.toInt() ?? 0;
+          final newSold = existingSold + birdsSold;
+          final opening = (data['openingBirds'] as num?)?.toInt() ?? 0;
+          final mort = (data['mortalityCount'] as num?)?.toInt() ?? 0;
+          final culls = (data['cullCount'] as num?)?.toInt() ?? 0;
+          final adj = (data['adjustmentCount'] as num?)?.toInt() ?? 0;
+          final newClosing =
+              (opening - mort - culls - newSold + adj).clamp(0, 9999999);
+
+          await dailyDocRef.set({
+            'birdsSold': newSold,
+            'closingBirds': newClosing,
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+
+          await DailyRecordService.recalculateRecordsAfterDate(
+            farmId: farmId,
+            batchId: batchId,
+            editedDate: date,
+          );
+        }
       } catch (err) {
-        debugPrint('Failed to update batch birds after sale: $err');
+        debugPrint('Failed to update batch/records after sale: $err');
       }
 
       return record;
@@ -170,6 +208,12 @@ class SalesService {
       final salesSnap = await salesDocRef.get();
       if (salesSnap.exists) {
         final sold = (salesSnap.data()?['birdsSold'] as num?)?.toInt() ?? 0;
+        final rawDate = salesSnap.data()?['date'];
+        final saleDate = rawDate is Timestamp
+            ? rawDate.toDate()
+            : (rawDate is String ? DateTime.tryParse(rawDate) : null) ??
+                DateTime.now();
+
         if (sold > 0) {
           final batchRef = _db
               .collection('users')
@@ -185,8 +229,45 @@ class SalesService {
                   (batchSnap.data()?['currentBirds'] as num?)?.toInt() ?? 0;
               await batchRef.set({
                 'currentBirds': current + sold,
+                'status': 'active',
                 'updatedAt': FieldValue.serverTimestamp(),
               }, SetOptions(merge: true));
+            }
+
+            final dRecordId = DailyRecordService.formatRecordDate(saleDate);
+            final dailyDocRef = _db
+                .collection('users')
+                .doc(user.uid)
+                .collection('farms')
+                .doc(farmId)
+                .collection('batches')
+                .doc(batchId)
+                .collection('dailyRecords')
+                .doc(dRecordId);
+
+            final dailySnap = await dailyDocRef.get();
+            if (dailySnap.exists) {
+              final data = dailySnap.data()!;
+              final existingSold = (data['birdsSold'] as num?)?.toInt() ?? 0;
+              final newSold = (existingSold - sold).clamp(0, 9999999);
+              final opening = (data['openingBirds'] as num?)?.toInt() ?? 0;
+              final mort = (data['mortalityCount'] as num?)?.toInt() ?? 0;
+              final culls = (data['cullCount'] as num?)?.toInt() ?? 0;
+              final adj = (data['adjustmentCount'] as num?)?.toInt() ?? 0;
+              final newClosing =
+                  (opening - mort - culls - newSold + adj).clamp(0, 9999999);
+
+              await dailyDocRef.set({
+                'birdsSold': newSold,
+                'closingBirds': newClosing,
+                'updatedAt': FieldValue.serverTimestamp(),
+              }, SetOptions(merge: true));
+
+              await DailyRecordService.recalculateRecordsAfterDate(
+                farmId: farmId,
+                batchId: batchId,
+                editedDate: saleDate,
+              );
             }
           } catch (_) {}
         }
