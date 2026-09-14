@@ -136,7 +136,7 @@ class _AllBatchesScreenState extends ConsumerState<AllBatchesScreen> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(
-                            Icons.agriculture_rounded,
+                            Icons.flutter_dash,
                             color: AppColors.primary,
                           ),
                         ),
@@ -474,7 +474,7 @@ class _AllBatchesCard extends StatelessWidget {
                         Row(
                           children: [
                             const Icon(
-                              Icons.agriculture_rounded,
+                              Icons.flutter_dash,
                               size: 13,
                               color: Colors.white70,
                             ),
@@ -548,7 +548,7 @@ class _AllBatchesCard extends StatelessWidget {
                 children: [
                   _buildMetric(
                     'Live Birds',
-                    '${batch.currentBirds > 0 ? batch.currentBirds : batch.totalBirds}',
+                    '${batch.currentBirds}',
                     Icons.pets_outlined,
                     AppColors.primary,
                   ),
