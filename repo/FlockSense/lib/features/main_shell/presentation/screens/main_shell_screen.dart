@@ -13,7 +13,9 @@ import 'package:flock_sense/features/notifications/data/services/notification_fi
 import 'package:flock_sense/features/notifications/data/services/smart_alert_evaluator.dart';
 import 'package:flock_sense/features/profile/presentation/screens/profile_screen.dart';
 import 'package:flock_sense/config/routes/app_routes.dart';
+import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/features/farms/presentation/screens/farm_list_screen.dart';
+import 'package:flock_sense/core/widgets/hen_icon.dart';
 
 class MainShellScreen extends ConsumerStatefulWidget {
   const MainShellScreen({super.key});
@@ -57,7 +59,7 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
     });
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: AppColors.background,
       body: Column(
         children: [
           Expanded(
@@ -68,10 +70,10 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
       floatingActionButton: _currentIndex == 1
           ? FloatingActionButton.extended(
               onPressed: () => Navigator.pushNamed(context, AppRoutes.farmSetup),
-              backgroundColor: const Color(0xFF16A34A),
+              backgroundColor: const Color(0xFF16A34A), // AppColors.primary
               foregroundColor: Colors.white,
               elevation: 4,
-              icon: const Icon(Icons.add_business_rounded),
+              icon: const Icon(Icons.add_rounded),
               label: const Text(
                 'Add Farm',
                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -80,7 +82,7 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
           : (_currentIndex == 0
               ? FloatingActionButton.extended(
                   onPressed: _openingRecordFlow ? null : _openQuickRecordFlow,
-                  backgroundColor: const Color(0xFF1B5E20),
+                  backgroundColor: const Color(0xFF14532D), // AppColors.primaryDark
                   foregroundColor: Colors.white,
                   elevation: 4,
                   icon: const Icon(Icons.post_add),
@@ -103,8 +105,8 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.agriculture_outlined),
-            selectedIcon: Icon(Icons.agriculture),
+            icon: HenIcon(size: 22),
+            selectedIcon: HenIcon(size: 22),
             label: 'Farms',
           ),
           NavigationDestination(
