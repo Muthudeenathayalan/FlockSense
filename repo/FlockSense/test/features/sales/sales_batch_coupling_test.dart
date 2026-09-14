@@ -1,6 +1,7 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:flock_sense/features/sales/domain/sales_record_model.dart';
 import 'package:flock_sense/features/batches/domain/batch_model.dart';
+import 'package:flock_sense/features/daily_records/domain/daily_record_model.dart';
 
 void main() {
   group('Sales and Batch Coupling Logic Tests', () {
@@ -125,6 +126,36 @@ void main() {
 
       expect(deduplicated.length, 2);
       expect(deduplicated.map((e) => e.id).toList(), ['sale_dup_1', 'sale_unique_2']);
+    });
+
+    test('daily record closingBirds properly deducts birdsSold along with mortality and culls', () {
+      final closing = DailyRecordModel.calculateClosingBirds(
+        opening: 5000,
+        mortality: 20,
+        culls: 10,
+        adjustments: 0,
+        birdsSold: 1200,
+      );
+      expect(closing, 3770);
+
+      // Verify that when birdsSold + mortality exceeds opening, it clamps safely to 0
+      final closingDepleted = DailyRecordModel.calculateClosingBirds(
+        opening: 500,
+        mortality: 10,
+        culls: 5,
+        birdsSold: 600,
+      );
+      expect(closingDepleted, 0);
+    });
+
+    test('batch calculateRemainingBirds correctly incorporates cumulative sales', () {
+      final remaining = BatchModel.calculateRemainingBirds(
+        totalBirds: 5000,
+        cumulativeMortality: 100,
+        cumulativeCulls: 20,
+        cumulativeSales: 1500,
+      );
+      expect(remaining, 3380);
     });
   });
 }
