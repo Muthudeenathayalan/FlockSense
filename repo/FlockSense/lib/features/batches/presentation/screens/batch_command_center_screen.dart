@@ -93,12 +93,22 @@ class _BatchCommandCenterScreenState extends State<BatchCommandCenterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final b = _batch;
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
+    return StreamBuilder<BatchModel?>(
+      stream: BatchService.watchBatch(widget.farmId, widget.batchId),
+      builder: (context, snapshot) {
+        final b = snapshot.data ?? _batch;
+        final ageDays = b != null
+            ? DateTime.now().difference(b.placementDate).inDays
+            : _ageDays;
+        final fmtDate = b != null
+            ? '${b.placementDate.day}/${b.placementDate.month}/${b.placementDate.year}'
+            : _fmtDate;
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: CustomScrollView(
+            slivers: [
+              SliverAppBar(
             expandedHeight: 220,
             pinned: true,
             backgroundColor: AppColors.primary,
@@ -162,7 +172,7 @@ class _BatchCommandCenterScreenState extends State<BatchCommandCenterScreen> {
                             Row(
                               children: [
                                 AppDesign.statusChip(
-                                  'Day $_ageDays',
+                                  'Day $ageDays',
                                   const Color(0x1AFFFFFF),
                                   textColor: Colors.white,
                                 ),
@@ -209,7 +219,7 @@ class _BatchCommandCenterScreenState extends State<BatchCommandCenterScreen> {
                                 Expanded(
                                   child: AppDesign.headerStat(
                                     'Placed',
-                                    _fmtDate,
+                                    fmtDate,
                                     Icons.calendar_today_rounded,
                                   ),
                                 ),
@@ -464,9 +474,11 @@ class _BatchCommandCenterScreenState extends State<BatchCommandCenterScreen> {
                       ],
                     ),
                   ),
+                ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
