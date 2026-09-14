@@ -1,9 +1,10 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flock_sense/config/api_config.dart';
+
+import 'package:flock_sense/features/ai/data/models/ai_message_model.dart';
 
 class GeminiService {
   GeminiService._();
@@ -54,7 +55,7 @@ class GeminiService {
               ]
             }),
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 10));
       return response.statusCode == 200;
     } catch (_) {
       return false;
@@ -69,6 +70,7 @@ class GeminiService {
   static Future<String> generateResponse({
     required String prompt,
     required String contextSnapshot,
+    List<AiMessageModel>? conversationHistory,
     List<Uint8List>? imageBytesList,
     List<String>? imageMimeTypes,
     String? customApiKey,
@@ -82,10 +84,39 @@ class GeminiService {
     try {
       final url = Uri.parse('$_defaultEndpoint?key=$apiKey');
 
-      final parts = <Map<String, dynamic>>[];
+      // 1. Build Multi-Turn Contents List
+      final contents = <Map<String, dynamic>>[];
 
-      // System Context
-      parts.add({'text': '$contextSnapshot\n\nUser Query: $prompt'});
+      if (conversationHistory != null && conversationHistory.isNotEmpty) {
+        // Exclude system, streaming, or empty messages
+        final validMessages = conversationHistory
+            .where((m) =>
+                !m.isStreaming &&
+                m.content.trim().isNotEmpty &&
+                m.sender != AiMessageSender.system)
+            .toList();
+
+        // Keep last 10 messages for rich chatbot context memory
+        final recentMessages = validMessages.length > 10
+            ? validMessages.sublist(validMessages.length - 10)
+            : validMessages;
+
+        for (final msg in recentMessages) {
+          final role = msg.sender == AiMessageSender.user ? 'user' : 'model';
+          contents.add({
+            'role': role,
+            'parts': [
+              {'text': msg.content.trim()}
+            ],
+          });
+        }
+      }
+
+      // 2. Build the current user turn parts
+      final currentParts = <Map<String, dynamic>>[];
+
+      // Add text query
+      currentParts.add({'text': prompt.trim()});
 
       // Add image parts if provided
       if (imageBytesList != null && imageBytesList.isNotEmpty) {
@@ -96,16 +127,44 @@ class GeminiService {
               : 'image/jpeg';
           final base64String = base64Encode(bytes);
 
-          parts.add({
+          currentParts.add({
             'inline_data': {'mime_type': mime, 'data': base64String},
           });
         }
       }
 
+      contents.add({
+        'role': 'user',
+        'parts': currentParts,
+      });
+
+      // 3. System Instructions: sets role persona & active farm telemetry
+      final systemInstructionText = '''You are FlockSense AI Advisor, an expert commercial poultry veterinarian and farm operations specialist.
+You assist poultry farmers, flock supervisors, and agribusiness managers with:
+- Broiler and layer performance, FCR optimization, and daily growth targets (Cobb 500 / Ross 308)
+- Mortality root-cause analysis, cull reduction, and biosecurity protocols
+- Feed transitions (Pre-starter, Starter, Grower, Finisher) and feed conversion efficiency
+- Environmental control (temperature, relative humidity, ventilation, ammonia levels)
+- Financial unit economics, cost per kg, and cash flow optimization
+
+LIVE FARM TELEMETRY SNAPSHOT:
+$contextSnapshot
+
+COMMUNICATION GUIDELINES:
+- Act like an experienced, helpful poultry doctor and agribusiness consultant in a chat conversation.
+- Answer user queries directly and practically.
+- Use clear structure: bold headings, short bullet points, and numbered action steps.
+- When the farmer asks follow-up questions, maintain conversational continuity from previous messages.
+- If images of birds or farm conditions are attached, provide visual observations, differential diagnosis, and recommended immediate farm management actions.
+- Avoid unnecessary disclaimers; prioritize actionable steps for farm success.''';
+
       final body = {
-        'contents': [
-          {'parts': parts},
-        ],
+        'systemInstruction': {
+          'parts': [
+            {'text': systemInstructionText}
+          ],
+        },
+        'contents': contents,
         'generationConfig': {
           'temperature': 0.7,
           'topK': 40,
@@ -120,7 +179,7 @@ class GeminiService {
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode(body),
           )
-          .timeout(const Duration(seconds: 6));
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -131,14 +190,14 @@ class GeminiService {
           if (partsRes != null && partsRes.isNotEmpty) {
             final text = partsRes.first['text'] as String?;
             if (text != null && text.isNotEmpty) {
-              return text;
+              return text.trim();
             }
           }
         }
-        return 'No response text returned from Gemini API.';
+        return 'I received your query but no text was generated. Please try again.';
       } else if (response.statusCode == 400 || response.statusCode == 403) {
         debugPrint(
-          '[GeminiService] API Key error ${response.statusCode}: ${response.body}',
+          '[GeminiService] API error ${response.statusCode}: ${response.body}',
         );
         return _generateOfflineSmartResponse(prompt, contextSnapshot);
       } else {

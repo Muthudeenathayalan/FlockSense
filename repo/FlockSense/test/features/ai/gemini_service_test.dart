@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flock_sense/config/api_config.dart';
+import 'package:flock_sense/features/ai/data/models/ai_message_model.dart';
 import 'package:flock_sense/features/ai/data/services/gemini_service.dart';
 
 class _AllowRealHttpOverrides extends HttpOverrides {}
@@ -39,6 +40,35 @@ void main() {
 
       expect(response.isNotEmpty, isTrue);
       expect(response.toLowerCase().contains('flocksense'), isTrue);
+    });
+
+    test('Chatbot multi-turn conversational memory remembers prior turns', () async {
+      final history = [
+        AiMessageModel(
+          id: '1',
+          conversationId: 'c1',
+          sender: AiMessageSender.user,
+          content: 'My flock is Cobb 500 placed in Shed 2.',
+          timestamp: DateTime.now().subtract(const Duration(minutes: 2)),
+        ),
+        AiMessageModel(
+          id: '2',
+          conversationId: 'c1',
+          sender: AiMessageSender.ai,
+          content: 'Understood. Cobb 500 in Shed 2 has excellent feed conversion potential.',
+          timestamp: DateTime.now().subtract(const Duration(minutes: 1)),
+        ),
+      ];
+
+      final response = await GeminiService.generateResponse(
+        prompt: 'Which breed and shed did I mention earlier? Answer in one short sentence.',
+        contextSnapshot: 'System: You are FlockSense AI Advisor.',
+        conversationHistory: history,
+      );
+
+      expect(response.isNotEmpty, isTrue);
+      expect(response.toLowerCase().contains('cobb'), isTrue);
+      expect(response.toLowerCase().contains('2') || response.toLowerCase().contains('two'), isTrue);
     });
   });
 }

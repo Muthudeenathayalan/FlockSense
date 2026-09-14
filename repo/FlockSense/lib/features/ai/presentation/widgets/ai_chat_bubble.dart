@@ -213,25 +213,182 @@ class AiChatBubble extends StatelessWidget {
     final chartRegex = RegExp(r'\[CHART:\s*([a-zA-Z0-9_]+)\]');
     final match = chartRegex.firstMatch(rawText);
 
+    Widget? chartWidget;
+    String textToFormat = rawText;
+
     if (match != null) {
       final chartType = match.group(1) ?? 'growth';
-      final cleanText = rawText.replaceAll(chartRegex, '').trim();
-
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            cleanText,
-            style: TextStyle(fontSize: 13, height: 1.4, color: textColor),
-          ),
-          AiChartView(chartType: chartType),
-        ],
+      textToFormat = rawText.replaceAll(chartRegex, '').trim();
+      chartWidget = Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: AiChartView(chartType: chartType),
       );
     }
 
-    return Text(
-      rawText,
-      style: TextStyle(fontSize: 13, height: 1.4, color: textColor),
+    if (isUser) {
+      return Text(
+        textToFormat,
+        style: TextStyle(fontSize: 13, height: 1.4, color: textColor),
+      );
+    }
+
+    // For AI model responses: parse headings, bullet lists, and bold text
+    final lines = textToFormat.split('\n');
+    final widgets = <Widget>[];
+
+    for (int i = 0; i < lines.length; i++) {
+      final line = lines[i].trimRight();
+      if (line.trim().isEmpty) {
+        widgets.add(const SizedBox(height: 6));
+        continue;
+      }
+
+      // Check headings (###, ##, #)
+      if (line.startsWith('### ')) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 6, bottom: 2),
+            child: Text(
+              line.substring(4).trim(),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF104422),
+              ),
+            ),
+          ),
+        );
+      } else if (line.startsWith('## ')) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 2),
+            child: Text(
+              line.substring(3).trim(),
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF104422),
+              ),
+            ),
+          ),
+        );
+      } else if (line.startsWith('# ')) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 8, bottom: 4),
+            child: Text(
+              line.substring(2).trim(),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF104422),
+              ),
+            ),
+          ),
+        );
+      } else if (line.startsWith('* ') ||
+          line.startsWith('- ') ||
+          line.startsWith('• ')) {
+        final bulletText = line.substring(2).trim();
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 5, right: 6),
+                  child: Icon(Icons.circle, size: 5, color: Color(0xFF104422)),
+                ),
+                Expanded(
+                  child: _buildRichInlineSpans(bulletText, textColor),
+                ),
+              ],
+            ),
+          ),
+        );
+      } else if (RegExp(r'^\d+\.\s+').hasMatch(line)) {
+        final matchNum = RegExp(r'^(\d+)\.\s+(.*)$').firstMatch(line);
+        final numStr = matchNum?.group(1) ?? '•';
+        final itemText = matchNum?.group(2) ?? line;
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: Text(
+                    '$numStr.',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF104422),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: _buildRichInlineSpans(itemText, textColor),
+                ),
+              ],
+            ),
+          ),
+        );
+      } else {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 1),
+            child: _buildRichInlineSpans(line, textColor),
+          ),
+        );
+      }
+    }
+
+    if (chartWidget != null) {
+      widgets.add(chartWidget);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: widgets,
+    );
+  }
+
+  /// Parses **bold** segments within a line
+  Widget _buildRichInlineSpans(String text, Color baseColor) {
+    final spans = <TextSpan>[];
+    final boldRegex = RegExp(r'\*\*(.*?)\*\*');
+    int lastEnd = 0;
+
+    for (final match in boldRegex.allMatches(text)) {
+      if (match.start > lastEnd) {
+        spans.add(TextSpan(
+          text: text.substring(lastEnd, match.start),
+          style: TextStyle(fontSize: 13, height: 1.4, color: baseColor),
+        ));
+      }
+      spans.add(TextSpan(
+        text: match.group(1),
+        style: TextStyle(
+          fontSize: 13,
+          height: 1.4,
+          fontWeight: FontWeight.bold,
+          color: baseColor == Colors.white ? Colors.white : Colors.black,
+        ),
+      ));
+      lastEnd = match.end;
+    }
+
+    if (lastEnd < text.length) {
+      spans.add(TextSpan(
+        text: text.substring(lastEnd),
+        style: TextStyle(fontSize: 13, height: 1.4, color: baseColor),
+      ));
+    }
+
+    return RichText(
+      text: TextSpan(children: spans),
     );
   }
 }

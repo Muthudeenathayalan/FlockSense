@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
@@ -50,6 +52,10 @@ class _AiScreenState extends ConsumerState<AiScreen> {
       final activeNotifier = ref.read(activeConversationProvider.notifier);
       final conversation = await activeNotifier.ensureActiveConversation();
 
+      // Retrieve existing conversation history BEFORE adding the new message
+      final existingHistory =
+          AiChatFirestoreService.getLocalMessages(conversation.id);
+
       // 2. Save User Message
       final userMessage = AiMessageModel(
         id: 'msg_${DateTime.now().millisecondsSinceEpoch}',
@@ -85,15 +91,35 @@ class _AiScreenState extends ConsumerState<AiScreen> {
         batchId: conversation.batchId,
       );
 
-      // 5. Call Gemini Service
+      // 5. Extract local image bytes if attached
+      final imageBytesList = <Uint8List>[];
+      final imageMimeTypes = <String>[];
+      for (final att in attachments) {
+        if (att.localPath != null && att.fileType == AiAttachmentType.image) {
+          try {
+            final file = File(att.localPath!);
+            if (await file.exists()) {
+              imageBytesList.add(await file.readAsBytes());
+              imageMimeTypes.add(att.mimeType ?? 'image/jpeg');
+            }
+          } catch (e) {
+            debugPrint('[AiScreen] Error reading attachment: $e');
+          }
+        }
+      }
+
+      // 6. Call Gemini Service with Multi-Turn History & Images
       final aiResponseText = await GeminiService.generateResponse(
         prompt: userText.isNotEmpty
             ? userText
-            : 'Analyze the uploaded content and telemetry.',
+            : 'Analyze the uploaded image and flock telemetry.',
         contextSnapshot: contextSnapshot,
+        conversationHistory: existingHistory,
+        imageBytesList: imageBytesList.isNotEmpty ? imageBytesList : null,
+        imageMimeTypes: imageMimeTypes.isNotEmpty ? imageMimeTypes : null,
       );
 
-      // 6. Update AI Message
+      // 7. Update AI Message
       final completedAiMessage = initialAiMessage.copyWith(
         content: aiResponseText,
         isStreaming: false,
@@ -173,10 +199,12 @@ class _AiScreenState extends ConsumerState<AiScreen> {
               foregroundColor: Colors.white,
             ),
             onPressed: () async {
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              final navigator = Navigator.of(ctx);
               await GeminiService.setStoredApiKey(controller.text.trim());
               if (mounted) {
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
+                navigator.pop();
+                scaffoldMessenger.showSnackBar(
                   const SnackBar(
                     content: Text('Gemini API key saved successfully.'),
                   ),
@@ -223,46 +251,85 @@ class _AiScreenState extends ConsumerState<AiScreen> {
             child: messagesAsync.when(
               data: (messages) {
                 if (messages.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(18),
-                            decoration: BoxDecoration(
-                              color: const Color(
-                                0xFF1B5E20,
-                              ).withAlpha((0.1 * 255).toInt()),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.psychology,
-                              size: 48,
-                              color: Color(0xFF1B5E20),
-                            ),
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 24,
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF104422).withAlpha(25),
+                            shape: BoxShape.circle,
                           ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Welcome to FlockSense AI Workspace',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Colors.black87,
-                            ),
+                          child: const Icon(
+                            Icons.psychology,
+                            size: 44,
+                            color: Color(0xFF104422),
                           ),
-                          const SizedBox(height: 6),
-                          const Text(
-                            'Ask any question about your flock, analyze photos, upload reports, or generate performance predictions.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.black54,
-                            ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'FlockSense AI Advisor',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: Color(0xFF104422),
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Your 24/7 intelligent poultry consultant. Powered by Gemini 3.6 Flash with real-time flock telemetry.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        _buildStarterCard(
+                          icon: Icons.analytics_outlined,
+                          title: 'Flock Performance Review',
+                          subtitle: 'Analyze current FCR, weight & standard growth',
+                          prompt:
+                              'Analyze my current active flock performance and FCR against breed standards.',
+                          color: const Color(0xFF0284C7),
+                          bgColor: const Color(0xFFF0F9FF),
+                        ),
+                        const SizedBox(height: 10),
+                        _buildStarterCard(
+                          icon: Icons.warning_amber_rounded,
+                          title: 'Mortality & Health Diagnostic',
+                          subtitle: 'Root-cause analysis and biosecurity action steps',
+                          prompt:
+                              'Review mortality trends in my farm and recommend corrective action steps.',
+                          color: const Color(0xFFDC2626),
+                          bgColor: const Color(0xFFFEF2F2),
+                        ),
+                        const SizedBox(height: 10),
+                        _buildStarterCard(
+                          icon: Icons.grain_outlined,
+                          title: 'Feed Management & Transition',
+                          subtitle: 'Optimal daily feed intake and phase schedule',
+                          prompt:
+                              'What are the recommended feed intake targets and phase transitions for my flock age?',
+                          color: const Color(0xFFD97706),
+                          bgColor: const Color(0xFFFFFBEB),
+                        ),
+                        const SizedBox(height: 10),
+                        _buildStarterCard(
+                          icon: Icons.camera_alt_outlined,
+                          title: 'Photo Symptom Diagnostic',
+                          subtitle: 'Upload bird or feces photos for visual inspection',
+                          prompt:
+                              'How do I identify early signs of respiratory stress or digestive disorders in my birds?',
+                          color: const Color(0xFF16A34A),
+                          bgColor: const Color(0xFFF0FDF4),
+                        ),
+                      ],
                     ),
                   );
                 }
@@ -301,6 +368,72 @@ class _AiScreenState extends ConsumerState<AiScreen> {
                 ref.read(aiSendingStateProvider.notifier).setSending(false),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStarterCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String prompt,
+    required Color color,
+    required Color bgColor,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _handleSendMessage(prompt, []),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: color.withAlpha(60)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withAlpha(35),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 20, color: color),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 12,
+                color: color.withAlpha(160),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
