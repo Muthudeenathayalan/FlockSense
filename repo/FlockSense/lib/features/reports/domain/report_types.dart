@@ -279,7 +279,7 @@ class ReportFilterState {
         ? '_${farmName.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_').toLowerCase()}'
         : '';
     final cleanExt = extension.replaceAll('.', '');
-    return '${cleanTitle}${cleanFarm}_$dateStr.$cleanExt';
+    return '$cleanTitle${cleanFarm}_$dateStr.$cleanExt';
   }
 }
 

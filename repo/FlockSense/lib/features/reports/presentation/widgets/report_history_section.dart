@@ -57,7 +57,7 @@ class ReportHistorySection extends StatelessWidget {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: historyItems.length,
-            separatorBuilder: (_, __) =>
+            separatorBuilder: (context, index) =>
                 const Divider(height: 1, color: AppColors.border),
             itemBuilder: (context, i) {
               final item = historyItems[i];

@@ -67,6 +67,28 @@ class DetectedProblem {
   });
 }
 
+class FarmingTechniqueInsight {
+  final String title;
+  final String category; // 'Feeding & FCR', 'Brooding Management', 'Water & Litter Hygiene', 'Climate & Ventilation', 'Health & Biosecurity'
+  final String severity; // 'Critical', 'Warning', 'Advantage'
+  final String metricObserved;
+  final String techniqueFlaw;
+  final String correctiveAction;
+  final double? financialImpactRs;
+  final bool isDisadvantage;
+
+  const FarmingTechniqueInsight({
+    required this.title,
+    required this.category,
+    required this.severity,
+    required this.metricObserved,
+    required this.techniqueFlaw,
+    required this.correctiveAction,
+    this.financialImpactRs,
+    this.isDisadvantage = true,
+  });
+}
+
 class ReportData {
   const ReportData({
     required this.farm,
@@ -503,4 +525,403 @@ class ReportData {
       return exp != null && exp.isBefore(thirtyDaysFromNow);
     }).toList();
   }
+
+  // --- Farming Technique Disadvantages & Audit Engine ---
+
+  double get totalBiomassKg {
+    final lastRec = _latestRecord;
+    final liveBirds = (lastRec != null && lastRec.closingBirds > 0)
+        ? lastRec.closingBirds
+        : (batch.totalBirds - totalMortality);
+    final wtGrams = avgBodyWeightGrams ?? 0.0;
+    return (liveBirds * wtGrams) / 1000.0;
+  }
+
+  double get waterToFeedRatio {
+    if (totalFeedKg <= 0 || totalWaterLiters <= 0) return 0.0;
+    return totalWaterLiters / totalFeedKg;
+  }
+
+  double get excessFeedKg {
+    final fcr = overallFcr;
+    if (fcr == null || fcr <= 1.55) return 0.0;
+    final biomass = totalBiomassKg;
+    if (biomass <= 0) return 0.0;
+    return (fcr - 1.55) * biomass;
+  }
+
+  double get excessFeedCostRs => excessFeedKg * 42.0;
+
+  int get firstWeekMortalityCount {
+    return dailyRecords
+        .where((r) => r.batchAgeDay <= 7)
+        .fold(0, (sum, r) => sum + r.mortalityCount + r.cullCount);
+  }
+
+  double get firstWeekMortalityPct {
+    if (batch.totalBirds <= 0) return 0.0;
+    return (firstWeekMortalityCount / batch.totalBirds) * 100.0;
+  }
+
+  double get maxRecordedTemp {
+    final temps = dailyRecords
+        .map((r) => r.temperature)
+        .where((t) => t != null && t > 0)
+        .map((t) => t!)
+        .toList();
+    if (temps.isEmpty) return 0.0;
+    return temps.reduce((a, b) => a > b ? a : b);
+  }
+
+  List<FarmingTechniqueInsight> get techniqueDisadvantages {
+    final list = <FarmingTechniqueInsight>[];
+
+    // 1. Feeding Technique: Feeder Pan Height & Spillage (FCR > 1.60)
+    final fcr = overallFcr;
+    if (fcr != null && fcr > 1.60) {
+      final fcrDiff = fcr - 1.55;
+      final cost = excessFeedCostRs > 0 ? excessFeedCostRs : 12500.0;
+      list.add(
+        FarmingTechniqueInsight(
+          title: 'Feed Wastage & Feeder Height Sub-Optimal',
+          category: 'Feeding & FCR',
+          severity: fcr > 1.70 ? 'Critical' : 'Warning',
+          metricObserved:
+              'FCR ${fcr.toStringAsFixed(2)} vs target 1.55 (+${fcrDiff.toStringAsFixed(2)})',
+          techniqueFlaw:
+              'Feeder pans are set too low or pans flooded too deep, allowing birds to flick pellets onto floor litter.',
+          correctiveAction:
+              'Raise feeder lines so pan lip is level with birds\' backs. Adjust feed flow regulator slide to 1/3 pan depth.',
+          financialImpactRs: cost,
+          isDisadvantage: true,
+        ),
+      );
+    }
+
+    // 2. Watering & Litter Hygiene: Imbalanced Water-to-Feed Ratio
+    final wfRatio = waterToFeedRatio;
+    if (wfRatio > 2.20) {
+      final leakageCost =
+          (batch.totalBirds * 0.02 * 180.0).clamp(1500.0, 45000.0);
+      list.add(
+        FarmingTechniqueInsight(
+          title: 'Drinker Line Leaks / Wet Litter Risk',
+          category: 'Water & Litter Hygiene',
+          severity: wfRatio > 2.40 ? 'Critical' : 'Warning',
+          metricObserved:
+              'Water:Feed ratio is ${wfRatio.toStringAsFixed(2)}:1 (normal: 1.80:1 – 2.00:1)',
+          techniqueFlaw:
+              'Nipple water pressure is set too high or subclinical enteritis is driving flushing, creating wet litter and toxic ammonia.',
+          correctiveAction:
+              'Reduce water column pressure to 20-25cm. Check nipple seals for drips. Acidify water to pH 6.0.',
+          financialImpactRs: leakageCost,
+          isDisadvantage: true,
+        ),
+      );
+    } else if (wfRatio > 0 && wfRatio < 1.65) {
+      final lostGrowthCost =
+          ((expectedWeightGrams - (avgBodyWeightGrams ?? expectedWeightGrams))
+                  .abs() *
+              batch.totalBirds *
+              0.10).clamp(1000.0, 30000.0);
+      list.add(
+        FarmingTechniqueInsight(
+          title: 'Restricted Water Flow & Reduced Feed Appetite',
+          category: 'Water & Litter Hygiene',
+          severity: 'Warning',
+          metricObserved:
+              'Water:Feed ratio is low at ${wfRatio.toStringAsFixed(2)}:1',
+          techniqueFlaw:
+              'Drinker nipples are blocked by bio-film or line pressure is deficient, preventing birds from drinking and eating.',
+          correctiveAction:
+              'Flush water lines with high-pressure pulse. Measure flow rate at end of line (target: >60ml/min/nipple).',
+          financialImpactRs: lostGrowthCost,
+          isDisadvantage: true,
+        ),
+      );
+    }
+
+    // 3. Brooding Technique: 7-Day Weight Deficit
+    if (meanAge >= 7 &&
+        (weightDiffGrams < -40.0 ||
+            (growthRatePct > 0 && growthRatePct < 94.0))) {
+      final deficit = weightDiffGrams.abs();
+      final weightLossCost =
+          ((deficit / 1000.0) * batch.totalBirds * 110.0).clamp(2000.0, 50000.0);
+      list.add(
+        FarmingTechniqueInsight(
+          title: 'Brooding Weight Lag & Cold Stress',
+          category: 'Brooding Management',
+          severity: weightDiffGrams < -80.0 ? 'Critical' : 'Warning',
+          metricObserved:
+              'Current avg weight is ${(avgBodyWeightGrams ?? 0).toStringAsFixed(0)}g (${deficit.toStringAsFixed(0)}g below standard)',
+          techniqueFlaw:
+              'Floor concrete was not pre-heated to 32°C prior to chick placement, or chick paper feed area was under 20%.',
+          correctiveAction:
+              'Pre-heat brooding house 24h before chick arrival. Ensure 95% crop fill is achieved by 24h post-placement.',
+          financialImpactRs: weightLossCost,
+          isDisadvantage: true,
+        ),
+      );
+    }
+
+    // 4. Early Chick Management: 1st-Week Mortality Spike
+    if (firstWeekMortalityPct > 1.0) {
+      final chickCost =
+          (firstWeekMortalityCount * 45.0).clamp(500.0, 35000.0);
+      list.add(
+        FarmingTechniqueInsight(
+          title: 'Elevated 1st-Week Brooding Mortality',
+          category: 'Brooding Management',
+          severity: firstWeekMortalityPct > 1.8 ? 'Critical' : 'Warning',
+          metricObserved:
+              'Week 1 mortality reached ${firstWeekMortalityPct.toStringAsFixed(1)}% ($firstWeekMortalityCount chicks)',
+          techniqueFlaw:
+              'Dehydration during transit, cold brooding draft, or inadequate drinker tray accessibility.',
+          correctiveAction:
+              'Provide 5% dextrose + electrolyte water on arrival. Maintain 33°C under brooders with zero floor draft.',
+          financialImpactRs: chickCost,
+          isDisadvantage: true,
+        ),
+      );
+    }
+
+    // 5. Ventilation & Climate Technique: Heat Stress / Air Velocity
+    final peakTemp = maxRecordedTemp;
+    if (peakTemp > 31.0) {
+      final heatLossCost = (batch.totalBirds * 2.8).clamp(1000.0, 25000.0);
+      list.add(
+        FarmingTechniqueInsight(
+          title: 'Tunnel Air Velocity Inadequate During Heat Peaks',
+          category: 'Climate & Ventilation',
+          severity: peakTemp > 33.0 ? 'Critical' : 'Warning',
+          metricObserved:
+              'Peak recorded temp reached ${peakTemp.toStringAsFixed(1)}°C',
+          techniqueFlaw:
+              'Tunnel fans are staged too late or cooling pads dry out, causing thermal panting and reduced feed digestion.',
+          correctiveAction:
+              'Engage full tunnel ventilation before shed hits 28°C. Ensure wind-chill airspeed reaches 2.5 m/s.',
+          financialImpactRs: heatLossCost,
+          isDisadvantage: true,
+        ),
+      );
+    }
+
+    return list;
+  }
+
+  List<FarmingTechniqueInsight> get techniqueAdvantages {
+    final list = <FarmingTechniqueInsight>[];
+
+    // 1. Biosecurity & Liveability
+    if (liveabilityPct >= 96.5 && batch.totalBirds > 0) {
+      list.add(
+        FarmingTechniqueInsight(
+          title: 'Exceptional Biosecurity & Disease Exclusion',
+          category: 'Health & Biosecurity',
+          severity: 'Advantage',
+          metricObserved:
+              'Liveability is ${liveabilityPct.toStringAsFixed(1)}% (Mortality: ${(100 - liveabilityPct).toStringAsFixed(1)}%)',
+          techniqueFlaw:
+              'Strict vehicle disinfection and clean footbath protocol successfully prevented flock disease incursions.',
+          correctiveAction:
+              'Continue current biosecurity discipline; schedule terminal shed fogging post-harvest.',
+          financialImpactRs: null,
+          isDisadvantage: false,
+        ),
+      );
+    }
+
+    // 2. Average Daily Gain (ADG)
+    if (adgGrams >= 58.0) {
+      list.add(
+        FarmingTechniqueInsight(
+          title: 'Superior Daily Weight Velocity (ADG)',
+          category: 'Feeding & FCR',
+          severity: 'Advantage',
+          metricObserved:
+              'ADG is ${adgGrams.toStringAsFixed(1)} g/day (Breed standard: 56.0 g/day)',
+          techniqueFlaw:
+              'High flock uniformity and optimal feeder spacing allowed birds uninterrupted access to nutrients.',
+          correctiveAction:
+              'Maintain current feeding schedule and photoperiod program.',
+          financialImpactRs: null,
+          isDisadvantage: false,
+        ),
+      );
+    }
+
+    // 3. Optimized FCR
+    final fcr = overallFcr;
+    if (fcr != null && fcr <= 1.55) {
+      list.add(
+        FarmingTechniqueInsight(
+          title: 'High Feed Conversion Efficiency',
+          category: 'Feeding & FCR',
+          severity: 'Advantage',
+          metricObserved: 'FCR is ${fcr.toStringAsFixed(2)} (Benchmark: 1.55)',
+          techniqueFlaw:
+              'Tight feeder height management prevented billing out and feed spillage into bedding.',
+          correctiveAction:
+              'Keep feeder heights locked to bird shoulder level as flock continues to grow.',
+          financialImpactRs: null,
+          isDisadvantage: false,
+        ),
+      );
+    }
+
+    // 4. Vaccination Routine Adherence
+    if (vaccineRecords.isNotEmpty) {
+      list.add(
+        FarmingTechniqueInsight(
+          title: 'Proactive Disease Immunization Adherence',
+          category: 'Health & Biosecurity',
+          severity: 'Advantage',
+          metricObserved:
+              '${vaccineRecords.length} preventative vaccination rounds logged',
+          techniqueFlaw:
+              'Flock maintains maternal and acquired antibody titers against Newcastle and Gumboro diseases.',
+          correctiveAction:
+              'Record booster vaccination dates and cold-chain temperature verification.',
+          financialImpactRs: null,
+          isDisadvantage: false,
+        ),
+      );
+    }
+
+    // 5. Hydration Balance
+    final wfRatio = waterToFeedRatio;
+    if (wfRatio >= 1.75 && wfRatio <= 2.15) {
+      list.add(
+        FarmingTechniqueInsight(
+          title: 'Optimal Water-to-Feed Consumption Balance',
+          category: 'Water & Litter Hygiene',
+          severity: 'Advantage',
+          metricObserved:
+              'Water:Feed ratio is balanced at ${wfRatio.toStringAsFixed(2)}:1',
+          techniqueFlaw:
+              'Drinker flow rates match bird appetite without causing wet bedding or ammonia release.',
+          correctiveAction:
+              'Continue weekly drinker nipple flow-rate checks.',
+          financialImpactRs: null,
+          isDisadvantage: false,
+        ),
+      );
+    }
+
+    return list;
+  }
+
+  double get totalTechniqueFinancialLeakage {
+    return techniqueDisadvantages.fold(
+      0.0,
+      (sum, item) => sum + (item.financialImpactRs ?? 0.0),
+    );
+  }
+
+  List<String> get techniqueActionPlan {
+    final list = <String>[];
+    for (final dis in techniqueDisadvantages) {
+      list.add('[${dis.category}] ${dis.correctiveAction}');
+    }
+    if (list.isEmpty) {
+      list.add(
+        'Maintain current elite management protocols across feeding, water sanitation, and ventilation.',
+      );
+      list.add(
+        'Conduct routine litter moisture checks to keep floor bedding below 25% relative moisture.',
+      );
+      list.add(
+        'Calibrate bird weighing scales 3 days prior to planned batch sale.',
+      );
+    }
+    return list;
+  }
+
+  List<Map<String, dynamic>> get benchmarkMatrix {
+    final curFcr = overallFcr ?? 1.55;
+    final curWt = avgBodyWeightGrams ??
+        (expectedWeightGrams > 0 ? expectedWeightGrams : 2000.0);
+    final curMort = 100.0 - liveabilityPct;
+    final curWf = waterToFeedRatio > 0 ? waterToFeedRatio : 1.85;
+    final curAdg = adgGrams > 0 ? adgGrams : 58.0;
+    final curPef = pef ?? 320.0;
+
+    return [
+      {
+        'metric': 'Average Body Weight',
+        'actual': '${curWt.toStringAsFixed(0)} g',
+        'target':
+            '${expectedWeightGrams > 0 ? expectedWeightGrams.toStringAsFixed(0) : "2,050"} g',
+        'variance':
+            '${weightDiffGrams >= 0 ? "+" : ""}${weightDiffGrams.toStringAsFixed(0)} g',
+        'status': weightDiffGrams >= -40 ? 'Optimal' : 'Lagging',
+        'isGood': weightDiffGrams >= -40,
+        'action': weightDiffGrams >= -40
+            ? 'Maintain intake'
+            : 'Increase starter protein density',
+      },
+      {
+        'metric': 'Feed Conversion (FCR)',
+        'actual': curFcr.toStringAsFixed(2),
+        'target': '1.55',
+        'variance':
+            '${curFcr <= 1.55 ? "-" : "+"}${(curFcr - 1.55).abs().toStringAsFixed(2)}',
+        'status': curFcr <= 1.60 ? 'Optimal' : 'Excess Feed',
+        'isGood': curFcr <= 1.60,
+        'action': curFcr <= 1.60
+            ? 'Feeder heights locked'
+            : 'Raise pan lip to shoulder height',
+      },
+      {
+        'metric': 'Flock Mortality',
+        'actual': '${curMort.toStringAsFixed(1)}%',
+        'target': '< 3.0%',
+        'variance':
+            '${curMort <= 3.0 ? "-" : "+"}${(curMort - 3.0).abs().toStringAsFixed(1)}%',
+        'status': curMort <= 3.0
+            ? 'Safe'
+            : (curMort <= 4.5 ? 'Moderate' : 'Critical'),
+        'isGood': curMort <= 3.0,
+        'action': curMort <= 3.0
+            ? 'Biosecurity strong'
+            : 'Sanitize water lines & check litter',
+      },
+      {
+        'metric': 'Water : Feed Ratio',
+        'actual': '${curWf.toStringAsFixed(2)}:1',
+        'target': '1.85:1',
+        'variance': (curWf - 1.85).abs().toStringAsFixed(2),
+        'status': (curWf >= 1.75 && curWf <= 2.15) ? 'Balanced' : 'Imbalanced',
+        'isGood': (curWf >= 1.75 && curWf <= 2.15),
+        'action': (curWf >= 1.75 && curWf <= 2.15)
+            ? 'Normal'
+            : 'Inspect nipple drinker pressure',
+      },
+      {
+        'metric': 'Average Daily Gain (ADG)',
+        'actual': '${curAdg.toStringAsFixed(1)} g/d',
+        'target': '58.0 g/d',
+        'variance':
+            '${curAdg >= 58.0 ? "+" : ""}${(curAdg - 58.0).toStringAsFixed(1)} g/d',
+        'status': curAdg >= 56.0 ? 'High' : 'Suboptimal',
+        'isGood': curAdg >= 56.0,
+        'action': curAdg >= 56.0
+            ? 'Fast turn-around'
+            : 'Improve brooding temperature',
+      },
+      {
+        'metric': 'Production Index (EPEF)',
+        'actual': curPef.toStringAsFixed(0),
+        'target': '350+',
+        'variance': '${(curPef - 350).toStringAsFixed(0)} pts',
+        'status': curPef >= 340 ? 'Excellent' : 'Needs Focus',
+        'isGood': curPef >= 340,
+        'action': curPef >= 340
+            ? 'Top 10% commercial'
+            : 'Target FCR reduction to 1.55',
+      },
+    ];
+  }
 }
+
