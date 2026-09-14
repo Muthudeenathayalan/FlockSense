@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
@@ -34,7 +35,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     try {
       final u = FirebaseAuth.instance.currentUser;
       if (u != null) {
-        await u.updateDisplayName(_nameCtrl.text.trim());
+        final name = _nameCtrl.text.trim();
+        final phone = _phoneCtrl.text.trim();
+        await u.updateDisplayName(name);
+        await FirebaseFirestore.instance.collection('users').doc(u.uid).set({
+          'name': name,
+          'phone': phone,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
       }
       if (!mounted) return;
       ScaffoldMessenger.of(

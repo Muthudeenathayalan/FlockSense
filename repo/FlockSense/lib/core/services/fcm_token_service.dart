@@ -10,10 +10,10 @@ class FcmTokenService {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
-    await FirebaseFirestore.instance.collection('users').doc(uid).update({
+    await FirebaseFirestore.instance.collection('users').doc(uid).set({
       'fcmToken': token,
       'tokenUpdatedAt': FieldValue.serverTimestamp(),
-    });
+    }, SetOptions(merge: true));
   }
 
   static Future<void> deleteToken() async {
@@ -21,8 +21,8 @@ class FcmTokenService {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
-    await FirebaseFirestore.instance.collection('users').doc(uid).update({
+    await FirebaseFirestore.instance.collection('users').doc(uid).set({
       'fcmToken': FieldValue.delete(),
-    });
+    }, SetOptions(merge: true));
   }
 }

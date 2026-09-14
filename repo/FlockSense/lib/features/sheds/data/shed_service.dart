@@ -155,14 +155,19 @@ class ShedService {
     String? notes,
   }) async {
     final user = _auth.currentUser;
-    if (user == null) throw AuthException('Sign in before creating a shed.');
+    if (user == null) {
+      throw AuthException('Sign in before creating a shed.');
+    }
 
-    if (name.trim().length < 2)
+    if (name.trim().length < 2) {
       throw ValidationException('Shed name must be at least 2 characters.');
-    if (lengthFt <= 0)
+    }
+    if (lengthFt <= 0) {
       throw ValidationException('Length must be greater than zero.');
-    if (widthFt <= 0)
+    }
+    if (widthFt <= 0) {
       throw ValidationException('Width must be greater than zero.');
+    }
 
     final shedId = _db.collection('_tmp').doc().id;
     final totalSqFt = lengthFt * widthFt;
@@ -204,20 +209,28 @@ class ShedService {
 
   /// Returns the total bird capacity from all sheds across the current user.
   static Future<int> getUserShedCapacity(String uid) async {
-    final querySnapshot = await _db
-        .collectionGroup('sheds')
-        .where('userId', isEqualTo: uid)
+    final farmSnapshot = await _db
+        .collection('users')
+        .doc(uid)
+        .collection('farms')
         .get();
+    if (farmSnapshot.docs.isEmpty) return 0;
 
-    return querySnapshot.docs.fold<int>(0, (total, doc) {
-      final data = doc.data();
-      final capacityValue =
-          data['capacity'] ?? data['physicalCapacity'] ?? data['birdCapacity'];
-      if (capacityValue is num) return total + capacityValue.toInt();
-      if (capacityValue is String)
-        return total + (int.tryParse(capacityValue) ?? 0);
-      return total;
-    });
+    var totalCapacity = 0;
+    for (final farmDoc in farmSnapshot.docs) {
+      final shedSnapshot = await farmDoc.reference.collection('sheds').get();
+      for (final doc in shedSnapshot.docs) {
+        final data = doc.data();
+        final capacityValue =
+            data['capacity'] ?? data['physicalCapacity'] ?? data['birdCapacity'];
+        if (capacityValue is num) {
+          totalCapacity += capacityValue.toInt();
+        } else if (capacityValue is String) {
+          totalCapacity += int.tryParse(capacityValue) ?? 0;
+        }
+      }
+    }
+    return totalCapacity;
   }
 
   /// Returns the total number of sheds for the current user.
