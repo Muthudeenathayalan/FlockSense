@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
+import 'package:flock_sense/features/home/presentation/providers/home_dashboard_provider.dart';
 import 'package:flock_sense/features/ai/data/models/ai_attachment_model.dart';
 import 'package:flock_sense/features/ai/data/models/ai_message_model.dart';
 import 'package:flock_sense/features/ai/data/services/ai_chat_firestore_service.dart';
@@ -48,13 +50,27 @@ class _AiScreenState extends ConsumerState<AiScreen> {
     ref.read(aiSendingStateProvider.notifier).setSending(true);
 
     try {
-      // 1. Ensure Active Conversation
+      // 1. Ensure Active Conversation with currently selected Firebase Farm
+      final activeFarmId = ref.read(selectedDashboardFarmIdProvider) ??
+          ref.read(activeFarmIdProvider).value;
       final activeNotifier = ref.read(activeConversationProvider.notifier);
-      final conversation = await activeNotifier.ensureActiveConversation();
+      final conversation = await activeNotifier.ensureActiveConversation(
+        farmId: activeFarmId,
+      );
 
       // Retrieve existing conversation history BEFORE adding the new message
       final existingHistory =
           AiChatFirestoreService.getLocalMessages(conversation.id);
+
+      // Auto-title the conversation in Firestore if this is the first message
+      if (existingHistory.isEmpty && userText.trim().isNotEmpty) {
+        final shortTitle = userText.trim().length > 32
+            ? '${userText.trim().substring(0, 32)}...'
+            : userText.trim();
+        unawaited(
+          AiChatFirestoreService.renameConversation(conversation.id, shortTitle),
+        );
+      }
 
       // 2. Save User Message
       final userMessage = AiMessageModel(
@@ -85,9 +101,9 @@ class _AiScreenState extends ConsumerState<AiScreen> {
       ref.invalidate(messagesStreamProvider(conversation.id));
       _scrollToBottom();
 
-      // 4. Build Live Farm Snapshot Context
+      // 4. Build Live Farm Snapshot Context from Firebase Firestore
       final contextSnapshot = await AiContextBuilder.buildFarmContext(
-        farmId: conversation.farmId,
+        farmId: conversation.farmId ?? activeFarmId,
         batchId: conversation.batchId,
       );
 

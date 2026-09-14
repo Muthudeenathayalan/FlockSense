@@ -51,7 +51,10 @@ class ReportService {
               orElse: () => batches.first,
             )
           : (batches.isNotEmpty
-                ? batches.first
+                ? batches.firstWhere(
+                    (b) => b.status == 'active' || b.isActive,
+                    orElse: () => batches.first,
+                  )
                 : BatchModel(
                     id: '',
                     farmId: targetFarm.id,

@@ -34,7 +34,7 @@ class _AiHistoryDrawerState extends ConsumerState<AiHistoryDrawer> {
             // Drawer Header
             Container(
               padding: const EdgeInsets.all(16),
-              color: const Color(0xFF0A3200),
+              color: const Color(0xFF104422),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -236,13 +236,14 @@ class _AiHistoryDrawerState extends ConsumerState<AiHistoryDrawer> {
           ),
           ElevatedButton(
             onPressed: () async {
+              final nav = Navigator.of(ctx);
               if (controller.text.trim().isNotEmpty) {
                 await AiChatFirestoreService.renameConversation(
                   item.id,
                   controller.text.trim(),
                 );
               }
-              if (mounted) Navigator.pop(ctx);
+              if (mounted) nav.pop();
             },
             child: const Text('Save'),
           ),
