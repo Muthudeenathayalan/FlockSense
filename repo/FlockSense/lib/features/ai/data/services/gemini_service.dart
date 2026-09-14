@@ -117,13 +117,34 @@ class GeminiService {
     String contextSnapshot,
   ) {
     final query = prompt.toLowerCase();
+    final hasNoData = contextSnapshot.contains('NO ACTIVE FARM') ||
+        contextSnapshot.contains('0 farms') ||
+        contextSnapshot.contains('Current Live Count: 0 birds');
+
+    if (hasNoData &&
+        (query.contains('analyze') ||
+            query.contains('farm') ||
+            query.contains('status') ||
+            query.contains('health') ||
+            query.contains('performance'))) {
+      return '''### 🤖 FlockSense AI Operational Assessment
+
+No active farm or flock telemetry was found in your account.
+
+To activate live AI operational assessments:
+1. Set up your facility in the **Farms** tab.
+2. Place a chick flock batch.
+3. Log daily records (mortality, feed intake, and average body weight).
+
+Once active records are logged, FlockSense AI will analyze your live FCR benchmarks, predict harvest dates, and provide smart disease risk warnings!''';
+    }
 
     if (query.contains('mortality') ||
         query.contains('dying') ||
         query.contains('death')) {
       return '''### ⚠️ Mortality & Biosecurity Analysis
 
-Based on your live farm telemetry:
+Based on poultry management standards:
 - **Biosecurity Status:** Active monitoring required.
 - **Recommended Interventions:**
   1. **Immediate Inspection:** Check drinkers for water sanitization and chlorination levels (target 2-5 ppm).
@@ -183,6 +204,12 @@ Based on your live farm telemetry:
 - **Administration Tip:** Skim milk powder (2g/L) neutralizes chlorine in water prior to live vaccine mixing.
 
 [CHART: growth]''';
+    } else if (hasNoData) {
+      return '''### 🤖 FlockSense AI Assistant
+
+No active farm or flock data is currently logged in your account.
+
+Create a farm and batch to unlock live operational analytics, or ask me any general poultry farming questions about **nutrition**, **brooding**, **biosecurity**, or **disease prevention**!''';
     } else {
       return '''### 🤖 FlockSense AI Operational Assessment
 

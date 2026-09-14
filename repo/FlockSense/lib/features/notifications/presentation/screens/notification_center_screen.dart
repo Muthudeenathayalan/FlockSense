@@ -87,14 +87,8 @@ class _NotificationCenterScreenState
       final titleLower = n.title.toLowerCase();
       final bodyLower = n.body.toLowerCase();
 
-      // Purge any dummy or test alerts
-      final isDummy = titleLower.contains('dummy') ||
-          bodyLower.contains('dummy') ||
-          titleLower.contains('sample alert') ||
-          titleLower.contains('test notification') ||
-          titleLower.contains('demo notification') ||
-          n.id.contains('test_');
-      if (isDummy) continue;
+      // Purge any dummy, test, or legacy mock alerts
+      if (NotificationFirestoreService.isLegacyMockOrInvalidAlert(n)) continue;
 
       if (filter.statusFilter == 'unread' &&
           n.status != NotificationStatus.unread) {

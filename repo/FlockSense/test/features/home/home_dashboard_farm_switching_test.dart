@@ -19,5 +19,14 @@ void main() {
       container.read(selectedDashboardFarmIdProvider.notifier).selectFarm(null);
       expect(container.read(selectedDashboardFarmIdProvider), isNull);
     });
+
+    test('HomeDashboardData.empty yields null estFcr and 0 metrics without fake numbers', () {
+      const data = HomeDashboardData.empty;
+      expect(data.liveBirds, equals(0));
+      expect(data.activeBatchCount, equals(0));
+      expect(data.todayMortality, equals(0));
+      expect(data.estFcr, isNull);
+      expect(data.recentRecords, isEmpty);
+    });
   });
 }

@@ -56,14 +56,6 @@ const List<BoxShadow> _kCardShadow = [
   BoxShadow(color: Color(0x040F172A), blurRadius: 2, offset: Offset(0, 1)),
 ];
 
-// 7-day benchmark dataset
-const List<String> _kDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const List<double> _kFeed = [1100, 1180, 1250, 1320, 1400, 1480, 1550];
-const List<double> _kMortality = [2, 1, 3, 1, 2, 1, 0];
-const List<double> _kFcr = [1.65, 1.64, 1.62, 1.61, 1.60, 1.59, 1.58];
-const List<double> _kRevActual = [6.6, 6.9, 7.1, 7.4, 7.6, 7.9, 8.2];
-const List<double> _kRevForecast = [7.2, 7.8, 8.5, 9.2, 10.1, 11.0, 12.1];
-
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN HOME SCREEN
 // ─────────────────────────────────────────────────────────────────────────────
@@ -226,7 +218,13 @@ class HomeScreen extends ConsumerWidget {
                         'Live flock telemetry, intake & financial projections',
                   ),
                   const SizedBox(height: 12),
-                  const _PerformanceAnalyticsPanel(),
+                  if (data.activeBatchCount == 0 || data.liveBirds == 0)
+                    _EmptyAnalyticsCard(
+                      onAddBatch: navigateToAddBatch,
+                      hasFarms: data.farms.isNotEmpty,
+                    )
+                  else
+                    _PerformanceAnalyticsPanel(data: data),
                   const SizedBox(height: 24),
 
                   // AI Diagnostics
@@ -276,7 +274,7 @@ class HomeScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const _AiDiagnosticsSection(),
+                  _AiDiagnosticsSection(data: data),
                   const SizedBox(height: 24),
 
                   // Facility & Biosecurity
@@ -941,6 +939,9 @@ class _ExecutiveKpiGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasFlock = data.liveBirds > 0;
+    final fcr = data.estFcr;
+
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -955,39 +956,51 @@ class _ExecutiveKpiGrid extends StatelessWidget {
           iconColor: _kBlue,
           value: data.activeBatchCount.toString(),
           label: 'Active Batches',
-          badgeText: '${data.activeBatchCount} in growout',
+          badgeText: data.activeBatchCount > 0
+              ? '${data.activeBatchCount} in growout'
+              : '0 batches',
           badgeColor: _kBlue,
           badgeBg: _kBlueTint,
         ),
         _ExecutiveStatCard(
           icon: Icons.groups_rounded,
-          iconBg: _kGreenTint,
-          iconColor: _kPrimary,
+          iconBg: hasFlock ? _kGreenTint : _kBackground,
+          iconColor: hasFlock ? _kPrimary : _kTextMuted,
           value: NumberFormat('#,###').format(data.liveBirds),
           label: 'Live Birds',
-          badgeText: '99.8% livability',
-          badgeColor: _kPrimary,
-          badgeBg: _kGreenTint,
+          badgeText: hasFlock ? 'Active flock' : '0 birds',
+          badgeColor: hasFlock ? _kPrimary : _kTextMuted,
+          badgeBg: hasFlock ? _kGreenTint : _kBackground,
         ),
         _ExecutiveStatCard(
           icon: Icons.health_and_safety_rounded,
-          iconBg: data.todayMortality == 0 ? _kGreenTint : _kRedTint,
-          iconColor: data.todayMortality == 0 ? _kPrimary : _kRed,
-          value: data.todayMortality.toString(),
+          iconBg: !hasFlock
+              ? _kBackground
+              : (data.todayMortality == 0 ? _kGreenTint : _kRedTint),
+          iconColor: !hasFlock
+              ? _kTextMuted
+              : (data.todayMortality == 0 ? _kPrimary : _kRed),
+          value: hasFlock ? data.todayMortality.toString() : '--',
           label: "Today's Mortality",
-          badgeText: data.todayMortality == 0 ? '0.0% • Safe' : 'Alert',
-          badgeColor: data.todayMortality == 0 ? _kPrimary : _kRed,
-          badgeBg: data.todayMortality == 0 ? _kGreenTint : _kRedTint,
+          badgeText: !hasFlock
+              ? 'No flock'
+              : (data.todayMortality == 0 ? '0.0% • Safe' : 'Alert'),
+          badgeColor: !hasFlock
+              ? _kTextMuted
+              : (data.todayMortality == 0 ? _kPrimary : _kRed),
+          badgeBg: !hasFlock
+              ? _kBackground
+              : (data.todayMortality == 0 ? _kGreenTint : _kRedTint),
         ),
-        const _ExecutiveStatCard(
+        _ExecutiveStatCard(
           icon: Icons.trending_up_rounded,
-          iconBg: _kAmberTint,
-          iconColor: _kAmber,
-          value: '1.58',
+          iconBg: fcr != null ? _kAmberTint : _kBackground,
+          iconColor: fcr != null ? _kAmber : _kTextMuted,
+          value: fcr != null ? fcr.toStringAsFixed(2) : '--',
           label: 'Est. FCR (Ratio)',
-          badgeText: 'Target: 1.50',
-          badgeColor: _kAmber,
-          badgeBg: _kAmberTint,
+          badgeText: fcr != null ? 'Target: 1.50' : 'No telemetry',
+          badgeColor: fcr != null ? _kAmber : _kTextMuted,
+          badgeBg: fcr != null ? _kAmberTint : _kBackground,
         ),
       ],
     );
@@ -1416,6 +1429,92 @@ class _EmptyBatchCard extends StatelessWidget {
   }
 }
 
+class _EmptyAnalyticsCard extends StatelessWidget {
+  const _EmptyAnalyticsCard({
+    required this.onAddBatch,
+    required this.hasFarms,
+  });
+
+  final VoidCallback onAddBatch;
+  final bool hasFarms;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      decoration: BoxDecoration(
+        color: _kSurface,
+        borderRadius: BorderRadius.circular(_kCardRadius),
+        border: Border.all(color: _kBorder, width: 1),
+        boxShadow: _kCardShadow,
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: _kBlueTint,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Icons.analytics_outlined,
+              color: _kBlue,
+              size: 26,
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'No Active Flock Telemetry',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: _kTextPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Population curves, feed conversion ratio (FCR), and financial forecasts will automatically render when an active flock batch is logging daily records.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              color: _kTextSecondary,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 16),
+          GestureDetector(
+            onTap: onAddBatch,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+              decoration: BoxDecoration(
+                color: _kPrimary,
+                borderRadius: BorderRadius.circular(_kSmRadius),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.add_rounded, size: 16, color: Colors.white),
+                  const SizedBox(width: 6),
+                  Text(
+                    hasFarms ? 'Add Batch' : 'Register Farm',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // AGE RING PAINTER
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1468,7 +1567,9 @@ class _AgeRingPainter extends CustomPainter {
 // 4-TAB PERFORMANCE ANALYTICS
 // ─────────────────────────────────────────────────────────────────────────────
 class _PerformanceAnalyticsPanel extends StatefulWidget {
-  const _PerformanceAnalyticsPanel();
+  const _PerformanceAnalyticsPanel({required this.data});
+
+  final HomeDashboardData data;
 
   @override
   State<_PerformanceAnalyticsPanel> createState() =>
@@ -1493,15 +1594,23 @@ class _PerformanceAnalyticsPanelState
     Icons.insights_rounded,
   ];
 
-  static const List<String> _tabSummaries = [
-    'Live Survival: 4,988 birds (99.76%) • Cobb500 Target: 5,000',
-    'Feed Intake: 1.55 kg/bird • FCR: 1.58 (0.04 below benchmark)',
-    'Cumulative Losses: 10 birds (0.20% rate) • 0 mortality today',
-    'Actual Valuation: ₹8.20L • 42-Day Harvest Proj: ₹12.10L',
-  ];
+  List<String> get _tabSummaries {
+    final liveBirdsStr = NumberFormat('#,###').format(widget.data.liveBirds);
+    final fcr = widget.data.estFcr;
+    final fcrStr = fcr != null ? fcr.toStringAsFixed(2) : '--';
+
+    return [
+      'Live Survival: $liveBirdsStr birds • Active Batches: ${widget.data.activeBatchCount}',
+      'Est. FCR: $fcrStr • Daily Records: ${widget.data.recentRecords.length} entries',
+      "Today's Losses: ${widget.data.todayMortality} birds • Monitored Batches: ${widget.data.activeBatchCount}",
+      'Active Cycle Valuation • ${widget.data.activeBatchCount} flock(s) in growth',
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
+    final summaries = _tabSummaries;
+
     return Container(
       decoration: BoxDecoration(
         color: _kSurface,
@@ -1578,7 +1687,7 @@ class _PerformanceAnalyticsPanelState
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    _tabSummaries[_selectedTab],
+                    summaries[_selectedTab],
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -1599,10 +1708,10 @@ class _PerformanceAnalyticsPanelState
                 transitionBuilder: (child, anim) =>
                     FadeTransition(opacity: anim, child: child),
                 child: <Widget>[
-                  const _PopulationChart(key: ValueKey(0)),
-                  const _FeedEfficiencyChart(key: ValueKey(1)),
-                  const _MortalityChart(key: ValueKey(2)),
-                  const _RevenueChart(key: ValueKey(3)),
+                  _PopulationChart(key: const ValueKey(0), data: widget.data),
+                  _FeedEfficiencyChart(key: const ValueKey(1), data: widget.data),
+                  _MortalityChart(key: const ValueKey(2), data: widget.data),
+                  _RevenueChart(key: const ValueKey(3), data: widget.data),
                 ][_selectedTab],
               ),
             ),
@@ -1613,20 +1722,46 @@ class _PerformanceAnalyticsPanelState
   }
 }
 
-Widget _dayTitle(double v, TitleMeta meta) {
-  final i = v.toInt();
-  if (i < 0 || i >= _kDays.length) return const SizedBox.shrink();
-  return Padding(
-    padding: const EdgeInsets.only(top: 6),
-    child: Text(
-      _kDays[i],
-      style: const TextStyle(
-        fontSize: 10,
-        fontWeight: FontWeight.w600,
-        color: _kTextMuted,
+class _EmptyChartState extends StatelessWidget {
+  const _EmptyChartState({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: _kBackground,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.insights_rounded,
+                size: 28,
+                color: _kTextMuted,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: _kTextSecondary,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 FlGridData _cleanGrid() => FlGridData(
@@ -1636,40 +1771,40 @@ FlGridData _cleanGrid() => FlGridData(
 );
 
 class _PopulationChart extends StatelessWidget {
-  const _PopulationChart({super.key});
+  const _PopulationChart({super.key, required this.data});
+  final HomeDashboardData data;
 
   @override
   Widget build(BuildContext context) {
-    final spots = <FlSpot>[];
-    var alive = 5000.0;
-    for (var i = 0; i < 7; i++) {
-      alive -= _kMortality[i];
-      spots.add(FlSpot(i.toDouble(), alive));
+    final sorted = [...data.recentRecords]
+      ..sort((a, b) => a.recordDate.compareTo(b.recordDate));
+    final recs = sorted.length > 7 ? sorted.sublist(sorted.length - 7) : sorted;
+
+    if (recs.length < 2) {
+      return const _EmptyChartState(
+        message: 'Log daily telemetry records for this batch to render live population survival curves.',
+      );
     }
-    const expected = <FlSpot>[
-      FlSpot(0, 5000),
-      FlSpot(1, 5000),
-      FlSpot(2, 5000),
-      FlSpot(3, 5000),
-      FlSpot(4, 5000),
-      FlSpot(5, 5000),
-      FlSpot(6, 5000),
-    ];
+
+    final spots = <FlSpot>[];
+    double minBirds = recs.first.closingBirds.toDouble();
+    double maxBirds = recs.first.closingBirds.toDouble();
+
+    for (var i = 0; i < recs.length; i++) {
+      final birds = recs[i].closingBirds.toDouble();
+      if (birds < minBirds) minBirds = birds;
+      if (birds > maxBirds) maxBirds = birds;
+      spots.add(FlSpot(i.toDouble(), birds));
+    }
+
+    final minY = (minBirds - 10).clamp(0.0, double.infinity);
+    final maxY = maxBirds + 10;
 
     return LineChart(
       LineChartData(
-        minY: 4984,
-        maxY: 5004,
+        minY: minY,
+        maxY: maxY,
         lineBarsData: [
-          LineChartBarData(
-            spots: expected,
-            isCurved: false,
-            color: _kSky.withValues(alpha: 0.50),
-            barWidth: 1.5,
-            dashArray: [5, 4],
-            dotData: const FlDotData(show: false),
-            belowBarData: BarAreaData(show: false),
-          ),
           LineChartBarData(
             spots: spots,
             isCurved: true,
@@ -1702,7 +1837,24 @@ class _PopulationChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 26,
-              getTitlesWidget: _dayTitle,
+              getTitlesWidget: (v, _) {
+                final i = v.toInt();
+                if (i < 0 || i >= recs.length) return const SizedBox.shrink();
+                final label = recs[i].batchAgeDay > 0
+                    ? 'D${recs[i].batchAgeDay}'
+                    : DateFormat('MM/dd').format(recs[i].recordDate);
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: _kTextMuted,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           leftTitles: AxisTitles(
@@ -1734,30 +1886,48 @@ class _PopulationChart extends StatelessWidget {
 }
 
 class _FeedEfficiencyChart extends StatelessWidget {
-  const _FeedEfficiencyChart({super.key});
+  const _FeedEfficiencyChart({super.key, required this.data});
+  final HomeDashboardData data;
 
   @override
   Widget build(BuildContext context) {
-    final feedSpots = List<FlSpot>.generate(
-      7,
-      (i) => FlSpot(i.toDouble(), _kFeed[i] / 1000),
-    );
-    final fcrSpots = List<FlSpot>.generate(
-      7,
-      (i) => FlSpot(i.toDouble(), _kFcr[i]),
-    );
+    final sorted = [...data.recentRecords]
+      ..sort((a, b) => a.recordDate.compareTo(b.recordDate));
+    final recs = sorted.length > 7 ? sorted.sublist(sorted.length - 7) : sorted;
+
+    if (recs.length < 2) {
+      return const _EmptyChartState(
+        message: 'Log daily feed consumption records to render the feed intake and FCR efficiency trend.',
+      );
+    }
+
+    final feedSpots = <FlSpot>[];
+    double maxFeed = 1.0;
+    for (var i = 0; i < recs.length; i++) {
+      final feed = recs[i].feedConsumedKg;
+      if (feed > maxFeed) maxFeed = feed;
+      feedSpots.add(FlSpot(i.toDouble(), feed));
+    }
 
     return LineChart(
       LineChartData(
-        minY: 0.95,
-        maxY: 1.75,
+        minY: 0,
+        maxY: maxFeed * 1.2,
         lineBarsData: [
           LineChartBarData(
             spots: feedSpots,
             isCurved: true,
             color: _kSky,
-            barWidth: 2,
-            dotData: const FlDotData(show: false),
+            barWidth: 2.5,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, pct, bar, idx) => FlDotCirclePainter(
+                radius: 3.5,
+                color: _kSky,
+                strokeWidth: 2,
+                strokeColor: Colors.white,
+              ),
+            ),
             belowBarData: BarAreaData(
               show: true,
               gradient: LinearGradient(
@@ -1770,29 +1940,30 @@ class _FeedEfficiencyChart extends StatelessWidget {
               ),
             ),
           ),
-          LineChartBarData(
-            spots: fcrSpots,
-            isCurved: true,
-            color: _kAmber,
-            barWidth: 2.5,
-            dotData: FlDotData(
-              show: true,
-              getDotPainter: (spot, pct, bar, idx) => FlDotCirclePainter(
-                radius: 3.5,
-                color: _kAmber,
-                strokeWidth: 2,
-                strokeColor: Colors.white,
-              ),
-            ),
-            belowBarData: BarAreaData(show: false),
-          ),
         ],
         titlesData: FlTitlesData(
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 26,
-              getTitlesWidget: _dayTitle,
+              getTitlesWidget: (v, _) {
+                final i = v.toInt();
+                if (i < 0 || i >= recs.length) return const SizedBox.shrink();
+                final label = recs[i].batchAgeDay > 0
+                    ? 'D${recs[i].batchAgeDay}'
+                    : DateFormat('MM/dd').format(recs[i].recordDate);
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: _kTextMuted,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           leftTitles: AxisTitles(
@@ -1800,7 +1971,7 @@ class _FeedEfficiencyChart extends StatelessWidget {
               showTitles: true,
               reservedSize: 42,
               getTitlesWidget: (v, _) => Text(
-                v.toStringAsFixed(2),
+                '${v.toInt()}kg',
                 style: const TextStyle(
                   fontSize: 9,
                   color: _kTextMuted,
@@ -1824,39 +1995,58 @@ class _FeedEfficiencyChart extends StatelessWidget {
 }
 
 class _MortalityChart extends StatelessWidget {
-  const _MortalityChart({super.key});
+  const _MortalityChart({super.key, required this.data});
+  final HomeDashboardData data;
 
   static Color _barColor(double v) {
     if (v == 0) return _kPrimary;
-    if (v <= 1) return _kAmber;
+    if (v <= 2) return _kAmber;
     return _kRed;
   }
 
   @override
   Widget build(BuildContext context) {
+    final sorted = [...data.recentRecords]
+      ..sort((a, b) => a.recordDate.compareTo(b.recordDate));
+    final recs = sorted.length > 7 ? sorted.sublist(sorted.length - 7) : sorted;
+
+    if (recs.length < 2) {
+      return const _EmptyChartState(
+        message: 'Log daily records to view mortality tracking and shed health alerts.',
+      );
+    }
+
+    double maxMort = 5.0;
+    for (final r in recs) {
+      if (r.mortalityCount > maxMort) maxMort = r.mortalityCount.toDouble();
+    }
+
     return BarChart(
       BarChartData(
-        maxY: 5,
+        maxY: maxMort * 1.2,
         barGroups: List.generate(
-          7,
-          (i) => BarChartGroupData(
-            x: i,
-            barRods: [
-              BarChartRodData(
-                toY: _kMortality[i] == 0 ? 0.20 : _kMortality[i],
-                color: _barColor(_kMortality[i]),
-                width: 26,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(6),
+          recs.length,
+          (i) {
+            final m = recs[i].mortalityCount.toDouble();
+            return BarChartGroupData(
+              x: i,
+              barRods: [
+                BarChartRodData(
+                  toY: m == 0 ? 0.20 : m,
+                  color: _barColor(m),
+                  width: 24,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(6),
+                  ),
+                  backDrawRodData: BackgroundBarChartRodData(
+                    show: true,
+                    toY: maxMort * 1.2,
+                    color: _kBackground,
+                  ),
                 ),
-                backDrawRodData: BackgroundBarChartRodData(
-                  show: true,
-                  toY: 5,
-                  color: _kBackground,
-                ),
-              ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
         titlesData: FlTitlesData(
           bottomTitles: AxisTitles(
@@ -1865,11 +2055,14 @@ class _MortalityChart extends StatelessWidget {
               reservedSize: 26,
               getTitlesWidget: (v, _) {
                 final i = v.toInt();
-                if (i < 0 || i >= 7) return const SizedBox.shrink();
+                if (i < 0 || i >= recs.length) return const SizedBox.shrink();
+                final label = recs[i].batchAgeDay > 0
+                    ? 'D${recs[i].batchAgeDay}'
+                    : DateFormat('MM/dd').format(recs[i].recordDate);
                 return Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
-                    _kDays[i],
+                    label,
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
@@ -1912,45 +2105,39 @@ class _MortalityChart extends StatelessWidget {
 }
 
 class _RevenueChart extends StatelessWidget {
-  const _RevenueChart({super.key});
+  const _RevenueChart({super.key, required this.data});
+  final HomeDashboardData data;
 
   @override
   Widget build(BuildContext context) {
-    final actual = List<FlSpot>.generate(
-      7,
-      (i) => FlSpot(i.toDouble(), _kRevActual[i]),
-    );
-    final forecast = List<FlSpot>.generate(
-      7,
-      (i) => FlSpot(i.toDouble(), _kRevForecast[i]),
-    );
+    final sorted = [...data.recentRecords]
+      ..sort((a, b) => a.recordDate.compareTo(b.recordDate));
+    final recs = sorted.length > 7 ? sorted.sublist(sorted.length - 7) : sorted;
+
+    if (recs.length < 2) {
+      return const _EmptyChartState(
+        message: 'Log body weights and daily records to project harvest valuation and flock revenues.',
+      );
+    }
+
+    final spots = <FlSpot>[];
+    double maxVal = 1.0;
+    for (var i = 0; i < recs.length; i++) {
+      final r = recs[i];
+      final weightGrams = r.avgWeightGrams > 0 ? r.avgWeightGrams : 45.0;
+      final weightKg = weightGrams / 1000.0;
+      final valK = (r.closingBirds * weightKg * 110.0) / 1000.0;
+      if (valK > maxVal) maxVal = valK;
+      spots.add(FlSpot(i.toDouble(), valK));
+    }
 
     return LineChart(
       LineChartData(
-        minY: 5.5,
-        maxY: 13.5,
+        minY: 0,
+        maxY: maxVal * 1.25,
         lineBarsData: [
           LineChartBarData(
-            spots: forecast,
-            isCurved: true,
-            color: _kAmber,
-            barWidth: 1.8,
-            dashArray: [5, 4],
-            dotData: const FlDotData(show: false),
-            belowBarData: BarAreaData(
-              show: true,
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  _kAmber.withValues(alpha: 0.10),
-                  _kAmber.withValues(alpha: 0.0),
-                ],
-              ),
-            ),
-          ),
-          LineChartBarData(
-            spots: actual,
+            spots: spots,
             isCurved: true,
             color: _kPrimary,
             barWidth: 2.5,
@@ -1981,7 +2168,24 @@ class _RevenueChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 26,
-              getTitlesWidget: _dayTitle,
+              getTitlesWidget: (v, _) {
+                final i = v.toInt();
+                if (i < 0 || i >= recs.length) return const SizedBox.shrink();
+                final label = recs[i].batchAgeDay > 0
+                    ? 'D${recs[i].batchAgeDay}'
+                    : DateFormat('MM/dd').format(recs[i].recordDate);
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: _kTextMuted,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           leftTitles: AxisTitles(
@@ -1989,9 +2193,9 @@ class _RevenueChart extends StatelessWidget {
               showTitles: true,
               reservedSize: 44,
               getTitlesWidget: (v, _) => Text(
-                '₹${v.toStringAsFixed(1)}L',
+                '₹${v.toInt()}K',
                 style: const TextStyle(
-                  fontSize: 8.5,
+                  fontSize: 9,
                   color: _kTextMuted,
                   fontWeight: FontWeight.w600,
                 ),
@@ -2016,47 +2220,135 @@ class _RevenueChart extends StatelessWidget {
 // AI DIAGNOSTICS TILES
 // ─────────────────────────────────────────────────────────────────────────────
 class _AiDiagnosticsSection extends StatelessWidget {
-  const _AiDiagnosticsSection();
+  const _AiDiagnosticsSection({required this.data});
+
+  final HomeDashboardData data;
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
-      children: [
-        _AiDiagnosticTile(
-          category: 'EFFICIENCY GAIN',
-          title: 'Feed Conversion (FCR) improved by 4.8%',
-          subtitle:
-              'Current FCR is 1.58 vs 1.65 last week. Cobb-500 standard met.',
+    if (data.activeBatchCount == 0 || data.liveBirds == 0) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _kSurface,
+          borderRadius: BorderRadius.circular(_kCardRadius),
+          border: Border.all(color: _kBorder),
+          boxShadow: _kCardShadow,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: _kIndigoTint,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.auto_awesome_rounded,
+                color: _kIndigo,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'AI Intelligence on Standby',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: _kTextPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Register your farm and start an active flock batch to receive automated telemetry diagnostics on feed conversion, mortality risk, and harvest readiness.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _kTextSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final fcr = data.estFcr;
+    final fcrStr = fcr != null ? fcr.toStringAsFixed(2) : '--';
+    final tiles = <Widget>[];
+
+    // 1. Mortality Diagnostic
+    if (data.todayMortality == 0) {
+      tiles.add(
+        const _AiDiagnosticTile(
+          category: 'HEALTH & BIOSECURITY',
+          title: 'Zero Mortality Logged Today',
+          subtitle: 'Flock mortality is under strict control across active sheds.',
           color: _kPrimary,
-          icon: Icons.trending_down_rounded,
+          icon: Icons.health_and_safety_rounded,
         ),
-        SizedBox(height: 8),
+      );
+    } else {
+      tiles.add(
         _AiDiagnosticTile(
-          category: 'SCHEDULED VACCINE',
-          title: 'Newcastle (ND-Lasota) Booster in 2 Days',
-          subtitle:
-              'Day 21 standard protocol. Water line sanitizer flush required.',
-          color: _kAmber,
-          icon: Icons.vaccines_rounded,
-        ),
-        SizedBox(height: 8),
-        _AiDiagnosticTile(
-          category: 'HARVEST TARGET',
-          title: 'Average 2.30 kg Market Weight in 8 Days',
-          subtitle:
-              'Growth velocity is optimal (+62g/day). Ready for lifting schedule.',
-          color: _kBlue,
-          icon: Icons.scale_rounded,
-        ),
-        SizedBox(height: 8),
-        _AiDiagnosticTile(
-          category: 'FEED INVENTORY',
-          title: 'Broiler Finisher Feed Stock: 5 Days Left',
-          subtitle:
-              'Reorder ~850 kg before Thursday to avoid growth rate drop.',
+          category: 'MORTALITY ALERT',
+          title: '${data.todayMortality} Bird Losses Recorded Today',
+          subtitle: 'Check shed ventilation, drinker line flow, and heat stress indicators.',
           color: _kRed,
-          icon: Icons.inventory_2_outlined,
+          icon: Icons.warning_amber_rounded,
         ),
+      );
+    }
+
+    // 2. Feed / FCR Diagnostic
+    if (fcr != null) {
+      tiles.add(
+        _AiDiagnosticTile(
+          category: 'FEED EFFICIENCY',
+          title: 'Estimated FCR: $fcrStr',
+          subtitle: fcr <= 1.60
+              ? 'Feed conversion is optimal and meeting performance benchmarks.'
+              : 'FCR is elevated. Review feed spillage and feed formulation energy ratio.',
+          color: fcr <= 1.60 ? _kPrimary : _kAmber,
+          icon: Icons.trending_up_rounded,
+        ),
+      );
+    } else {
+      tiles.add(
+        const _AiDiagnosticTile(
+          category: 'LOGGING ADVICE',
+          title: 'Daily Telemetry Recommended',
+          subtitle: 'Log daily feed intake and body weights to unlock live FCR tracking.',
+          color: _kSky,
+          icon: Icons.edit_note_rounded,
+        ),
+      );
+    }
+
+    // 3. Shed Capacity Diagnostic
+    tiles.add(
+      _AiDiagnosticTile(
+        category: 'SHED OCCUPANCY',
+        title: '${NumberFormat('#,###').format(data.liveBirds)} Birds Under Active Care',
+        subtitle: 'Telemetry streaming across ${data.activeBatchCount} flock cycle(s) in ${data.activeFarm?.farmName ?? "Main Facility"}.',
+        color: _kIndigo,
+        icon: Icons.warehouse_rounded,
+      ),
+    );
+
+    return Column(
+      children: [
+        for (var i = 0; i < tiles.length; i++) ...[
+          tiles[i],
+          if (i < tiles.length - 1) const SizedBox(height: 8),
+        ],
       ],
     );
   }

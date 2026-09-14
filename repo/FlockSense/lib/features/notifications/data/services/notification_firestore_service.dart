@@ -18,6 +18,28 @@ class NotificationFirestoreService {
     return '${n.type.name}_${n.title.trim().toLowerCase()}_${n.body.trim().toLowerCase()}';
   }
 
+  static bool isLegacyMockOrInvalidAlert(NotificationModel notif) {
+    final titleLower = notif.title.toLowerCase();
+    final bodyLower = notif.body.toLowerCase();
+    final idLower = notif.id.toLowerCase();
+
+    return titleLower.contains('dummy') ||
+        bodyLower.contains('dummy') ||
+        titleLower.contains('sample alert') ||
+        titleLower.contains('test notification') ||
+        titleLower.contains('demo notification') ||
+        idLower.contains('test_') ||
+        titleLower.contains('cobb 500 batch #4') ||
+        bodyLower.contains('cobb 500 batch #4') ||
+        titleLower.contains('green valley') ||
+        bodyLower.contains('green valley') ||
+        bodyLower.contains('temperature humidity index') ||
+        titleLower.contains('batch #4') ||
+        bodyLower.contains('batch #4') ||
+        bodyLower.contains('day -') ||
+        titleLower.contains('day -');
+  }
+
   // --- Notifications Stream & CRUD ---
   static Stream<List<NotificationModel>> streamNotifications() {
     final user = _auth.currentUser;
@@ -25,6 +47,7 @@ class NotificationFirestoreService {
       final deduplicated = <NotificationModel>[];
       final seenKeys = <String>{};
       for (final n in _localNotifications) {
+        if (isLegacyMockOrInvalidAlert(n)) continue;
         if (seenKeys.add(_notificationKey(n))) {
           deduplicated.add(n);
         }
@@ -50,16 +73,9 @@ class NotificationFirestoreService {
             final data = Map<String, dynamic>.from(doc.data());
             data['id'] = doc.id;
             final notif = NotificationModel.fromJson(data);
-            final titleLower = notif.title.toLowerCase();
-            final bodyLower = notif.body.toLowerCase();
 
-            // Discard any dummy or sample notifications
-            if (titleLower.contains('dummy') ||
-                bodyLower.contains('dummy') ||
-                titleLower.contains('sample alert') ||
-                titleLower.contains('test notification') ||
-                titleLower.contains('demo notification') ||
-                notif.id.contains('test_')) {
+            // Discard any dummy, test, or legacy mock notifications
+            if (isLegacyMockOrInvalidAlert(notif)) {
               continue;
             }
 
@@ -89,11 +105,11 @@ class NotificationFirestoreService {
 
   /// Scans Firestore notifications and removes duplicate documents and dummy data
   static Future<int> cleanupDuplicateNotifications() async {
-    final user = _auth.currentUser;
-    if (user == null) return 0;
-
     try {
-      final snap = await _firestore
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return 0;
+
+      final snap = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
           .collection('notifications')
@@ -108,18 +124,9 @@ class NotificationFirestoreService {
         final data = Map<String, dynamic>.from(doc.data());
         data['id'] = doc.id;
         final notif = NotificationModel.fromJson(data);
-        final titleLower = notif.title.toLowerCase();
-        final bodyLower = notif.body.toLowerCase();
 
-        // 1. Purge dummy/test notifications
-        final isDummy = titleLower.contains('dummy') ||
-            bodyLower.contains('dummy') ||
-            titleLower.contains('sample alert') ||
-            titleLower.contains('test notification') ||
-            titleLower.contains('demo notification') ||
-            notif.id.contains('test_');
-
-        if (isDummy) {
+        // 1. Purge dummy/test/legacy mock notifications
+        if (isLegacyMockOrInvalidAlert(notif)) {
           duplicateRefs.add(doc.reference);
           continue;
         }

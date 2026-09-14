@@ -136,35 +136,43 @@ class ReportData {
   double get netProfit => totalRevenue - totalExpenses;
 
   double get liveabilityPct {
-    final initial = batch.totalBirds > 0 ? batch.totalBirds : 5000;
+    if (batch.totalBirds <= 0) return 0.0;
+    final initial = batch.totalBirds;
     return (((initial - totalMortality) / initial) * 100.0).clamp(0.0, 100.0);
   }
 
   double? get overallFcr {
     final lastRec = _latestRecord;
-    if (lastRec == null || lastRec.avgWeightGrams <= 0) {
-      return totalFeedKg > 0 ? (totalFeedKg / 2400.0).clamp(1.2, 2.2) : 1.55;
+    if (lastRec == null || lastRec.avgWeightGrams <= 0 || totalFeedKg <= 0) {
+      return null;
     }
     return totalFeedKg / (lastRec.avgWeightGrams / 1000.0);
   }
 
   double? get avgBodyWeightGrams {
     final lastRec = _latestRecord;
-    if (lastRec == null || lastRec.avgWeightGrams <= 0) return 2150.0;
+    if (lastRec == null || lastRec.avgWeightGrams <= 0) return null;
     return lastRec.avgWeightGrams;
   }
 
   int get meanAge {
     final lastRec = _latestRecord;
-    return lastRec?.batchAgeDay ?? 38;
+    if (lastRec != null) return lastRec.batchAgeDay;
+    if (batch.placementDate.isBefore(DateTime.now())) {
+      return (DateTime.now().difference(batch.placementDate).inDays + 1)
+          .clamp(0, 365);
+    }
+    return 0;
   }
 
   double? get pef {
-    final fcr = overallFcr ?? 1.55;
-    final wtKg = (avgBodyWeightGrams ?? 2150.0) / 1000.0;
-    final age = meanAge > 0 ? meanAge : 38;
-    if (fcr <= 0 || age <= 0) return 380.0;
-    return (liveabilityPct * wtKg) / (age * fcr) * 100;
+    final fcr = overallFcr;
+    final wt = avgBodyWeightGrams;
+    if (fcr == null || fcr <= 0 || wt == null || wt <= 0 || meanAge <= 0) {
+      return null;
+    }
+    final wtKg = wt / 1000.0;
+    return (liveabilityPct * wtKg) / (meanAge * fcr) * 100;
   }
 
   DailyRecordModel? get _latestRecord {
@@ -178,19 +186,25 @@ class ReportData {
   // --- Extended Intelligence Metrics ---
 
   double get adgGrams {
-    final age = meanAge > 0 ? meanAge : 38;
-    final wt = avgBodyWeightGrams ?? 2150.0;
+    final age = meanAge;
+    final wt = avgBodyWeightGrams;
+    if (age <= 0 || wt == null || wt <= 42.0) return 0.0;
     return (wt - 42.0) / age;
   }
 
-  double get expectedWeightGrams => kStandardBodyWeightGrams[meanAge] ?? 2387.0;
+  double get expectedWeightGrams => kStandardBodyWeightGrams[meanAge] ?? 0.0;
 
-  double get weightDiffGrams =>
-      (avgBodyWeightGrams ?? 2150.0) - expectedWeightGrams;
+  double get weightDiffGrams {
+    final wt = avgBodyWeightGrams;
+    if (wt == null || expectedWeightGrams <= 0) return 0.0;
+    return wt - expectedWeightGrams;
+  }
 
-  double get growthRatePct => expectedWeightGrams > 0
-      ? (((avgBodyWeightGrams ?? 2150.0) / expectedWeightGrams) * 100.0)
-      : 100.0;
+  double get growthRatePct {
+    final wt = avgBodyWeightGrams;
+    if (wt == null || expectedWeightGrams <= 0) return 0.0;
+    return (((wt) / expectedWeightGrams) * 100.0).clamp(0.0, 200.0);
+  }
 
   double get feedRemainingKg {
     final stockBags = inventoryItems
@@ -200,30 +214,31 @@ class ReportData {
   }
 
   double get avgFeedPerBirdGrams {
-    final curBirds = batch.currentBirds > 0 ? batch.currentBirds : 4880;
-    final dailyFeedKg = _latestRecord?.feedConsumedKg ?? 180.0;
-    return (dailyFeedKg * 1000.0) / curBirds;
+    if (batch.currentBirds <= 0 || _latestRecord == null) return 0.0;
+    final dailyFeedKg = _latestRecord!.feedConsumedKg;
+    return (dailyFeedKg * 1000.0) / batch.currentBirds;
   }
 
   double get avgWaterPerBirdMl {
-    final curBirds = batch.currentBirds > 0 ? batch.currentBirds : 4880;
-    final dailyWaterL = _latestRecord?.waterConsumedLiters ?? 324.0;
-    return (dailyWaterL * 1000.0) / curBirds;
+    if (batch.currentBirds <= 0 || _latestRecord == null) return 0.0;
+    final dailyWaterL = _latestRecord!.waterConsumedLiters;
+    return (dailyWaterL * 1000.0) / batch.currentBirds;
   }
 
   double get maxDailyWaterLiters => dailyRecords.isEmpty
-      ? 350.0
+      ? 0.0
       : dailyRecords
             .map((r) => r.waterConsumedLiters)
             .reduce((a, b) => a > b ? a : b);
 
   double get minDailyWaterLiters => dailyRecords.isEmpty
-      ? 180.0
+      ? 0.0
       : dailyRecords
             .map((r) => r.waterConsumedLiters)
             .reduce((a, b) => a < b ? a : b);
 
   String get mortalityRiskLevel {
+    if (batch.totalBirds <= 0) return 'None';
     final mortPct = 100.0 - liveabilityPct;
     if (mortPct > 5.0) return 'Critical';
     if (mortPct > 3.0) return 'High';
@@ -239,17 +254,21 @@ class ReportData {
   // --- Scorecard Calculations (0 - 100) ---
 
   int get growthScore {
-    final ratio = (avgBodyWeightGrams ?? 2150.0) / expectedWeightGrams;
-    return (ratio * 92.0).clamp(50.0, 100.0).round();
+    final wt = avgBodyWeightGrams;
+    if (wt == null || expectedWeightGrams <= 0) return 0;
+    final ratio = wt / expectedWeightGrams;
+    return (ratio * 92.0).clamp(0.0, 100.0).round();
   }
 
   int get healthScore {
+    if (batch.totalBirds <= 0) return 0;
     final score = liveabilityPct - (medicineRecords.length * 1.5);
-    return score.clamp(40.0, 100.0).round();
+    return score.clamp(0.0, 100.0).round();
   }
 
   int get feedScore {
-    final fcr = overallFcr ?? 1.55;
+    final fcr = overallFcr;
+    if (fcr == null || fcr <= 0) return 0;
     if (fcr <= 1.45) return 98;
     if (fcr <= 1.55) return 92;
     if (fcr <= 1.65) return 84;
@@ -258,6 +277,7 @@ class ReportData {
   }
 
   int get profitScore {
+    if (totalExpenses <= 0 && totalRevenue <= 0) return 0;
     if (roiPct >= 25) return 96;
     if (roiPct >= 15) return 90;
     if (roiPct >= 5) return 80;
@@ -266,6 +286,7 @@ class ReportData {
   }
 
   int get mortalityScore {
+    if (batch.totalBirds <= 0) return 0;
     final mortPct = 100.0 - liveabilityPct;
     if (mortPct <= 1.5) return 96;
     if (mortPct <= 3.0) return 86;
@@ -274,23 +295,27 @@ class ReportData {
   }
 
   int get inventoryScore {
+    if (inventoryItems.isEmpty) return 0;
     final lowStockCount = lowStockItems.length;
     final expCount = expiringItems.length;
     final score = 95 - (lowStockCount * 8) - (expCount * 12);
-    return score.clamp(30, 100);
+    return score.clamp(0, 100);
   }
 
-  int get overallScore =>
-      ((growthScore +
-                  healthScore +
-                  feedScore +
-                  profitScore +
-                  mortalityScore +
-                  inventoryScore) /
-              6)
-          .round();
+  int get overallScore {
+    if (batch.totalBirds <= 0 || dailyRecords.isEmpty) return 0;
+    return ((growthScore +
+                healthScore +
+                feedScore +
+                profitScore +
+                mortalityScore +
+                inventoryScore) /
+            6)
+        .round();
+  }
 
   int get starRating {
+    if (overallScore == 0) return 0;
     if (overallScore >= 90) return 5;
     if (overallScore >= 80) return 4;
     if (overallScore >= 70) return 3;

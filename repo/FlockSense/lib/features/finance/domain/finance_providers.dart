@@ -4,6 +4,7 @@ import 'package:flock_sense/features/finance/data/models/finance_budget_model.da
 import 'package:flock_sense/features/finance/data/models/finance_transaction_model.dart';
 import 'package:flock_sense/features/finance/data/services/finance_service.dart';
 import 'package:flock_sense/features/finance/domain/finance_analytics_engine.dart';
+import 'package:flock_sense/features/farms/presentation/providers/farm_providers.dart';
 
 class FinanceFilterState {
   final String? selectedFarmId;
@@ -106,6 +107,7 @@ final financeBudgetStreamProvider = StreamProvider<FinanceBudgetModel>((ref) {
 final financeAnalyticsProvider = Provider<FinanceAnalyticsResult>((ref) {
   final txsAsync = ref.watch(financeTransactionsProvider);
   final budgetAsync = ref.watch(financeBudgetStreamProvider);
+  final batchesAsync = ref.watch(allUserBatchesProvider);
 
   final transactions = txsAsync.asData?.value ?? [];
   final budget =
@@ -117,8 +119,14 @@ final financeAnalyticsProvider = Provider<FinanceAnalyticsResult>((ref) {
         updatedAt: DateTime.now(),
       );
 
+  final batches = batchesAsync.asData?.value ?? [];
+  final activeBirds = batches
+      .where((b) => b.isActive)
+      .fold<int>(0, (sum, b) => sum + b.currentBirds);
+
   return FinanceAnalyticsEngine.calculateAnalytics(
     transactions: transactions,
     budget: budget,
+    activeBirdCount: activeBirds,
   );
 });

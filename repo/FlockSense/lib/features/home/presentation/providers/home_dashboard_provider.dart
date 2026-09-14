@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flock_sense/features/auth/presentation/providers/auth_provider.dart';
-import 'package:flock_sense/features/batches/data/batch_service.dart';
 import 'package:flock_sense/features/batches/domain/batch_model.dart';
 import 'package:flock_sense/features/farms/data/farm_service.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
@@ -11,13 +10,6 @@ import 'package:flock_sense/features/daily_records/domain/daily_record_model.dar
 
 export 'package:flock_sense/features/farms/presentation/providers/farm_providers.dart'
     show allUserBatchesProvider;
-
-String _formatTodayRecordDate() {
-  final now = DateTime.now();
-  return '${now.year.toString().padLeft(4, '0')}-'
-      '${now.month.toString().padLeft(2, '0')}-'
-      '${now.day.toString().padLeft(2, '0')}';
-}
 
 final activeFarmIdProvider = StreamProvider.autoDispose<String?>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -100,6 +92,22 @@ class HomeDashboardData {
     todayMortality: 0,
     recentRecords: <DailyRecordModel>[],
   );
+
+  double? get estFcr {
+    if (liveBirds <= 0 || recentRecords.isEmpty) return null;
+    double totalFeed = 0;
+    double latestWeightKg = 0;
+    for (final r in recentRecords) {
+      totalFeed += r.feedConsumedKg;
+      if (r.avgWeightGrams > 0) {
+        final w = r.avgWeightGrams / 1000.0;
+        if (w > latestWeightKg) latestWeightKg = w;
+      }
+    }
+    final totalGain = latestWeightKg * liveBirds;
+    if (totalGain <= 0 || totalFeed <= 0) return null;
+    return totalFeed / totalGain;
+  }
 }
 
 class SelectedDashboardFarmNotifier extends Notifier<String?> {

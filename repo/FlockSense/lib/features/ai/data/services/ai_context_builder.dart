@@ -25,6 +25,14 @@ class AiContextBuilder {
   }
 
   static String formatReportDataToPromptContext(ReportData data) {
+    if (data.farms.isEmpty ||
+        (data.farm.farmName == 'No Farm Selected' &&
+            data.batch.totalBirds == 0)) {
+      return '''=== NO ACTIVE FARM OR FLOCK DATA AVAILABLE ===
+User currently has 0 farms or 0 active birds placed.
+INSTRUCTIONS FOR AI: If the user asks to analyze their farm or check live flock health, inform them clearly that no active farm or flock telemetry is currently logged. Direct them to set up a farm in the Farms tab and place a batch with daily records. Answer general poultry knowledge queries accurately using standard guidelines.''';
+    }
+
     final farm = data.farm;
     final batch = data.batch;
     final recs = data.dailyRecords.take(10).toList();

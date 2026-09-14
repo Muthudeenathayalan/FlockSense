@@ -89,7 +89,7 @@ class FinanceAnalyticsEngine {
   static FinanceAnalyticsResult calculateAnalytics({
     required List<FinanceTransactionModel> transactions,
     required FinanceBudgetModel budget,
-    int activeBirdCount = 5000,
+    int activeBirdCount = 0,
   }) {
     final now = DateTime.now();
 

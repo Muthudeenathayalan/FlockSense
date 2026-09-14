@@ -9,6 +9,7 @@ import 'package:flock_sense/features/daily_records/presentation/screens/daily_re
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
 import 'package:flock_sense/features/home/presentation/screens/home_screen.dart';
 import 'package:flock_sense/features/more/presentation/screens/more_screen.dart';
+import 'package:flock_sense/features/notifications/data/services/notification_firestore_service.dart';
 import 'package:flock_sense/features/notifications/data/services/smart_alert_evaluator.dart';
 import 'package:flock_sense/features/profile/presentation/screens/profile_screen.dart';
 import 'package:flock_sense/config/routes/app_routes.dart';
@@ -28,8 +29,11 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      SmartAlertEvaluator.evaluateSmartAlerts();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await NotificationFirestoreService.cleanupDuplicateNotifications();
+        SmartAlertEvaluator.evaluateSmartAlerts();
+      } catch (_) {}
     });
   }
 
