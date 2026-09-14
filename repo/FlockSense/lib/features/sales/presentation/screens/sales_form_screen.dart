@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
+import 'package:flock_sense/features/batches/data/batch_service.dart';
 import 'package:flock_sense/features/sales/data/sales_service.dart';
 
 class SalesFormScreen extends StatefulWidget {
@@ -8,12 +10,14 @@ class SalesFormScreen extends StatefulWidget {
     super.key,
     required this.farmId,
     required this.batchId,
-    required this.currentBatchAge,
+    this.currentBatchAge = 0,
+    this.availableBirds,
   });
 
   final String farmId;
   final String batchId;
   final int currentBatchAge;
+  final int? availableBirds;
 
   @override
   State<SalesFormScreen> createState() => _SalesFormScreenState();
@@ -30,14 +34,41 @@ class _SalesFormScreenState extends State<SalesFormScreen> {
   late DateTime _selectedDate;
   bool _saving = false;
 
+  int? _availableBirds;
+  int _calculatedAge = 0;
+
   @override
   void initState() {
     super.initState();
     _selectedDate = DateTime.now();
+    _availableBirds = widget.availableBirds;
+    _calculatedAge = widget.currentBatchAge;
+    _birdsController.addListener(_onFieldChanged);
+    _priceController.addListener(_onFieldChanged);
+    _loadBatchInfo();
+  }
+
+  void _onFieldChanged() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _loadBatchInfo() async {
+    try {
+      final b = await BatchService.getBatchById(widget.farmId, widget.batchId);
+      if (b != null && mounted) {
+        setState(() {
+          _availableBirds = b.currentBirds;
+          final age = _selectedDate.difference(b.placementDate).inDays;
+          _calculatedAge = age >= 0 ? age : 0;
+        });
+      }
+    } catch (_) {}
   }
 
   @override
   void dispose() {
+    _birdsController.removeListener(_onFieldChanged);
+    _priceController.removeListener(_onFieldChanged);
     _customerController.dispose();
     _birdsController.dispose();
     _weightController.dispose();
@@ -46,6 +77,13 @@ class _SalesFormScreenState extends State<SalesFormScreen> {
     _notesController.dispose();
     super.dispose();
   }
+
+  int get _soldCount => int.tryParse(_birdsController.text.trim()) ?? 0;
+  double get _pricePerBird =>
+      double.tryParse(_priceController.text.trim()) ?? 0.0;
+  int get _remainingBirds =>
+      _availableBirds != null ? (_availableBirds! - _soldCount) : 0;
+  double get _totalEstimatedValue => _soldCount * _pricePerBird;
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -56,6 +94,7 @@ class _SalesFormScreenState extends State<SalesFormScreen> {
     );
     if (picked != null) {
       setState(() => _selectedDate = picked);
+      _loadBatchInfo();
     }
   }
 
@@ -68,11 +107,11 @@ class _SalesFormScreenState extends State<SalesFormScreen> {
         farmId: widget.farmId,
         batchId: widget.batchId,
         customerName: _customerController.text.trim(),
-        birdsSold: int.tryParse(_birdsController.text.trim()) ?? 0,
+        birdsSold: _soldCount,
         averageWeightKg: double.tryParse(_weightController.text.trim()) ?? 0,
-        pricePerBird: double.tryParse(_priceController.text.trim()) ?? 0,
+        pricePerBird: _pricePerBird,
         date: _selectedDate,
-        batchAgeDay: widget.currentBatchAge,
+        batchAgeDay: _calculatedAge > 0 ? _calculatedAge : widget.currentBatchAge,
         vehicleNumber: _vehicleController.text.trim().isEmpty
             ? null
             : _vehicleController.text.trim(),
@@ -84,7 +123,7 @@ class _SalesFormScreenState extends State<SalesFormScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Sale entry saved'),
+          content: Text('Sale entry saved successfully. Flock count updated.'),
           backgroundColor: AppColors.primary,
           behavior: SnackBarBehavior.floating,
         ),
@@ -106,12 +145,16 @@ class _SalesFormScreenState extends State<SalesFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final hasAvailable = _availableBirds != null;
+    final isExceeding = hasAvailable && _soldCount > _availableBirds!;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Bird Sale Entry'),
         backgroundColor: AppColors.surface,
         foregroundColor: AppColors.primary,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -120,6 +163,7 @@ class _SalesFormScreenState extends State<SalesFormScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Header Card with Live Flock Context
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: const BoxDecoration(
@@ -129,24 +173,25 @@ class _SalesFormScreenState extends State<SalesFormScreen> {
                 child: Row(
                   children: [
                     Container(
-                      width: 46,
-                      height: 46,
+                      width: 48,
+                      height: 48,
                       decoration: const BoxDecoration(
                         color: AppColors.surface,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.sell_outlined,
+                        Icons.point_of_sale_rounded,
                         color: AppColors.primary,
+                        size: 26,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Bird Sales',
+                            'Bird Sale Entry',
                             style: TextStyle(
                               color: AppColors.surface,
                               fontSize: 18,
@@ -155,8 +200,14 @@ class _SalesFormScreenState extends State<SalesFormScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Age day ${widget.currentBatchAge}',
-                            style: const TextStyle(color: AppColors.surface),
+                            hasAvailable
+                                ? 'Available: ${NumberFormat('#,###').format(_availableBirds)} live birds • Day $_calculatedAge'
+                                : 'Recording live flock sales',
+                            style: const TextStyle(
+                              color: Color(0xFFDCFCE7),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ],
                       ),
@@ -165,47 +216,106 @@ class _SalesFormScreenState extends State<SalesFormScreen> {
                 ),
               ),
               const SizedBox(height: 16),
+
               _textField(
                 _customerController,
-                'Customer name',
+                'Customer / Trader Name',
                 required: true,
-                icon: Icons.person_outline,
+                icon: Icons.person_outline_rounded,
               ),
               const SizedBox(height: 14),
+
               _textField(
                 _birdsController,
-                'Birds sold',
+                'Number of Birds Sold',
                 required: true,
                 icon: Icons.pets_outlined,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: false,
-                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: false),
                 formatter: FilteringTextInputFormatter.allow(RegExp(r'[\d]')),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Birds sold is required';
+                  }
+                  final n = int.tryParse(value.trim());
+                  if (n == null || n <= 0) return 'Must be greater than 0';
+                  if (hasAvailable && n > _availableBirds!) {
+                    return 'Cannot sell more than available live birds ($_availableBirds)';
+                  }
+                  return null;
+                },
               ),
+
+              // Live Real-Time Deduction Preview Banner
+              if (_soldCount > 0) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isExceeding ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isExceeding ? const Color(0xFFFECDD3) : const Color(0xFFBBF7D0),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isExceeding
+                            ? Icons.error_outline_rounded
+                            : Icons.check_circle_outline_rounded,
+                        color: isExceeding ? AppColors.danger : AppColors.primary,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          isExceeding
+                              ? 'Exceeds available live birds ($_availableBirds)'
+                              : 'Remaining after sale: ${NumberFormat('#,###').format(_remainingBirds)} birds',
+                          style: TextStyle(
+                            color: isExceeding ? const Color(0xFFBE123C) : const Color(0xFF15803D),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      if (_totalEstimatedValue > 0)
+                        Text(
+                          '₹${NumberFormat('#,###').format(_totalEstimatedValue)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primaryDark,
+                            fontSize: 13,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 14),
+
               _textField(
                 _weightController,
-                'Average weight (kg)',
+                'Average Weight (kg / bird)',
                 icon: Icons.scale_outlined,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 formatter: FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
               ),
               const SizedBox(height: 14),
+
               _textField(
                 _priceController,
-                'Price per bird (₹)',
+                'Price per Bird (₹)',
                 required: true,
                 icon: Icons.currency_rupee_outlined,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 formatter: FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
               ),
               const SizedBox(height: 14),
+
               InkWell(
                 onTap: _pickDate,
+                borderRadius: BorderRadius.circular(14),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     vertical: 16,
@@ -219,47 +329,76 @@ class _SalesFormScreenState extends State<SalesFormScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Date',
-                        style: TextStyle(color: AppColors.textSecondary),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.calendar_today_rounded,
+                            color: AppColors.textSecondary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Sale Date: ${_formatDate(_selectedDate)}',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        _formatDate(_selectedDate),
-                        style: const TextStyle(color: AppColors.textPrimary),
+                      const Text(
+                        'Change',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 14),
+
               _textField(
                 _vehicleController,
-                'Vehicle number',
+                'Vehicle Number (Optional)',
                 icon: Icons.local_shipping_outlined,
               ),
               const SizedBox(height: 14),
+
               _textField(
                 _notesController,
-                'Notes',
-                maxLines: 3,
-                icon: Icons.sticky_note_2_outlined,
+                'Notes / Remarks (Optional)',
+                maxLines: 2,
+                icon: Icons.note_outlined,
               ),
-              const SizedBox(height: 20),
-              FilledButton(
+              const SizedBox(height: 24),
+
+              ElevatedButton(
                 onPressed: _saving ? null : _save,
-                style: FilledButton.styleFrom(
+                style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.surface,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 2,
                 ),
                 child: _saving
                     ? const SizedBox(
-                        width: 18,
-                        height: 18,
+                        height: 20,
+                        width: 20,
                         child: CircularProgressIndicator(
-                          strokeWidth: 2,
                           color: AppColors.surface,
+                          strokeWidth: 2,
                         ),
                       )
-                    : const Text('Save Sale'),
+                    : const Text(
+                        'Save Sale & Deduct Flock',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      ),
               ),
             ],
           ),
@@ -276,6 +415,7 @@ class _SalesFormScreenState extends State<SalesFormScreen> {
     IconData? icon,
     TextInputType? keyboardType,
     TextInputFormatter? formatter,
+    String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
@@ -286,7 +426,7 @@ class _SalesFormScreenState extends State<SalesFormScreen> {
         labelText: label,
         prefixIcon: icon == null
             ? null
-            : Icon(icon, color: AppColors.textSecondary),
+            : Icon(icon, color: AppColors.textSecondary, size: 20),
         filled: true,
         fillColor: AppColors.surface,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
@@ -294,11 +434,16 @@ class _SalesFormScreenState extends State<SalesFormScreen> {
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: AppColors.border),
         ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
       ),
-      validator: required
-          ? (value) =>
-                (value == null || value.trim().isEmpty) ? 'Required' : null
-          : null,
+      validator: validator ??
+          (required
+              ? (value) =>
+                    (value == null || value.trim().isEmpty) ? 'Required' : null
+              : null),
     );
   }
 
