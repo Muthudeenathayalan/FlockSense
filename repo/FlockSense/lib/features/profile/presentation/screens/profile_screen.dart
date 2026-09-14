@@ -83,7 +83,7 @@ class ProfileScreen extends ConsumerWidget {
           SliverAppBar(
             expandedHeight: 220,
             pinned: true,
-            backgroundColor: AppColors.primary,
+            backgroundColor: AppColors.primaryDark,
             foregroundColor: Colors.white,
             title: const Text(
               'Profile',
@@ -95,7 +95,7 @@ class ProfileScreen extends ConsumerWidget {
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: const BoxDecoration(
-                  gradient: AppColors.primaryGradient,
+                  gradient: AppColors.headerGradient,
                 ),
                 child: SafeArea(
                   child: Column(
