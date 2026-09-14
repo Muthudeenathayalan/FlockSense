@@ -51,7 +51,7 @@ class FarmIdentityHeader extends StatelessWidget {
     return SliverAppBar(
       expandedHeight: 220,
       pinned: true,
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.primaryDark,
       foregroundColor: Colors.white,
       titleTextStyle: const TextStyle(
         fontSize: 18,
