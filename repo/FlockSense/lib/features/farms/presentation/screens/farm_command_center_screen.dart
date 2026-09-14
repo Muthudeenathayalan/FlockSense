@@ -163,8 +163,7 @@ class _FarmCommandCenterScreenState extends State<FarmCommandCenterScreen> {
             .toList();
         final totalLiveBirds = activeBatches.fold<int>(
           0,
-          (sum, b) =>
-              sum + (b.currentBirds > 0 ? b.currentBirds : b.totalBirds),
+          (sum, b) => sum + b.currentBirds,
         );
         final shedsCount = _farm.capacity != null && _farm.capacity! > 0
             ? 1
