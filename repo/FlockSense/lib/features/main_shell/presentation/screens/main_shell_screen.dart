@@ -1,16 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flock_sense/features/batches/data/batch_service.dart';
-import 'package:flock_sense/features/batches/domain/batch_model.dart';
 import 'package:flock_sense/core/providers/connectivity_provider.dart';
 import 'package:flock_sense/core/services/sync_service.dart';
+import 'package:flock_sense/features/batches/domain/batch_model.dart';
 import 'package:flock_sense/features/daily_records/presentation/screens/daily_record_form_screen.dart';
 import 'package:flock_sense/features/daily_records/presentation/screens/daily_records_dashboard_screen.dart';
-import 'package:flock_sense/features/farms/data/farm_service.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
 import 'package:flock_sense/features/home/presentation/screens/home_screen.dart';
 import 'package:flock_sense/features/more/presentation/screens/more_screen.dart';
+import 'package:flock_sense/features/notifications/data/services/smart_alert_evaluator.dart';
 import 'package:flock_sense/features/profile/presentation/screens/profile_screen.dart';
 import 'package:flock_sense/config/routes/app_routes.dart';
 import 'package:flock_sense/features/farms/presentation/screens/farm_list_screen.dart';
@@ -25,6 +24,14 @@ class MainShellScreen extends ConsumerStatefulWidget {
 class _MainShellScreenState extends ConsumerState<MainShellScreen> {
   int _currentIndex = 0;
   bool _openingRecordFlow = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      SmartAlertEvaluator.evaluateSmartAlerts();
+    });
+  }
 
   List<Widget> get _screens => <Widget>[
     const HomeScreen(),

@@ -294,7 +294,32 @@ class DailyRecordService {
       debugPrint('Automatic inventory deduction error: $e');
     }
 
+    // Auto-dismiss today's pending daily record reminder
+    final now = DateTime.now();
+    if (recordDate.year == now.year &&
+        recordDate.month == now.month &&
+        recordDate.day == now.day) {
+      try {
+        await NotificationService.dismissDailyRecordReminder(batchId);
+        await NotificationFirestoreService.deletePendingDailyRecordNotifications(
+          batchId,
+        );
+      } catch (e) {
+        debugPrint('[DailyRecordService] Dismiss daily reminder error: $e');
+      }
+    }
+
     return record;
+  }
+
+  /// Checks if today's record has already been logged for a specific batch.
+  static Future<bool> hasTodayRecordForBatch(String farmId, String batchId) async {
+    final record = await getDailyRecordByDate(
+      farmId: farmId,
+      batchId: batchId,
+      recordDate: DateTime.now(),
+    );
+    return record != null;
   }
 
   /// Delete a daily record and update batch bird counts automatically

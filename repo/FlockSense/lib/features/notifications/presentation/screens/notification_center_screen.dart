@@ -78,10 +78,24 @@ class _NotificationCenterScreenState
 
     final searchQuery = filter.searchQuery.toLowerCase();
 
-    // Filter & Deduplicate Notifications
+    // Filter & Deduplicate Notifications (Eliminates dummy/test items and duplicates)
     final filteredNotifs = <NotificationModel>[];
     final seenKeys = <String>{};
+    final seenPendingBatches = <String>{};
+
     for (final n in notifications) {
+      final titleLower = n.title.toLowerCase();
+      final bodyLower = n.body.toLowerCase();
+
+      // Purge any dummy or test alerts
+      final isDummy = titleLower.contains('dummy') ||
+          bodyLower.contains('dummy') ||
+          titleLower.contains('sample alert') ||
+          titleLower.contains('test notification') ||
+          titleLower.contains('demo notification') ||
+          n.id.contains('test_');
+      if (isDummy) continue;
+
       if (filter.statusFilter == 'unread' &&
           n.status != NotificationStatus.unread) {
         continue;
@@ -94,9 +108,17 @@ class _NotificationCenterScreenState
       if (filter.typeFilter != null && n.type != filter.typeFilter) continue;
 
       if (searchQuery.isNotEmpty) {
-        final matchesTitle = n.title.toLowerCase().contains(searchQuery);
-        final matchesBody = n.body.toLowerCase().contains(searchQuery);
+        final matchesTitle = titleLower.contains(searchQuery);
+        final matchesBody = bodyLower.contains(searchQuery);
         if (!matchesTitle && !matchesBody) continue;
+      }
+
+      // Deduplicate daily record pending: only show 1 latest alert per batch
+      if (n.id.startsWith('daily_record_pending') ||
+          n.title.contains('Daily Record Pending')) {
+        final batchId =
+            n.relatedBatchId ?? n.id.replaceFirst('daily_record_pending_', '');
+        if (!seenPendingBatches.add(batchId)) continue;
       }
 
       final key =

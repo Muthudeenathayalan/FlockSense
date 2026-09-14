@@ -44,13 +44,34 @@ class NotificationFirestoreService {
           final deduplicated = <NotificationModel>[];
           final seenIds = <String>{};
           final seenKeys = <String>{};
+          final seenPendingBatches = <String>{};
 
           for (final doc in snap.docs) {
             final data = Map<String, dynamic>.from(doc.data());
             data['id'] = doc.id;
             final notif = NotificationModel.fromJson(data);
-            final key = _notificationKey(notif);
+            final titleLower = notif.title.toLowerCase();
+            final bodyLower = notif.body.toLowerCase();
 
+            // Discard any dummy or sample notifications
+            if (titleLower.contains('dummy') ||
+                bodyLower.contains('dummy') ||
+                titleLower.contains('sample alert') ||
+                titleLower.contains('test notification') ||
+                titleLower.contains('demo notification') ||
+                notif.id.contains('test_')) {
+              continue;
+            }
+
+            // Deduplicate daily record pending: keep only newest 1 per batch
+            if (notif.id.startsWith('daily_record_pending') ||
+                notif.title.contains('Daily Record Pending')) {
+              final batchId = notif.relatedBatchId ??
+                  notif.id.replaceFirst('daily_record_pending_', '');
+              if (!seenPendingBatches.add(batchId)) continue;
+            }
+
+            final key = _notificationKey(notif);
             if (seenIds.add(notif.id) && seenKeys.add(key)) {
               deduplicated.add(notif);
             }
@@ -66,7 +87,7 @@ class NotificationFirestoreService {
         });
   }
 
-  /// Scans Firestore notifications and removes duplicate documents
+  /// Scans Firestore notifications and removes duplicate documents and dummy data
   static Future<int> cleanupDuplicateNotifications() async {
     final user = _auth.currentUser;
     if (user == null) return 0;
@@ -80,14 +101,42 @@ class NotificationFirestoreService {
           .get();
 
       final seenKeys = <String>{};
+      final seenPendingBatches = <String>{};
       final duplicateRefs = <DocumentReference>[];
 
       for (final doc in snap.docs) {
         final data = Map<String, dynamic>.from(doc.data());
         data['id'] = doc.id;
         final notif = NotificationModel.fromJson(data);
-        final key = _notificationKey(notif);
+        final titleLower = notif.title.toLowerCase();
+        final bodyLower = notif.body.toLowerCase();
 
+        // 1. Purge dummy/test notifications
+        final isDummy = titleLower.contains('dummy') ||
+            bodyLower.contains('dummy') ||
+            titleLower.contains('sample alert') ||
+            titleLower.contains('test notification') ||
+            titleLower.contains('demo notification') ||
+            notif.id.contains('test_');
+
+        if (isDummy) {
+          duplicateRefs.add(doc.reference);
+          continue;
+        }
+
+        // 2. Daily record pending deduplication: keep only the newest 1 per batch
+        if (notif.id.startsWith('daily_record_pending') ||
+            notif.title.contains('Daily Record Pending')) {
+          final batchId = notif.relatedBatchId ??
+              notif.id.replaceFirst('daily_record_pending_', '');
+          if (!seenPendingBatches.add(batchId)) {
+            duplicateRefs.add(doc.reference);
+            continue;
+          }
+        }
+
+        // 3. General semantic deduplication
+        final key = _notificationKey(notif);
         if (!seenKeys.add(key)) {
           duplicateRefs.add(doc.reference);
         }
@@ -100,7 +149,7 @@ class NotificationFirestoreService {
         }
         await batch.commit();
         debugPrint(
-          '[NotificationFirestoreService] Removed ${duplicateRefs.length} duplicate notifications',
+          '[NotificationFirestoreService] Removed ${duplicateRefs.length} duplicate/dummy notifications',
         );
       }
 
@@ -110,6 +159,52 @@ class NotificationFirestoreService {
         '[NotificationFirestoreService] cleanupDuplicateNotifications error: $e',
       );
       return 0;
+    }
+  }
+
+  /// Removes all pending daily record notification alerts for a given batch
+  static Future<void> deletePendingDailyRecordNotifications(
+    String batchId,
+  ) async {
+    _localNotifications.removeWhere(
+      (n) =>
+          n.id == 'daily_record_pending_$batchId' ||
+          n.id.startsWith('daily_record_pending_${batchId}_') ||
+          (n.relatedBatchId == batchId &&
+              n.id.startsWith('daily_record_pending')),
+    );
+
+    final user = _auth.currentUser;
+    if (user != null) {
+      try {
+        final snap = await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('notifications')
+            .get();
+
+        final batch = _firestore.batch();
+        var deletedCount = 0;
+        for (final doc in snap.docs) {
+          final id = doc.id;
+          final data = doc.data();
+          final relatedBatchId = data['relatedBatchId'] as String?;
+          if (id == 'daily_record_pending_$batchId' ||
+              id.startsWith('daily_record_pending_${batchId}_') ||
+              (relatedBatchId == batchId &&
+                  id.startsWith('daily_record_pending'))) {
+            batch.delete(doc.reference);
+            deletedCount++;
+          }
+        }
+        if (deletedCount > 0) {
+          await batch.commit();
+        }
+      } catch (e) {
+        debugPrint(
+          '[NotificationFirestoreService] deletePendingDailyRecordNotifications error: $e',
+        );
+      }
     }
   }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flock_sense/config/routes/app_routes.dart';
+import 'package:flock_sense/features/daily_records/presentation/screens/daily_records_dashboard_screen.dart';
 import 'package:flock_sense/features/notifications/data/models/notification_model.dart';
 import 'package:flock_sense/features/notifications/data/services/notification_firestore_service.dart';
 
@@ -76,6 +78,19 @@ class NotificationCard extends StatelessWidget {
         ),
       ),
       child: ListTile(
+        onTap: () async {
+          if (isUnread) {
+            await NotificationFirestoreService.markAsRead(notification.id);
+          }
+          if (notification.id.startsWith('daily_record_pending') ||
+              notification.actionUrl == '/daily-record') {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const DailyRecordsDashboardScreen(),
+              ),
+            );
+          }
+        },
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         leading: CircleAvatar(
           backgroundColor: priorityColor.withAlpha((0.15 * 255).toInt()),

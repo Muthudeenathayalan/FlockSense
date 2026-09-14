@@ -27,10 +27,11 @@ class SmartAlertEvaluator {
               .watchInventoryItems(uid: user.uid)
               .first;
           for (final item in inventoryItems) {
+            final invAlertId = 'smart_inv_${item.id}';
             if (item.quantityAvailable <= item.minStockLevel) {
               final isFeed = item.category.toLowerCase().contains('feed');
               final notif = NotificationModel(
-                id: 'smart_inv_${item.id}',
+                id: invAlertId,
                 title: isFeed
                     ? 'CRITICAL: Low Feed Stock Alert'
                     : 'Low Inventory Stock',
@@ -47,6 +48,8 @@ class SmartAlertEvaluator {
                 relatedFarmId: item.farmId,
               );
               alerts.add(notif);
+            } else {
+              await NotificationFirestoreService.deleteNotification(invAlertId);
             }
           }
         } catch (e) {
@@ -76,6 +79,10 @@ class SmartAlertEvaluator {
                 isSmartAlert: true,
               ),
             );
+          } else {
+            await NotificationFirestoreService.deleteNotification(
+              'smart_fin_pending',
+            );
           }
         } catch (e) {
           debugPrint('[SmartAlertEvaluator] Finance evaluation error: $e');
@@ -87,10 +94,55 @@ class SmartAlertEvaluator {
           for (final farm in farms) {
             final batches = await BatchService.getBatchesForFarm(farm.id);
             for (final b in batches) {
-              if (b.status.toLowerCase() != 'active') continue;
+              if (b.status.toLowerCase() != 'active') {
+                // Inactive batch - clean up any dangling alerts
+                await NotificationFirestoreService.deletePendingDailyRecordNotifications(
+                  b.id,
+                );
+                await NotificationFirestoreService.deleteNotification(
+                  'smart_harv_${b.id}',
+                );
+                continue;
+              }
 
               final ageDays =
                   DateTime.now().difference(b.placementDate).inDays + 1;
+
+              // 3.0 Real-Time Daily Record Pending Reminder
+              try {
+                final now = DateTime.now();
+                final todayRecord =
+                    await DailyRecordService.getDailyRecordByDate(
+                      farmId: farm.id,
+                      batchId: b.id,
+                      recordDate: now,
+                    );
+                final pendingAlertId = 'daily_record_pending_${b.id}';
+
+                if (todayRecord == null) {
+                  alerts.add(
+                    NotificationModel(
+                      id: pendingAlertId,
+                      title: 'Daily Record Pending — ${b.batchName}',
+                      body:
+                          "You haven't entered today's daily record for ${b.batchName} (${farm.farmName}). Log mortality, feed, and water to keep flock tracking up-to-date.",
+                      type: NotificationType.batch,
+                      priority: NotificationPriority.high,
+                      createdAt: DateTime.now(),
+                      isSmartAlert: true,
+                      relatedFarmId: farm.id,
+                      relatedBatchId: b.id,
+                      actionUrl: '/daily-record',
+                    ),
+                  );
+                } else {
+                  await NotificationFirestoreService.deletePendingDailyRecordNotifications(
+                    b.id,
+                  );
+                }
+              } catch (e) {
+                debugPrint('[SmartAlertEvaluator] Daily record check error: $e');
+              }
 
               // Vaccination Schedule Alert (e.g. Day 7 Lasota, Day 14 Gumboro)
               if (ageDays == 7 || ageDays == 14 || ageDays == 21) {
@@ -128,6 +180,10 @@ class SmartAlertEvaluator {
                     relatedFarmId: farm.id,
                     relatedBatchId: b.id,
                   ),
+                );
+              } else {
+                await NotificationFirestoreService.deleteNotification(
+                  'smart_harv_${b.id}',
                 );
               }
 
@@ -181,8 +237,11 @@ class SmartAlertEvaluator {
         final pushKey =
             '${alert.id}_${now.year}_${now.month}_${now.day}';
 
-        if (alert.priority == NotificationPriority.critical &&
-            !_recentlyNotifiedPushKeys.contains(pushKey)) {
+        final shouldPush = alert.priority == NotificationPriority.critical ||
+            (alert.priority == NotificationPriority.high &&
+                alert.id.startsWith('daily_record_pending'));
+
+        if (shouldPush && !_recentlyNotifiedPushKeys.contains(pushKey)) {
           _recentlyNotifiedPushKeys.add(pushKey);
           await FcmLocalNotificationService.showLocalNotification(
             title: alert.title,

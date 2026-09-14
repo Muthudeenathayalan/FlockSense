@@ -317,14 +317,7 @@ class FarmService {
           }
         }
       }
-      farms.sort((a, b) {
-        final aTime = a.createdAt;
-        final bTime = b.createdAt;
-        if (aTime == null && bTime == null) return a.farmName.compareTo(b.farmName);
-        if (aTime == null) return 1;
-        if (bTime == null) return -1;
-        return bTime.compareTo(aTime);
-      });
+      farms.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       // Update cache
       await _cacheService.cacheFarms(user.uid, farms);
@@ -391,14 +384,7 @@ class FarmService {
                 }
               }
             }
-            list.sort((a, b) {
-              final aTime = a.createdAt;
-              final bTime = b.createdAt;
-              if (aTime == null && bTime == null) return a.farmName.compareTo(b.farmName);
-              if (aTime == null) return 1;
-              if (bTime == null) return -1;
-              return bTime.compareTo(aTime);
-            });
+            list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
             return list;
           },
         );

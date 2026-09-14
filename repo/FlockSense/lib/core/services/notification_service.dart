@@ -382,6 +382,30 @@ class NotificationService {
     await _local.cancel(9999);
   }
 
+  /// Sends a real-time notification that today's daily log is pending for an active batch
+  static Future<void> checkDailyRecordPendingAlert({
+    required String batchName,
+    required String farmName,
+    required String batchId,
+  }) async {
+    final prefsMap = await getPreferences();
+    if (prefsMap['daily'] != true) return;
+
+    final notifId = 8800 + (batchId.hashCode.abs() % 1000);
+    await _showLocalNotification(
+      id: notifId,
+      title: 'Daily Record Pending — $batchName',
+      body: "You haven't logged today's daily record for $batchName ($farmName). Tap to log records now.",
+      payload: '/main',
+    );
+  }
+
+  /// Dismisses the real-time pending notification for a batch once logged
+  static Future<void> dismissDailyRecordReminder(String batchId) async {
+    final notifId = 8800 + (batchId.hashCode.abs() % 1000);
+    await _local.cancel(notifId);
+  }
+
   static Future<void> checkMortalityAlert({
     required String batchName,
     required int mortalityCount,
