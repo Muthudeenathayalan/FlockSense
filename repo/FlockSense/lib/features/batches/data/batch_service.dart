@@ -51,6 +51,22 @@ class BatchService {
         );
   }
 
+  static Stream<BatchModel?> watchBatch(String farmId, String batchId) {
+    final user = _auth.currentUser;
+    if (user == null || farmId.trim().isEmpty || batchId.trim().isEmpty) {
+      return Stream.value(null);
+    }
+
+    return _batchesRef(user.uid, farmId).doc(batchId).snapshots().map((doc) {
+      if (!doc.exists || doc.data() == null) return null;
+      return BatchModel.fromJson({
+        'id': doc.id,
+        'farmId': farmId,
+        ...doc.data()!,
+      });
+    });
+  }
+
   /// Real-time stream of ALL batches across all farms owned by the user.
   /// Uses direct subcollection listeners so no Firestore collection group index is required.
   static Stream<List<BatchModel>> watchAllUserBatches(String uid) {
@@ -480,7 +496,13 @@ class BatchService {
     final list = <BatchModel>[];
     for (final d in snapshot.docs) {
       if (seen.add(d.id)) {
-        list.add(BatchModel.fromJson(d.data()));
+        list.add(
+          BatchModel.fromJson({
+            'id': d.id,
+            'farmId': farmId,
+            ...d.data(),
+          }),
+        );
       }
     }
     return list;
@@ -497,7 +519,13 @@ class BatchService {
       final list = <BatchModel>[];
       for (final d in snapshot.docs) {
         if (seen.add(d.id)) {
-          list.add(BatchModel.fromJson(d.data()));
+          list.add(
+            BatchModel.fromJson({
+              'id': d.id,
+              'farmId': farmId,
+              ...d.data(),
+            }),
+          );
         }
       }
       result[farmId] = list;
