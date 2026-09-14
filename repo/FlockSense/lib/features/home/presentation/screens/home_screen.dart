@@ -15,40 +15,41 @@ import 'package:flock_sense/features/notifications/presentation/screens/notifica
 import 'package:flock_sense/features/reports/presentation/screens/reports_dashboard_screen.dart';
 import 'package:flock_sense/features/vaccination/presentation/screens/vaccination_screen.dart';
 import 'package:flock_sense/features/home/presentation/providers/home_dashboard_provider.dart';
+import 'package:flock_sense/core/widgets/hen_icon.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DESIGN SYSTEM TOKENS (Modern SaaS Poultry Intelligence Standard)
+// DESIGN SYSTEM TOKENS
 // ─────────────────────────────────────────────────────────────────────────────
 const double _kHPad = 20.0;
 const double _kCardRadius = 16.0;
 const double _kSmRadius = 12.0;
 
-// Palette
-const Color _kPrimary = Color(0xFF16A34A);
-const Color _kPrimaryDark = Color(0xFF0F172A);
-const Color _kPrimaryDeep = Color(0xFF15803D);
-const Color _kSurface = Color(0xFFFFFFFF);
-const Color _kBackground = Color(0xFFF8FAFC);
-const Color _kBorder = Color(0xFFE2E8F0);
-const Color _kBorderLight = Color(0xFFF1F5F9);
+// Palette — mirrors AppColors for consistency
+const Color _kPrimary      = Color(0xFF16A34A); // vibrant green
+const Color _kPrimaryDark  = Color(0xFF104422); // balanced dark forest green
+const Color _kPrimaryDeep  = Color(0xFF14522A); // deep green
+const Color _kSurface      = Color(0xFFFFFFFF);
+const Color _kBackground   = Color(0xFFF8FAFC); // clean neutral background
+const Color _kBorder       = Color(0xFFE2E8F0);
+const Color _kBorderLight  = Color(0xFFF1F5F9);
 
 // Text
-const Color _kTextPrimary = Color(0xFF0F172A);
+const Color _kTextPrimary   = Color(0xFF0F172A);
 const Color _kTextSecondary = Color(0xFF64748B);
-const Color _kTextMuted = Color(0xFF94A3B8);
+const Color _kTextMuted     = Color(0xFF94A3B8);
 
 // Accents
-const Color _kBlue = Color(0xFF2563EB);
-const Color _kSky = Color(0xFF0EA5E9);
-const Color _kAmber = Color(0xFFF59E0B);
-const Color _kRed = Color(0xFFEF4444);
+const Color _kBlue   = Color(0xFF2563EB);
+const Color _kSky    = Color(0xFF0EA5E9);
+const Color _kAmber  = Color(0xFFF59E0B);
+const Color _kRed    = Color(0xFFEF4444);
 const Color _kIndigo = Color(0xFF6366F1);
 
 // Soft Tints
-const Color _kGreenTint = Color(0xFFDCFCE7);
-const Color _kBlueTint = Color(0xFFDBEAFE);
-const Color _kAmberTint = Color(0xFFFEF3C7);
-const Color _kRedTint = Color(0xFFFEE2E2);
+const Color _kGreenTint  = Color(0xFFDCFCE7);
+const Color _kBlueTint   = Color(0xFFDBEAFE);
+const Color _kAmberTint  = Color(0xFFFEF3C7);
+const Color _kRedTint    = Color(0xFFFEE2E2);
 const Color _kIndigoTint = Color(0xFFEEF2FF);
 
 const List<BoxShadow> _kCardShadow = [
@@ -109,27 +110,32 @@ class HomeScreen extends ConsumerWidget {
           // Header
           _CommandCenterHeader(
             displayName: displayName,
-            activeFarmName:
-                data.activeFarm?.farmName ??
-                (data.farms.isNotEmpty
-                    ? data.farms.first.farmName
-                    : 'Main Facility'),
             onNotificationTap: () => Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => const NotificationCenterScreen(),
               ),
             ),
-            onFarmTap: () => _showFarmSwitcherBottomSheet(context, ref, data),
           ),
 
           // Content body
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(_kHPad, 16, _kHPad, 88),
+              padding: const EdgeInsets.fromLTRB(_kHPad, 14, _kHPad, 88),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Farm Switcher placed directly above live telemetry
+                  _DashboardFarmSwitcherBar(
+                    activeFarmName: data.activeFarm?.farmName ??
+                        (data.farms.isNotEmpty
+                            ? data.farms.first.farmName
+                            : 'Main Facility'),
+                    totalFarms: data.farms.length,
+                    onSwitchTap: () => _showFarmSwitcherBottomSheet(context, ref, data),
+                  ),
+                  const SizedBox(height: 12),
+
                   // Live telemetry strip
                   _TelemetryHealthStrip(
                     todayMortality: data.todayMortality,
@@ -277,22 +283,7 @@ class HomeScreen extends ConsumerWidget {
                   _AiDiagnosticsSection(data: data),
                   const SizedBox(height: 24),
 
-                  // Facility & Biosecurity
-                  const _SectionHeader(
-                    title: 'Facility & Operations',
-                    subtitle: 'Biosecurity index & automated backup systems',
-                  ),
-                  const SizedBox(height: 12),
-                  _FacilityOperationsSection(
-                    todayMortality: data.todayMortality,
-                    onDailyRecordsTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const DailyRecordsDashboardScreen(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+
 
                   // Quick Operations Grid
                   const _SectionHeader(
@@ -340,52 +331,7 @@ class HomeScreen extends ConsumerWidget {
                       onManageTap: () =>
                           Navigator.pushNamed(context, AppRoutes.farms),
                     ),
-                    if (data.farms.length > 1) ...[
-                      const SizedBox(height: 16),
-                      _SectionHeader(
-                        title: 'Other Facilities',
-                        subtitle:
-                            '${data.farms.length - 1} additional registered shed(s)',
-                      ),
-                      const SizedBox(height: 8),
-                      ...data.farms
-                          .where((f) => f.id != data.activeFarm?.id)
-                          .map(
-                            (farm) => Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: _OtherFacilityCard(
-                                name: farm.farmName,
-                                type: farm.farmType,
-                                status: farm.status,
-                                address: farm.address,
-                                onTap: () async {
-                                  await switchDashboardFarm(ref, farm.id);
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Row(
-                                          children: [
-                                            const Icon(
-                                              Icons.check_circle_rounded,
-                                              color: Colors.white,
-                                              size: 18,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              'Switched active facility to ${farm.farmName}',
-                                            ),
-                                          ],
-                                        ),
-                                        backgroundColor: _kPrimaryDark,
-                                        duration: const Duration(seconds: 2),
-                                      ),
-                                    );
-                                  }
-                                },
-                              ),
-                            ),
-                          ),
-                    ],
+
                   ],
                 ],
               ),
@@ -656,15 +602,11 @@ void _showFarmSwitcherBottomSheet(
 class _CommandCenterHeader extends StatelessWidget {
   const _CommandCenterHeader({
     required this.displayName,
-    required this.activeFarmName,
     required this.onNotificationTap,
-    required this.onFarmTap,
   });
 
   final String? displayName;
-  final String activeFarmName;
   final VoidCallback onNotificationTap;
-  final VoidCallback onFarmTap;
 
   @override
   Widget build(BuildContext context) {
@@ -675,7 +617,7 @@ class _CommandCenterHeader extends StatelessWidget {
         : 'Hello, ${displayName!.split(' ').first}';
 
     return SliverAppBar(
-      expandedHeight: 168,
+      expandedHeight: 144,
       pinned: true,
       backgroundColor: _kPrimaryDark,
       foregroundColor: Colors.white,
@@ -686,7 +628,8 @@ class _CommandCenterHeader extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFF0F172A), Color(0xFF132E23), Color(0xFF166534)],
+              // Rich dark forest green gradient
+              colors: [Color(0xFF104422), Color(0xFF14522A), Color(0xFF14532D)],
             ),
           ),
           child: Stack(
@@ -699,12 +642,12 @@ class _CommandCenterHeader extends StatelessWidget {
                   height: 180,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _kPrimary.withValues(alpha: 0.12),
+                    color: _kPrimary.withValues(alpha: 0.08),
                   ),
                 ),
               ),
               Positioned(
-                bottom: 20,
+                bottom: 18,
                 left: _kHPad,
                 right: _kHPad,
                 child: Column(
@@ -712,84 +655,50 @@ class _CommandCenterHeader extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        GestureDetector(
-                          onTap: onFarmTap,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.10),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.15),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.warehouse_rounded,
-                                  size: 13,
-                                  color: Color(0xFF4ADE80),
-                                ),
-                                const SizedBox(width: 6),
-                                ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxWidth: 130,
-                                  ),
-                                  child: Text(
-                                    activeFarmName,
-                                    style: const TextStyle(
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                const Icon(
-                                  Icons.keyboard_arrow_down_rounded,
-                                  size: 14,
-                                  color: Colors.white70,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 9,
-                            vertical: 4,
+                            horizontal: 10,
+                            vertical: 5,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.20),
+                            color: Colors.white.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            dateStr,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white70,
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.18),
                             ),
                           ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.calendar_today_rounded,
+                                size: 12,
+                                color: Colors.white70,
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                dateStr,
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(width: 8),
                         GestureDetector(
                           onTap: onNotificationTap,
                           child: Container(
-                            width: 32,
-                            height: 32,
+                            width: 34,
+                            height: 34,
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.10),
+                              color: Colors.white.withValues(alpha: 0.12),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.15),
+                                color: Colors.white.withValues(alpha: 0.18),
                               ),
                             ),
                             child: Stack(
@@ -797,15 +706,15 @@ class _CommandCenterHeader extends StatelessWidget {
                               children: [
                                 const Icon(
                                   Icons.notifications_outlined,
-                                  size: 16,
+                                  size: 18,
                                   color: Colors.white,
                                 ),
                                 Positioned(
-                                  top: 6,
-                                  right: 6,
+                                  top: 7,
+                                  right: 7,
                                   child: Container(
-                                    width: 6,
-                                    height: 6,
+                                    width: 7,
+                                    height: 7,
                                     decoration: const BoxDecoration(
                                       color: _kRed,
                                       shape: BoxShape.circle,
@@ -818,11 +727,11 @@ class _CommandCenterHeader extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     Text(
                       greeting,
                       style: const TextStyle(
-                        fontSize: 24,
+                        fontSize: 23,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                         letterSpacing: -0.4,
@@ -843,6 +752,129 @@ class _CommandCenterHeader extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FARM SWITCHER (ABOVE LIVE TELEMETRY)
+// ─────────────────────────────────────────────────────────────────────────────
+class _DashboardFarmSwitcherBar extends StatelessWidget {
+  const _DashboardFarmSwitcherBar({
+    required this.activeFarmName,
+    required this.totalFarms,
+    required this.onSwitchTap,
+  });
+
+  final String activeFarmName;
+  final int totalFarms;
+  final VoidCallback onSwitchTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onSwitchTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFD1FAE5), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF104422).withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: const Color(0xFFDCFCE7),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const HenIcon(
+                size: 18,
+                color: Color(0xFF104422),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'CURRENT FARM',
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF64748B),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    activeFarmName,
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                      letterSpacing: -0.3,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF104422), Color(0xFF16A34A)],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF16A34A).withValues(alpha: 0.25),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.sync_alt_rounded,
+                    size: 13,
+                    color: Colors.white,
+                  ),
+                  SizedBox(width: 4),
+                  Text(
+                    'Switch',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 2),
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 15,
+                    color: Colors.white,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -950,57 +982,65 @@ class _ExecutiveKpiGrid extends StatelessWidget {
       mainAxisSpacing: 12,
       childAspectRatio: 1.15,
       children: [
+        // 1. Active Batches — Sky / Royal Blue theme
         _ExecutiveStatCard(
           icon: Icons.layers_rounded,
-          iconBg: _kBlueTint,
-          iconColor: _kBlue,
+          iconBg: const Color(0xFFDBEAFE),
+          iconColor: const Color(0xFF0284C7),
+          cardBg: const Color(0xFFF0F7FF),
+          borderColor: const Color(0xFFBAE6FD),
           value: data.activeBatchCount.toString(),
+          valueColor: const Color(0xFF0369A1),
           label: 'Active Batches',
           badgeText: data.activeBatchCount > 0
               ? '${data.activeBatchCount} in growout'
               : '0 batches',
-          badgeColor: _kBlue,
-          badgeBg: _kBlueTint,
+          badgeColor: const Color(0xFF0284C7),
+          badgeBg: const Color(0xFFE0F2FE),
         ),
+        // 2. Live Birds — Emerald Green theme
         _ExecutiveStatCard(
           icon: Icons.groups_rounded,
-          iconBg: hasFlock ? _kGreenTint : _kBackground,
-          iconColor: hasFlock ? _kPrimary : _kTextMuted,
+          iconBg: const Color(0xFFDCFCE7),
+          iconColor: const Color(0xFF16A34A),
+          cardBg: const Color(0xFFF0FDF4),
+          borderColor: const Color(0xFFBBF7D0),
           value: NumberFormat('#,###').format(data.liveBirds),
+          valueColor: const Color(0xFF15803D),
           label: 'Live Birds',
           badgeText: hasFlock ? 'Active flock' : '0 birds',
-          badgeColor: hasFlock ? _kPrimary : _kTextMuted,
-          badgeBg: hasFlock ? _kGreenTint : _kBackground,
+          badgeColor: const Color(0xFF16A34A),
+          badgeBg: const Color(0xFFDCFCE7),
         ),
+        // 3. Today's Mortality — Rose / Coral Red theme
         _ExecutiveStatCard(
           icon: Icons.health_and_safety_rounded,
-          iconBg: !hasFlock
-              ? _kBackground
-              : (data.todayMortality == 0 ? _kGreenTint : _kRedTint),
-          iconColor: !hasFlock
-              ? _kTextMuted
-              : (data.todayMortality == 0 ? _kPrimary : _kRed),
+          iconBg: const Color(0xFFFFE4E6),
+          iconColor: const Color(0xFFE11D48),
+          cardBg: const Color(0xFFFFF1F2),
+          borderColor: const Color(0xFFFECDD3),
           value: hasFlock ? data.todayMortality.toString() : '--',
+          valueColor: const Color(0xFFBE123C),
           label: "Today's Mortality",
           badgeText: !hasFlock
               ? 'No flock'
-              : (data.todayMortality == 0 ? '0.0% • Safe' : 'Alert'),
-          badgeColor: !hasFlock
-              ? _kTextMuted
-              : (data.todayMortality == 0 ? _kPrimary : _kRed),
-          badgeBg: !hasFlock
-              ? _kBackground
-              : (data.todayMortality == 0 ? _kGreenTint : _kRedTint),
+              : (data.todayMortality == 0 ? '0.0% • Safe' : '${data.todayMortality} Losses'),
+          badgeColor: const Color(0xFFE11D48),
+          badgeBg: const Color(0xFFFFE4E6),
         ),
+        // 4. Est. FCR — Golden Amber theme
         _ExecutiveStatCard(
           icon: Icons.trending_up_rounded,
-          iconBg: fcr != null ? _kAmberTint : _kBackground,
-          iconColor: fcr != null ? _kAmber : _kTextMuted,
+          iconBg: const Color(0xFFFEF3C7),
+          iconColor: const Color(0xFFD97706),
+          cardBg: const Color(0xFFFFFBEB),
+          borderColor: const Color(0xFFFDE68A),
           value: fcr != null ? fcr.toStringAsFixed(2) : '--',
+          valueColor: const Color(0xFFB45309),
           label: 'Est. FCR (Ratio)',
           badgeText: fcr != null ? 'Target: 1.50' : 'No telemetry',
-          badgeColor: fcr != null ? _kAmber : _kTextMuted,
-          badgeBg: fcr != null ? _kAmberTint : _kBackground,
+          badgeColor: const Color(0xFFD97706),
+          badgeBg: const Color(0xFFFEF3C7),
         ),
       ],
     );
@@ -1013,30 +1053,42 @@ class _ExecutiveStatCard extends StatelessWidget {
     required this.iconBg,
     required this.iconColor,
     required this.value,
+    required this.valueColor,
     required this.label,
     required this.badgeText,
     required this.badgeColor,
     required this.badgeBg,
+    required this.cardBg,
+    required this.borderColor,
   });
 
   final IconData icon;
   final Color iconBg;
   final Color iconColor;
   final String value;
+  final Color valueColor;
   final String label;
   final String badgeText;
   final Color badgeColor;
   final Color badgeBg;
+  final Color cardBg;
+  final Color borderColor;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: _kSurface,
+        color: cardBg,
         borderRadius: BorderRadius.circular(_kCardRadius),
-        border: Border.all(color: _kBorder, width: 1),
-        boxShadow: _kCardShadow,
+        border: Border.all(color: borderColor, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: borderColor.withValues(alpha: 0.25),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1046,13 +1098,13 @@ class _ExecutiveStatCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
                   color: iconBg,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, color: iconColor, size: 19),
+                child: Icon(icon, color: iconColor, size: 20),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
@@ -1076,10 +1128,10 @@ class _ExecutiveStatCard extends StatelessWidget {
             children: [
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
-                  color: _kTextPrimary,
+                  color: valueColor,
                   height: 1.1,
                   letterSpacing: -0.5,
                 ),
@@ -1089,7 +1141,7 @@ class _ExecutiveStatCard extends StatelessWidget {
                 label,
                 style: const TextStyle(
                   fontSize: 11.5,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                   color: _kTextSecondary,
                 ),
                 overflow: TextOverflow.ellipsis,
@@ -2432,209 +2484,6 @@ class _AiDiagnosticTile extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FACILITY & BIOSECURITY SECTION
-// ─────────────────────────────────────────────────────────────────────────────
-class _FacilityOperationsSection extends StatelessWidget {
-  const _FacilityOperationsSection({
-    required this.todayMortality,
-    required this.onDailyRecordsTap,
-  });
-
-  final int todayMortality;
-  final VoidCallback onDailyRecordsTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final isSafe = todayMortality <= 2;
-    final riskColor = isSafe ? _kPrimary : _kRed;
-
-    return Column(
-      children: [
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onDailyRecordsTap,
-            borderRadius: BorderRadius.circular(_kSmRadius),
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: _kSurface,
-                borderRadius: BorderRadius.circular(_kSmRadius),
-                border: Border.all(color: _kBorder, width: 1),
-                boxShadow: _kCardShadow,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: riskColor.withValues(alpha: 0.10),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.shield_rounded,
-                      color: riskColor,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Text(
-                              'Biosecurity Risk Status',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: _kTextPrimary,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isSafe ? _kGreenTint : _kRedTint,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                isSafe ? 'LOW RISK' : 'ELEVATED',
-                                style: TextStyle(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w800,
-                                  color: riskColor,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        const Text(
-                          'Telemetry normal • Safe disinfection & water sanitation active',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: _kTextSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    size: 18,
-                    color: _kTextMuted,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        const _DgFuelStatusCard(),
-      ],
-    );
-  }
-}
-
-class _DgFuelStatusCard extends ConsumerWidget {
-  const _DgFuelStatusCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final dgRecord = ref.watch(latestDgRecordProvider).value;
-    final fuelLevel = dgRecord?.dgLevelLiters ?? 120.0;
-    final genName = dgRecord?.dgName ?? 'Main Generator (25 kVA)';
-
-    final double pct = (fuelLevel / 200.0).clamp(0.0, 1.0);
-    final isLow = fuelLevel < 80.0;
-    final statusColor = isLow
-        ? (fuelLevel < 50.0 ? _kRed : _kAmber)
-        : _kPrimary;
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: _kSurface,
-        borderRadius: BorderRadius.circular(_kSmRadius),
-        border: Border.all(color: _kBorder, width: 1),
-        boxShadow: _kCardShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: _kAmberTint,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.electric_bolt_rounded,
-                  color: _kAmber,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      genName,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: _kTextPrimary,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      'Automated Shed Power Backup • ~${(fuelLevel / 6.5).toStringAsFixed(1)} hrs run time',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: _kTextSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                '${fuelLevel.toStringAsFixed(0)}L',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: statusColor,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: pct,
-              minHeight: 5,
-              backgroundColor: _kBackground,
-              valueColor: AlwaysStoppedAnimation<Color>(statusColor),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // QUICK OPERATIONS 4-TILE GRID
 // ─────────────────────────────────────────────────────────────────────────────
 class _QuickActionsGrid extends StatelessWidget {
@@ -2792,10 +2641,9 @@ class _ActiveFarmCard extends StatelessWidget {
               color: _kPrimary.withValues(alpha: 0.20),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(
-              Icons.agriculture_rounded,
-              color: Color(0xFF4ADE80),
+            child: const HenIcon(
               size: 20,
+              color: Color(0xFF4ADE80),
             ),
           ),
           const SizedBox(width: 12),
@@ -2850,86 +2698,7 @@ class _ActiveFarmCard extends StatelessWidget {
   }
 }
 
-class _OtherFacilityCard extends StatelessWidget {
-  const _OtherFacilityCard({
-    required this.name,
-    required this.type,
-    required this.status,
-    required this.address,
-    required this.onTap,
-  });
 
-  final String name;
-  final String type;
-  final String status;
-  final String address;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(_kSmRadius),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: _kSurface,
-            borderRadius: BorderRadius.circular(_kSmRadius),
-            border: Border.all(color: _kBorder, width: 1),
-            boxShadow: _kCardShadow,
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(
-                  color: _kGreenTint,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.warehouse_rounded,
-                  color: _kPrimary,
-                  size: 16,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: _kTextPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$type • $status',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: _kTextSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                size: 18,
-                color: _kTextMuted,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _EmptyFarmCard extends StatelessWidget {
   const _EmptyFarmCard({required this.onCreateFarm});
