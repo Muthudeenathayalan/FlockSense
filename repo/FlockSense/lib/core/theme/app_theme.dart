@@ -23,12 +23,12 @@ class AppTheme {
       onTertiaryContainer: AppColors.textPrimary,
       surface: AppColors.surface,
       onSurface: AppColors.textPrimary,
-      surfaceContainerHighest: AppColors.surfaceSoft,
+      surfaceContainerHighest: AppColors.borderLight,
       onSurfaceVariant: AppColors.textSecondary,
       error: AppColors.danger,
       onError: Colors.white,
       outline: AppColors.border,
-      outlineVariant: AppColors.border,
+      outlineVariant: AppColors.borderLight,
       shadow: AppColors.shadow,
       scrim: Colors.black54,
       inverseSurface: AppColors.primaryDark,
@@ -39,7 +39,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: AppColors.background,
+      scaffoldBackgroundColor: AppColors.background, // #F8FAFC
       fontFamily: AppTypography.fontFamily,
       textTheme: AppTypography.lightTextTheme,
       appBarTheme: const AppBarTheme(
@@ -182,9 +182,9 @@ class AppTheme {
           if (states.contains(WidgetState.selected)) {
             return const IconThemeData(color: AppColors.primary, size: 26);
           }
-          return const IconThemeData(color: AppColors.textSecondary, size: 24);
+          return const IconThemeData(color: AppColors.textMuted, size: 24);
         }),
-        indicatorColor: AppColors.primaryLight,
+        indicatorColor: AppColors.greenTint,
         indicatorShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
         ),
