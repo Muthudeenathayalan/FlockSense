@@ -723,7 +723,8 @@ class _DailyRecordsDashboardScreenState
         recordDate: recordDate,
       );
 
-      final currentBirds = _selectedBatch!.currentBirds;
+      final freshBatch = await BatchService.getBatchById(farmId, batchId);
+      final currentBirds = freshBatch?.currentBirds ?? _selectedBatch!.currentBirds;
       final opening = existingRecord?.openingBirds ?? currentBirds;
       final ageDay =
           recordDate.difference(_selectedBatch!.placementDate).inDays + 1;
@@ -867,58 +868,24 @@ class _DailyRecordsDashboardScreenState
       if (!mounted) return;
       ref.invalidate(dailyRecordsStreamProvider);
 
-      if (_isDailyOpsSelected && loggedMortality > 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Logged $loggedMortality mortality'),
-            action: SnackBarAction(
-              label: 'Undo',
-              textColor: const Color(0xFFFBBF24),
-              onPressed: () async {
-                try {
-                  await DailyRecordService.undoMortalityLog(
-                    farmId: farmId,
-                    batchId: batchId,
-                    recordDate: recordDate,
-                    previousMortality: prevMortality,
-                    previousClosing: prevClosing,
-                  );
-                  if (mounted) {
-                    ref.invalidate(dailyRecordsStreamProvider);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Mortality log undone'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  debugPrint('Undo mortality error: $e');
-                }
-              },
-            ),
-            duration: const Duration(seconds: 5),
-            behavior: SnackBarBehavior.floating,
+      // Show single unified success message — auto-dismisses, no mortality count
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 10),
+              Text(
+                "Today's log record saved successfully",
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ],
           ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.check_circle_rounded, color: Colors.white),
-                SizedBox(width: 10),
-                Text(
-                  'Record Saved Successfully',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            backgroundColor: AppColors.primary,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
+          backgroundColor: Color(0xFF14532D), // dark green
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2, milliseconds: 500),
+        ),
+      );
 
       // Reset form / step
       setState(() {
@@ -1086,7 +1053,7 @@ class _DailyRecordsDashboardScreenState
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.agriculture_outlined,
+                    Icons.flutter_dash,
                     size: 40,
                     color: AppColors.primary,
                   ),
@@ -1485,7 +1452,7 @@ class _DailyRecordsDashboardScreenState
             labelText: 'Farm',
             labelStyle: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
             prefixIcon: const Icon(
-              Icons.agriculture_outlined,
+              Icons.flutter_dash,
               size: 20,
               color: Color(0xFF64748B),
             ),
@@ -2033,7 +2000,7 @@ class _DailyRecordsDashboardScreenState
               Row(
                 children: [
                   const Icon(
-                    Icons.agriculture_rounded,
+                    Icons.flutter_dash,
                     size: 16,
                     color: AppColors.primary,
                   ),
