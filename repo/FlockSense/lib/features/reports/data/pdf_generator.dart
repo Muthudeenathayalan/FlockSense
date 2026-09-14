@@ -1171,10 +1171,10 @@ class PdfGenerator {
     final chickCost = data.batch.totalBirds * 35.0;
     final medCost = data.medicineRecords.fold(
       0.0,
-      (sum, m) => sum + (m.valueRs ?? 500.0),
+      (sum, m) => sum + (m.valueRs ?? 0.0),
     );
-    final vaccineCost = data.vaccineRecords.length * 300.0;
-    final miscCost = 15000.0;
+    final vaccineCost = 0.0;
+    final miscCost = 0.0;
 
     return pw.Page(
       pageFormat: PdfPageFormat.a4,

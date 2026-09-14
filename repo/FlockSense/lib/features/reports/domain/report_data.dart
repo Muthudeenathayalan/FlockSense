@@ -126,9 +126,9 @@ class ReportData {
     final feedCost = totalFeedKg * 42.0;
     final medCost = medicineRecords.fold(
       0.0,
-      (sum, m) => sum + (m.valueRs ?? 500.0),
+      (sum, m) => sum + (m.valueRs ?? 0.0),
     );
-    final vaccineCost = vaccineRecords.length * 300.0;
+    final vaccineCost = 0.0;
     final chickCost = batch.totalBirds * 35.0;
     return feedCost + medCost + vaccineCost + chickCost;
   }
