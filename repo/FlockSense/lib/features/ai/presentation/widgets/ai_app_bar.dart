@@ -59,7 +59,7 @@ class AiAppBar extends StatelessWidget implements PreferredSizeWidget {
                     ),
                     const SizedBox(width: 4),
                     const Text(
-                      'ONLINE',
+                      'GEMINI 3.6 FLASH',
                       style: TextStyle(
                         fontSize: 8,
                         fontWeight: FontWeight.bold,
