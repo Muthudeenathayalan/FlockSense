@@ -3,20 +3,62 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flock_sense/config/api_config.dart';
 
 class GeminiService {
   GeminiService._();
 
   static const String _kUserApiKeyPrefKey = 'flocksense_gemini_api_key';
   static const String _defaultEndpoint =
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent';
 
   static Future<String?> getStoredApiKey() async {
+    // 1. Environment variable if passed during compilation
     const envKey = String.fromEnvironment('GEMINI_API_KEY');
     if (envKey.isNotEmpty) return envKey;
 
+    // 2. Custom override from user settings if entered
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kUserApiKeyPrefKey);
+    final userKey = prefs.getString(_kUserApiKeyPrefKey);
+    if (userKey != null && userKey.trim().isNotEmpty) {
+      return userKey.trim();
+    }
+
+    // 3. Central developer API key for all app users
+    if (ApiConfig.geminiApiKey.isNotEmpty &&
+        !ApiConfig.geminiApiKey.contains('PASTE_YOUR_GEMINI_API_KEY')) {
+      return ApiConfig.geminiApiKey.trim();
+    }
+
+    return null;
+  }
+
+  /// Quick health check to test whether an API key connects successfully to Gemini
+  static Future<bool> testApiKey([String? customApiKey]) async {
+    final key = customApiKey ?? await getStoredApiKey();
+    if (key == null || key.trim().isEmpty) return false;
+
+    try {
+      final url = Uri.parse('$_defaultEndpoint?key=${key.trim()}');
+      final response = await http
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'contents': [
+                {
+                  'parts': [
+                    {'text': 'Ping'}
+                  ]
+                }
+              ]
+            }),
+          )
+          .timeout(const Duration(seconds: 5));
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
   }
 
   static Future<void> setStoredApiKey(String apiKey) async {
