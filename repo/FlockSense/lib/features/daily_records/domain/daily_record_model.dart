@@ -22,6 +22,7 @@ class DailyRecordModel {
     required this.mortalityCount,
     required this.cullCount,
     required this.adjustmentCount,
+    this.birdsSold = 0,
     required this.closingBirds,
     required this.feedConsumedKg,
     required this.waterConsumedLiters,
@@ -70,6 +71,7 @@ class DailyRecordModel {
   final int mortalityCount;
   final int cullCount;
   final int adjustmentCount;
+  final int birdsSold;
   final int closingBirds;
   final double feedConsumedKg;
   final double waterConsumedLiters;
@@ -180,6 +182,7 @@ class DailyRecordModel {
     final rawCull = parseInt(json['cullCount']);
     final cullCount = rawCull < 0 ? 0 : rawCull;
     final adjustmentCount = parseInt(json['adjustmentCount']);
+    final birdsSold = parseInt(json['birdsSold']);
     final rawClosing = parseInt(json['closingBirds']);
     final closingBirds = rawClosing > 0
         ? rawClosing
@@ -190,6 +193,7 @@ class DailyRecordModel {
                 mortality: mortalityCount,
                 culls: cullCount,
                 adjustments: adjustmentCount,
+                birdsSold: birdsSold,
               ));
 
     return DailyRecordModel(
@@ -202,6 +206,7 @@ class DailyRecordModel {
       mortalityCount: mortalityCount,
       cullCount: cullCount,
       adjustmentCount: adjustmentCount,
+      birdsSold: birdsSold,
       closingBirds: closingBirds,
       feedConsumedKg: parseDouble(json['feedConsumedKg']),
       waterConsumedLiters: parseDouble(json['waterConsumedLiters']),
@@ -252,6 +257,7 @@ class DailyRecordModel {
     'mortalityCount': mortalityCount,
     'cullCount': cullCount,
     'adjustmentCount': adjustmentCount,
+    'birdsSold': birdsSold,
     'closingBirds': closingBirds,
     'feedConsumedKg': feedConsumedKg,
     'waterConsumedLiters': waterConsumedLiters,
@@ -302,6 +308,7 @@ class DailyRecordModel {
     int? mortalityCount,
     int? cullCount,
     int? adjustmentCount,
+    int? birdsSold,
     int? closingBirds,
     double? feedConsumedKg,
     double? waterConsumedLiters,
@@ -349,6 +356,7 @@ class DailyRecordModel {
       mortalityCount: mortalityCount ?? this.mortalityCount,
       cullCount: cullCount ?? this.cullCount,
       adjustmentCount: adjustmentCount ?? this.adjustmentCount,
+      birdsSold: birdsSold ?? this.birdsSold,
       closingBirds: closingBirds ?? this.closingBirds,
       feedConsumedKg: feedConsumedKg ?? this.feedConsumedKg,
       waterConsumedLiters: waterConsumedLiters ?? this.waterConsumedLiters,
@@ -416,17 +424,19 @@ class DailyRecordModel {
   static bool isValidBirdWeight(double weightGrams) =>
       weightGrams >= 0 && weightGrams <= 10000;
 
-  /// Computes expected closing birds from opening, mortality, culls, and adjustments.
+  /// Computes expected closing birds from opening, mortality, culls, sales, and adjustments.
   /// Safely ensures non-negative lower bound.
   static int calculateClosingBirds({
     required int opening,
     required int mortality,
     required int culls,
     int adjustments = 0,
+    int birdsSold = 0,
   }) {
     final safeMortality = mortality < 0 ? 0 : mortality;
     final safeCulls = culls < 0 ? 0 : culls;
-    final closing = opening - safeMortality - safeCulls + adjustments;
+    final safeSold = birdsSold < 0 ? 0 : birdsSold;
+    final closing = opening - safeMortality - safeCulls - safeSold + adjustments;
     return closing > 0 ? closing : 0;
   }
 
