@@ -9,7 +9,6 @@ import 'package:flock_sense/features/auth/presentation/providers/auth_provider.d
 import 'package:flock_sense/features/batches/domain/batch_model.dart';
 import 'package:flock_sense/features/batches/presentation/screens/batch_command_center_screen.dart';
 import 'package:flock_sense/features/batches/presentation/screens/batch_form_screen.dart';
-import 'package:flock_sense/features/daily_records/domain/daily_record_model.dart';
 import 'package:flock_sense/features/daily_records/presentation/screens/daily_records_dashboard_screen.dart';
 import 'package:flock_sense/features/inventory/presentation/screens/inventory_dashboard_screen.dart';
 import 'package:flock_sense/features/notifications/presentation/screens/notification_center_screen.dart';
@@ -57,6 +56,14 @@ const List<BoxShadow> _kCardShadow = [
   BoxShadow(color: Color(0x040F172A), blurRadius: 2, offset: Offset(0, 1)),
 ];
 
+// 7-day benchmark dataset
+const List<String> _kDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const List<double> _kFeed = [1100, 1180, 1250, 1320, 1400, 1480, 1550];
+const List<double> _kMortality = [2, 1, 3, 1, 2, 1, 0];
+const List<double> _kFcr = [1.65, 1.64, 1.62, 1.61, 1.60, 1.59, 1.58];
+const List<double> _kRevActual = [6.6, 6.9, 7.1, 7.4, 7.6, 7.9, 8.2];
+const List<double> _kRevForecast = [7.2, 7.8, 8.5, 9.2, 10.1, 11.0, 12.1];
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN HOME SCREEN
 // ─────────────────────────────────────────────────────────────────────────────
@@ -82,16 +89,6 @@ class HomeScreen extends ConsumerWidget {
                 (data.activeFarm == null || b.farmId == data.activeFarm!.id))
             .toList() ??
         const <BatchModel>[];
-
-    final now = DateTime.now();
-    final pendingBatches = activeBatches.where((b) {
-      final hasRecordToday = data.recentRecords.any((r) =>
-          r.batchId == b.id &&
-          r.recordDate.year == now.year &&
-          r.recordDate.month == now.month &&
-          r.recordDate.day == now.day);
-      return !hasRecordToday;
-    }).toList();
 
     final targetFarmId =
         data.activeFarm?.id ??
@@ -150,21 +147,7 @@ class HomeScreen extends ConsumerWidget {
 
                   // Executive 2x2 KPIs
                   _ExecutiveKpiGrid(data: data),
-                  const SizedBox(height: 16),
-
-                  // Real-Time Pending Daily Record Warning Banner
-                  if (activeBatches.isNotEmpty && pendingBatches.isNotEmpty) ...[
-                    _PendingDailyRecordBanner(
-                      pendingBatches: pendingBatches,
-                      onLogRecord: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const DailyRecordsDashboardScreen(),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
+                  const SizedBox(height: 24),
 
                   // Active Batches
                   _SectionHeader(
@@ -217,7 +200,7 @@ class HomeScreen extends ConsumerWidget {
                         scrollDirection: Axis.horizontal,
                         clipBehavior: Clip.none,
                         itemCount: activeBatches.length,
-                        separatorBuilder: (c, i) => const SizedBox(width: 14),
+                        separatorBuilder: (_, __) => const SizedBox(width: 14),
                         itemBuilder: (context, i) => _BatchAvatarCard(
                           batch: activeBatches[i],
                           index: i,
@@ -243,12 +226,7 @@ class HomeScreen extends ConsumerWidget {
                         'Live flock telemetry, intake & financial projections',
                   ),
                   const SizedBox(height: 12),
-                  _PerformanceAnalyticsPanel(
-                    records: data.recentRecords,
-                    batches: activeBatches,
-                    liveBirds: data.liveBirds,
-                    todayMortality: data.todayMortality,
-                  ),
+                  const _PerformanceAnalyticsPanel(),
                   const SizedBox(height: 24),
 
                   // AI Diagnostics
@@ -497,7 +475,7 @@ void _showFarmSwitcherBottomSheet(
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: data.farms.length,
-                separatorBuilder: (c, i) => const SizedBox(height: 8),
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
                   final farm = data.farms[index];
                   final isSelected = farm.id == data.activeFarm?.id;
@@ -1487,290 +1465,10 @@ class _AgeRingPainter extends CustomPainter {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 4-TAB PERFORMANCE ANALYTICS (Driven Entirely by User Telemetry)
+// 4-TAB PERFORMANCE ANALYTICS
 // ─────────────────────────────────────────────────────────────────────────────
-class _Chart7DayData {
-  final List<String> dayNames;
-  final List<DateTime> dates;
-  final List<double> feedKg;
-  final List<double> fcr;
-  final List<double> mortality;
-  final List<double> population;
-  final List<double> revenue;
-  final double totalFeedKg;
-  final double totalMortality;
-  final double avgFcr;
-  final bool hasAnyData;
-
-  const _Chart7DayData({
-    required this.dayNames,
-    required this.dates,
-    required this.feedKg,
-    required this.fcr,
-    required this.mortality,
-    required this.population,
-    required this.revenue,
-    required this.totalFeedKg,
-    required this.totalMortality,
-    required this.avgFcr,
-    required this.hasAnyData,
-  });
-
-  factory _Chart7DayData.compute(
-    List<DailyRecordModel> records,
-    List<BatchModel> batches,
-  ) {
-    final now = DateTime.now();
-    final dayNames = <String>[];
-    final dates = <DateTime>[];
-    final feedKg = <double>[];
-    final fcr = <double>[];
-    final mortality = <double>[];
-    final population = <double>[];
-    final revenue = <double>[];
-
-    final initialBirds = batches.fold<int>(0, (sum, b) => sum + b.totalBirds);
-    final currentLiveBirds =
-        batches.fold<int>(0, (sum, b) => sum + b.currentBirds);
-    final runningBirds = currentLiveBirds > 0
-        ? currentLiveBirds.toDouble()
-        : (initialBirds > 0 ? initialBirds.toDouble() : 0.0);
-
-    final hasAnyData = records.isNotEmpty || batches.isNotEmpty;
-
-    for (var i = 6; i >= 0; i--) {
-      final date = DateTime(
-        now.year,
-        now.month,
-        now.day,
-      ).subtract(Duration(days: i));
-      dates.add(date);
-      dayNames.add(DateFormat('E').format(date));
-
-      final dayRecords = records
-          .where(
-            (r) =>
-                r.recordDate.year == date.year &&
-                r.recordDate.month == date.month &&
-                r.recordDate.day == date.day,
-          )
-          .toList();
-
-      final dayFeed = dayRecords.fold<double>(
-        0.0,
-        (sum, r) => sum + r.feedConsumedKg,
-      );
-      final dayMort = dayRecords.fold<double>(
-        0.0,
-        (sum, r) => sum + r.mortalityCount,
-      );
-      final validWeights = dayRecords
-          .where((r) => r.avgWeightGrams > 0)
-          .map((r) => r.avgWeightGrams)
-          .toList();
-      final dayWeight = validWeights.isNotEmpty
-          ? (validWeights.reduce((a, b) => a + b) / validWeights.length)
-          : 0.0;
-
-      feedKg.add(dayFeed);
-      mortality.add(dayMort);
-
-      final weightKg = dayWeight > 0 ? (dayWeight / 1000.0) : 0.0;
-      final dayFcr = (dayFeed > 0 && weightKg > 0 && runningBirds > 0)
-          ? (dayFeed / (weightKg * runningBirds)).clamp(0.8, 3.5)
-          : 0.0;
-      fcr.add(dayFcr);
-
-      final dayRevLakhs =
-          (runningBirds * (weightKg > 0 ? weightKg : 1.5) * 120.0) / 100000.0;
-      revenue.add(dayRevLakhs);
-      population.add(runningBirds);
-    }
-
-    final totalFeed = feedKg.fold<double>(0.0, (sum, v) => sum + v);
-    final totalMort = mortality.fold<double>(0.0, (sum, v) => sum + v);
-    final nonZeroFcrs = fcr.where((v) => v > 0).toList();
-    final avgFcrVal = nonZeroFcrs.isNotEmpty
-        ? (nonZeroFcrs.reduce((a, b) => a + b) / nonZeroFcrs.length)
-        : 0.0;
-
-    return _Chart7DayData(
-      dayNames: dayNames,
-      dates: dates,
-      feedKg: feedKg,
-      fcr: fcr,
-      mortality: mortality,
-      population: population,
-      revenue: revenue,
-      totalFeedKg: totalFeed,
-      totalMortality: totalMort,
-      avgFcr: avgFcrVal,
-      hasAnyData: hasAnyData,
-    );
-  }
-}
-
-class _ChartEmptyPlaceholder extends StatelessWidget {
-  final IconData icon;
-  final String message;
-
-  const _ChartEmptyPlaceholder({required this.icon, required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(
-                color: _kBackground,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: _kTextMuted, size: 28),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: _kTextSecondary,
-                height: 1.4,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-Widget _dynamicDayTitle(double v, List<String> dayNames) {
-  final i = v.toInt();
-  if (i < 0 || i >= dayNames.length) return const SizedBox.shrink();
-  return Padding(
-    padding: const EdgeInsets.only(top: 6),
-    child: Text(
-      dayNames[i],
-      style: const TextStyle(
-        fontSize: 10,
-        fontWeight: FontWeight.w600,
-        color: _kTextMuted,
-      ),
-    ),
-  );
-}
-
-class _PendingDailyRecordBanner extends StatelessWidget {
-  final List<BatchModel> pendingBatches;
-  final VoidCallback onLogRecord;
-
-  const _PendingDailyRecordBanner({
-    required this.pendingBatches,
-    required this.onLogRecord,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (pendingBatches.isEmpty) return const SizedBox.shrink();
-
-    final batchNames = pendingBatches.map((b) => b.batchName).join(', ');
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFEF2F2),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFCA5A5), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.red.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-              color: Color(0xFFFEE2E2),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.warning_amber_rounded,
-              color: Color(0xFFDC2626),
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Today's Daily Record Pending",
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF991B1B),
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  "No daily log entered today for: $batchNames",
-                  style: const TextStyle(
-                    fontSize: 11.5,
-                    color: Color(0xFFB91C1C),
-                    height: 1.2,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFDC2626),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              elevation: 0,
-            ),
-            onPressed: onLogRecord,
-            child: const Text(
-              'Log Now',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _PerformanceAnalyticsPanel extends StatefulWidget {
-  final List<DailyRecordModel> records;
-  final List<BatchModel> batches;
-  final int liveBirds;
-  final int todayMortality;
-
-  const _PerformanceAnalyticsPanel({
-    this.records = const [],
-    this.batches = const [],
-    this.liveBirds = 0,
-    this.todayMortality = 0,
-  });
+  const _PerformanceAnalyticsPanel();
 
   @override
   State<_PerformanceAnalyticsPanel> createState() =>
@@ -1795,31 +1493,15 @@ class _PerformanceAnalyticsPanelState
     Icons.insights_rounded,
   ];
 
+  static const List<String> _tabSummaries = [
+    'Live Survival: 4,988 birds (99.76%) • Cobb500 Target: 5,000',
+    'Feed Intake: 1.55 kg/bird • FCR: 1.58 (0.04 below benchmark)',
+    'Cumulative Losses: 10 birds (0.20% rate) • 0 mortality today',
+    'Actual Valuation: ₹8.20L • 42-Day Harvest Proj: ₹12.10L',
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final chartData = _Chart7DayData.compute(widget.records, widget.batches);
-
-    final survivalPct =
-        (widget.batches.isNotEmpty && widget.batches.first.totalBirds > 0)
-            ? ((widget.liveBirds / widget.batches.first.totalBirds) * 100)
-                .toStringAsFixed(1)
-            : '100.0';
-
-    final tabSummaries = [
-      widget.liveBirds > 0
-          ? 'Live Birds: ${NumberFormat.decimalPattern().format(widget.liveBirds)} ($survivalPct% survival rate)'
-          : 'No active flock population logged yet',
-      chartData.totalFeedKg > 0
-          ? '7-Day Feed: ${chartData.totalFeedKg.toStringAsFixed(1)} kg • Avg FCR: ${chartData.avgFcr > 0 ? chartData.avgFcr.toStringAsFixed(2) : "Tracking"}'
-          : 'Log daily feed intake to track 7-day FCR trends',
-      chartData.totalMortality > 0 || widget.todayMortality > 0
-          ? '7-Day Loss: ${chartData.totalMortality.toInt()} birds • Today: ${widget.todayMortality} mortality'
-          : 'Zero mortality recorded in the last 7 days',
-      widget.liveBirds > 0
-          ? 'Active Flock Size: ${widget.liveBirds} birds • Valuation derived from daily weights'
-          : 'Create a batch to project 42-day harvest valuation',
-    ];
-
     return Container(
       decoration: BoxDecoration(
         color: _kSurface,
@@ -1896,7 +1578,7 @@ class _PerformanceAnalyticsPanelState
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    tabSummaries[_selectedTab],
+                    _tabSummaries[_selectedTab],
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -1917,22 +1599,10 @@ class _PerformanceAnalyticsPanelState
                 transitionBuilder: (child, anim) =>
                     FadeTransition(opacity: anim, child: child),
                 child: <Widget>[
-                  _PopulationChart(
-                    key: const ValueKey(0),
-                    data: chartData,
-                  ),
-                  _FeedEfficiencyChart(
-                    key: const ValueKey(1),
-                    data: chartData,
-                  ),
-                  _MortalityChart(
-                    key: const ValueKey(2),
-                    data: chartData,
-                  ),
-                  _RevenueChart(
-                    key: const ValueKey(3),
-                    data: chartData,
-                  ),
+                  const _PopulationChart(key: ValueKey(0)),
+                  const _FeedEfficiencyChart(key: ValueKey(1)),
+                  const _MortalityChart(key: ValueKey(2)),
+                  const _RevenueChart(key: ValueKey(3)),
                 ][_selectedTab],
               ),
             ),
@@ -1943,6 +1613,22 @@ class _PerformanceAnalyticsPanelState
   }
 }
 
+Widget _dayTitle(double v, TitleMeta meta) {
+  final i = v.toInt();
+  if (i < 0 || i >= _kDays.length) return const SizedBox.shrink();
+  return Padding(
+    padding: const EdgeInsets.only(top: 6),
+    child: Text(
+      _kDays[i],
+      style: const TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w600,
+        color: _kTextMuted,
+      ),
+    ),
+  );
+}
+
 FlGridData _cleanGrid() => FlGridData(
   show: true,
   drawVerticalLine: false,
@@ -1950,33 +1636,40 @@ FlGridData _cleanGrid() => FlGridData(
 );
 
 class _PopulationChart extends StatelessWidget {
-  final _Chart7DayData data;
-  const _PopulationChart({super.key, required this.data});
+  const _PopulationChart({super.key});
 
   @override
   Widget build(BuildContext context) {
-    if (!data.hasAnyData || data.population.every((p) => p <= 0)) {
-      return const _ChartEmptyPlaceholder(
-        icon: Icons.people_alt_rounded,
-        message: 'No active flock population data logged yet',
-      );
-    }
-
     final spots = <FlSpot>[];
+    var alive = 5000.0;
     for (var i = 0; i < 7; i++) {
-      spots.add(FlSpot(i.toDouble(), data.population[i]));
+      alive -= _kMortality[i];
+      spots.add(FlSpot(i.toDouble(), alive));
     }
-
-    final minPop = data.population.reduce(math.min);
-    final maxPop = data.population.reduce(math.max);
-    final minY = (minPop * 0.95).floorToDouble();
-    final maxY = ((maxPop * 1.05) + 5).ceilToDouble();
+    const expected = <FlSpot>[
+      FlSpot(0, 5000),
+      FlSpot(1, 5000),
+      FlSpot(2, 5000),
+      FlSpot(3, 5000),
+      FlSpot(4, 5000),
+      FlSpot(5, 5000),
+      FlSpot(6, 5000),
+    ];
 
     return LineChart(
       LineChartData(
-        minY: minY,
-        maxY: maxY > minY ? maxY : minY + 10,
+        minY: 4984,
+        maxY: 5004,
         lineBarsData: [
+          LineChartBarData(
+            spots: expected,
+            isCurved: false,
+            color: _kSky.withValues(alpha: 0.50),
+            barWidth: 1.5,
+            dashArray: [5, 4],
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(show: false),
+          ),
           LineChartBarData(
             spots: spots,
             isCurved: true,
@@ -2009,7 +1702,7 @@ class _PopulationChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 26,
-              getTitlesWidget: (v, meta) => _dynamicDayTitle(v, data.dayNames),
+              getTitlesWidget: _dayTitle,
             ),
           ),
           leftTitles: AxisTitles(
@@ -2026,8 +1719,12 @@ class _PopulationChart extends StatelessWidget {
               ),
             ),
           ),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
         ),
         gridData: _cleanGrid(),
         borderData: FlBorderData(show: false),
@@ -2037,38 +1734,29 @@ class _PopulationChart extends StatelessWidget {
 }
 
 class _FeedEfficiencyChart extends StatelessWidget {
-  final _Chart7DayData data;
-  const _FeedEfficiencyChart({super.key, required this.data});
+  const _FeedEfficiencyChart({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final hasFeed = data.feedKg.any((f) => f > 0);
-    if (!data.hasAnyData || !hasFeed) {
-      return const _ChartEmptyPlaceholder(
-        icon: Icons.grass_rounded,
-        message:
-            'No feed consumption logged in the past 7 days.\nLog daily records to view feed intake & FCR.',
-      );
-    }
-
     final feedSpots = List<FlSpot>.generate(
       7,
-      (i) => FlSpot(i.toDouble(), data.feedKg[i]),
+      (i) => FlSpot(i.toDouble(), _kFeed[i] / 1000),
     );
-
-    final maxFeed = data.feedKg.reduce(math.max);
-    final maxY = maxFeed > 0 ? (maxFeed * 1.2) : 10.0;
+    final fcrSpots = List<FlSpot>.generate(
+      7,
+      (i) => FlSpot(i.toDouble(), _kFcr[i]),
+    );
 
     return LineChart(
       LineChartData(
-        minY: 0,
-        maxY: maxY,
+        minY: 0.95,
+        maxY: 1.75,
         lineBarsData: [
           LineChartBarData(
             spots: feedSpots,
             isCurved: true,
             color: _kSky,
-            barWidth: 2.2,
+            barWidth: 2,
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
@@ -2082,13 +1770,29 @@ class _FeedEfficiencyChart extends StatelessWidget {
               ),
             ),
           ),
+          LineChartBarData(
+            spots: fcrSpots,
+            isCurved: true,
+            color: _kAmber,
+            barWidth: 2.5,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, pct, bar, idx) => FlDotCirclePainter(
+                radius: 3.5,
+                color: _kAmber,
+                strokeWidth: 2,
+                strokeColor: Colors.white,
+              ),
+            ),
+            belowBarData: BarAreaData(show: false),
+          ),
         ],
         titlesData: FlTitlesData(
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 26,
-              getTitlesWidget: (v, meta) => _dynamicDayTitle(v, data.dayNames),
+              getTitlesWidget: _dayTitle,
             ),
           ),
           leftTitles: AxisTitles(
@@ -2096,7 +1800,7 @@ class _FeedEfficiencyChart extends StatelessWidget {
               showTitles: true,
               reservedSize: 42,
               getTitlesWidget: (v, _) => Text(
-                '${v.toStringAsFixed(0)} kg',
+                v.toStringAsFixed(2),
                 style: const TextStyle(
                   fontSize: 9,
                   color: _kTextMuted,
@@ -2105,8 +1809,12 @@ class _FeedEfficiencyChart extends StatelessWidget {
               ),
             ),
           ),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
         ),
         gridData: _cleanGrid(),
         borderData: FlBorderData(show: false),
@@ -2116,39 +1824,34 @@ class _FeedEfficiencyChart extends StatelessWidget {
 }
 
 class _MortalityChart extends StatelessWidget {
-  final _Chart7DayData data;
-  const _MortalityChart({super.key, required this.data});
+  const _MortalityChart({super.key});
 
   static Color _barColor(double v) {
     if (v == 0) return _kPrimary;
-    if (v <= 2) return _kAmber;
+    if (v <= 1) return _kAmber;
     return _kRed;
   }
 
   @override
   Widget build(BuildContext context) {
-    final maxMort =
-        data.mortality.isNotEmpty ? data.mortality.reduce(math.max) : 0.0;
-    final maxY = (maxMort + 2).clamp(5.0, 10000.0);
-
     return BarChart(
       BarChartData(
-        maxY: maxY,
+        maxY: 5,
         barGroups: List.generate(
           7,
           (i) => BarChartGroupData(
             x: i,
             barRods: [
               BarChartRodData(
-                toY: data.mortality[i] == 0 ? 0.20 : data.mortality[i],
-                color: _barColor(data.mortality[i]),
+                toY: _kMortality[i] == 0 ? 0.20 : _kMortality[i],
+                color: _barColor(_kMortality[i]),
                 width: 26,
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(6),
                 ),
                 backDrawRodData: BackgroundBarChartRodData(
                   show: true,
-                  toY: maxY,
+                  toY: 5,
                   color: _kBackground,
                 ),
               ),
@@ -2160,7 +1863,21 @@ class _MortalityChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 26,
-              getTitlesWidget: (v, meta) => _dynamicDayTitle(v, data.dayNames),
+              getTitlesWidget: (v, _) {
+                final i = v.toInt();
+                if (i < 0 || i >= 7) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    _kDays[i],
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: _kTextMuted,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           leftTitles: AxisTitles(
@@ -2180,8 +1897,12 @@ class _MortalityChart extends StatelessWidget {
               },
             ),
           ),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
         ),
         gridData: _cleanGrid(),
         borderData: FlBorderData(show: false),
@@ -2191,35 +1912,45 @@ class _MortalityChart extends StatelessWidget {
 }
 
 class _RevenueChart extends StatelessWidget {
-  final _Chart7DayData data;
-  const _RevenueChart({super.key, required this.data});
+  const _RevenueChart({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final hasRev = data.revenue.any((r) => r > 0);
-    if (!data.hasAnyData || !hasRev) {
-      return const _ChartEmptyPlaceholder(
-        icon: Icons.insights_rounded,
-        message:
-            'No flock valuation data available.\nLog bird weights and sales to view financial telemetry.',
-      );
-    }
-
-    final revSpots = List<FlSpot>.generate(
+    final actual = List<FlSpot>.generate(
       7,
-      (i) => FlSpot(i.toDouble(), data.revenue[i]),
+      (i) => FlSpot(i.toDouble(), _kRevActual[i]),
     );
-
-    final maxRev = data.revenue.reduce(math.max);
-    final maxY = maxRev > 0 ? (maxRev * 1.25) : 5.0;
+    final forecast = List<FlSpot>.generate(
+      7,
+      (i) => FlSpot(i.toDouble(), _kRevForecast[i]),
+    );
 
     return LineChart(
       LineChartData(
-        minY: 0,
-        maxY: maxY,
+        minY: 5.5,
+        maxY: 13.5,
         lineBarsData: [
           LineChartBarData(
-            spots: revSpots,
+            spots: forecast,
+            isCurved: true,
+            color: _kAmber,
+            barWidth: 1.8,
+            dashArray: [5, 4],
+            dotData: const FlDotData(show: false),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  _kAmber.withValues(alpha: 0.10),
+                  _kAmber.withValues(alpha: 0.0),
+                ],
+              ),
+            ),
+          ),
+          LineChartBarData(
+            spots: actual,
             isCurved: true,
             color: _kPrimary,
             barWidth: 2.5,
@@ -2250,7 +1981,7 @@ class _RevenueChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 26,
-              getTitlesWidget: (v, meta) => _dynamicDayTitle(v, data.dayNames),
+              getTitlesWidget: _dayTitle,
             ),
           ),
           leftTitles: AxisTitles(
@@ -2267,8 +1998,12 @@ class _RevenueChart extends StatelessWidget {
               ),
             ),
           ),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
         ),
         gridData: _cleanGrid(),
         borderData: FlBorderData(show: false),
@@ -3022,7 +2757,7 @@ class _SectionHeader extends StatelessWidget {
             ),
           ],
         ),
-        ?trailing,
+        if (trailing != null) trailing!,
       ],
     );
   }
