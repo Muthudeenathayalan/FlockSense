@@ -172,7 +172,7 @@ class _BatchCommandCenterScreenState extends State<BatchCommandCenterScreen> {
                             Row(
                               children: [
                                 AppDesign.statusChip(
-                                  'Day $ageDays',
+                                  b.status == 'active' ? 'Day $ageDays' : 'Closed / Harvested',
                                   const Color(0x1AFFFFFF),
                                   textColor: Colors.white,
                                 ),

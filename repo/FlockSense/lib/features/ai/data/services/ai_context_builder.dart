@@ -97,6 +97,17 @@ INSTRUCTIONS FOR AI: If the user asks to analyze their farm or check live flock 
       buffer.writeln('Other Batches in Facility: $otherBatches');
     }
 
+    // Historical / Past Batches in Facility
+    final closedBatches = data.batches
+        .where((b) => b.id != batch.id && (!b.isActive || b.status.toLowerCase() == 'completed'))
+        .toList();
+    if (closedBatches.isNotEmpty) {
+      final historyStr = closedBatches
+          .map((b) => '${b.batchName} (Placed: ${b.placementDate.day}/${b.placementDate.month}/${b.placementDate.year}, ${b.totalBirds} chicks, ${b.breedOrFlockType})')
+          .join('; ');
+      buffer.writeln('Historical/Past Batches Archive (${closedBatches.length} completed): $historyStr');
+    }
+
     // 4. Mortality & Health Risk
     final lossRate = (100 - data.liveabilityPct).clamp(0, 100);
     buffer.writeln(

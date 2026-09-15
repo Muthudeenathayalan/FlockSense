@@ -505,7 +505,7 @@ class _AllBatchesCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Text(
-                      'Day $_age',
+                      _isActive ? 'Day $_age' : 'Closed',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,

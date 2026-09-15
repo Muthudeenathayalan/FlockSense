@@ -166,18 +166,23 @@ class ReportFilterBar extends ConsumerWidget {
                           ),
                         ),
                         ...batches.map(
-                          (b) => DropdownMenuItem<String?>(
-                            value: b.id,
-                            child: Text(
-                              b.batchName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                          (b) {
+                            final isClosed = !b.isActive || b.status.toLowerCase() == 'completed';
+                            final statusTag = isClosed ? ' (Closed)' : ' (Active)';
+                            return DropdownMenuItem<String?>(
+                              value: b.id,
+                              child: Text(
+                                '${b.batchName}$statusTag',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: isClosed ? AppColors.textSecondary : AppColors.textPrimary,
+                                ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         ),
                       ],
                       onChanged: (val) => filterNotifier.setBatchId(val),
