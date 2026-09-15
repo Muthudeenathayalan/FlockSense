@@ -57,7 +57,7 @@ class ReportFilterBar extends ConsumerWidget {
               const Spacer(),
               if (filterState.selectedFarmId != null ||
                   filterState.selectedBatchId != null ||
-                  filterState.datePreset != DateRangePreset.last30Days)
+                  filterState.datePreset != DateRangePreset.allTime)
                 GestureDetector(
                   onTap: () => filterNotifier.resetFilters(),
                   child: const Text(

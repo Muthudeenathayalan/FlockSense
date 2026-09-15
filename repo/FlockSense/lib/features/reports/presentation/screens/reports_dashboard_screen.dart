@@ -13,9 +13,14 @@ import 'package:flock_sense/features/reports/presentation/widgets/report_history
 import 'package:flock_sense/features/reports/presentation/widgets/report_preview_modal.dart';
 
 class ReportsDashboardScreen extends ConsumerStatefulWidget {
-  const ReportsDashboardScreen({super.key, this.initialFarmId});
+  const ReportsDashboardScreen({
+    super.key,
+    this.initialFarmId,
+    this.initialBatchId,
+  });
 
   final String? initialFarmId;
+  final String? initialBatchId;
 
   @override
   ConsumerState<ReportsDashboardScreen> createState() =>
@@ -29,11 +34,18 @@ class _ReportsDashboardScreenState
   @override
   void initState() {
     super.initState();
-    if (widget.initialFarmId != null) {
+    if (widget.initialFarmId != null || widget.initialBatchId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref
-            .read(reportsFilterProvider.notifier)
-            .setFarmId(widget.initialFarmId);
+        if (widget.initialFarmId != null) {
+          ref
+              .read(reportsFilterProvider.notifier)
+              .setFarmId(widget.initialFarmId);
+        }
+        if (widget.initialBatchId != null) {
+          ref
+              .read(reportsFilterProvider.notifier)
+              .setBatchId(widget.initialBatchId);
+        }
       });
     }
   }
@@ -153,59 +165,6 @@ class _ReportsDashboardScreenState
     required List<ReportType> filteredTypes,
     required List<ReportHistoryItem> historyItems,
   }) {
-    if (data.dailyRecords.isEmpty && data.inventoryItems.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.description_outlined,
-                size: 56,
-                color: AppColors.textHint,
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'No report data available.',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Start recording daily telemetry to generate comprehensive reports.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const DailyRecordsDashboardScreen(),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.assignment_outlined),
-                label: const Text('Go to Daily Records'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
     return RefreshIndicator(
       onRefresh: () async => ref.invalidate(reportsDataProvider),
       color: AppColors.primary,
@@ -265,7 +224,85 @@ class _ReportsDashboardScreenState
 
             // Filter Bar
             ReportFilterBar(farms: data.farms, batches: data.batches),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+
+            // Informational Notice if Telemetry is Empty for this Selection
+            if (data.dailyRecords.isEmpty) ...[
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFBEB),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFFDE68A)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.info_outline_rounded,
+                      color: Color(0xFFD97706),
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            'No daily telemetry records for this selection',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF92400E),
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'Reports display baseline setup and breed standards. Switch batches above or log daily telemetry.',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFFB45309),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const DailyRecordsDashboardScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text(
+                        'Add Record',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        backgroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: const BorderSide(color: AppColors.border),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // Recently Generated Reports
             RecentReportsSection(historyItems: historyItems, reportData: data),

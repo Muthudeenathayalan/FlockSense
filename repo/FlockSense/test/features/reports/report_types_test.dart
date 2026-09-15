@@ -5,6 +5,20 @@ void main() {
   group('Report Types & Filter Tests', () {
     final now = DateTime(2026, 8, 27, 14, 30);
 
+    test('defaults to allTime and handles effective start and end dates correctly', () {
+      const defaultFilter = ReportFilterState();
+      expect(defaultFilter.datePreset, DateRangePreset.allTime);
+      expect(defaultFilter.effectiveStartDate, isNull);
+      expect(defaultFilter.effectiveEndDate, isNull);
+      expect(DateRangePreset.allTime.label, 'All Time');
+
+      final thirtyDaysFilter = const ReportFilterState(
+        datePreset: DateRangePreset.last30Days,
+      );
+      expect(thirtyDaysFilter.effectiveStartDate, isNotNull);
+      expect(thirtyDaysFilter.effectiveEndDate, isNotNull);
+    });
+
     test('validates date ranges correctly', () {
       final validFilter = ReportFilterState(
         datePreset: DateRangePreset.custom,

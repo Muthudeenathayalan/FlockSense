@@ -8,6 +8,7 @@ import 'package:flock_sense/features/daily_records/presentation/screens/daily_re
 import 'package:flock_sense/features/feed/presentation/screens/feed_records_screen.dart';
 import 'package:flock_sense/features/medicine/presentation/screens/medicine_records_screen.dart';
 import 'package:flock_sense/features/performance/presentation/screens/batch_performance_screen.dart';
+import 'package:flock_sense/features/reports/presentation/screens/reports_dashboard_screen.dart';
 import 'package:flock_sense/features/reports/presentation/screens/reports_screen.dart';
 import 'package:flock_sense/features/sales/presentation/screens/bird_sales_screen.dart';
 import 'package:flock_sense/features/vaccine/presentation/screens/vaccine_records_screen.dart';
@@ -561,10 +562,9 @@ class _BatchCommandCenterScreenState extends State<BatchCommandCenterScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => ReportsScreen(
-                                      farmId: widget.farmId,
-                                      batchId: widget.batchId,
-                                      batchName: widget.batchName,
+                                    builder: (_) => ReportsDashboardScreen(
+                                      initialFarmId: widget.farmId,
+                                      initialBatchId: widget.batchId,
                                     ),
                                   ),
                                 );

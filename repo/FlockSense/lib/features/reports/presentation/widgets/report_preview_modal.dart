@@ -222,6 +222,42 @@ class _ReportPreviewModalState extends State<ReportPreviewModal>
   }
 
   Widget _buildDataTable() {
+    if (widget.data.dailyRecords.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          children: const [
+            Icon(
+              Icons.assignment_outlined,
+              size: 48,
+              color: AppColors.textHint,
+            ),
+            SizedBox(height: 12),
+            Text(
+              'No daily telemetry records found for this batch.',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            SizedBox(height: 6),
+            Text(
+              'Start logging daily feed, water, and mortality in Daily Records to view telemetry history here.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(

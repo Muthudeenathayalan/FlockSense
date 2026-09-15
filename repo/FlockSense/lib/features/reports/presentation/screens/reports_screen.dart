@@ -10,6 +10,7 @@ import 'package:flock_sense/features/performance/presentation/screens/batch_perf
 import 'package:flock_sense/features/reports/data/pdf_generator.dart';
 import 'package:flock_sense/features/reports/data/report_service.dart';
 import 'package:flock_sense/features/reports/domain/report_data.dart';
+import 'package:flock_sense/features/reports/presentation/screens/reports_dashboard_screen.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({
@@ -129,6 +130,23 @@ class _ReportsScreenState extends State<ReportsScreen> {
         title: Text('Reports — ${widget.batchName}'),
         backgroundColor: AppColors.primaryDark,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.grid_view_rounded),
+            tooltip: 'All 12 Reports',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ReportsDashboardScreen(
+                    initialFarmId: widget.farmId,
+                    initialBatchId: widget.batchId,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -138,6 +156,28 @@ class _ReportsScreenState extends State<ReportsScreen> {
             children: [
               _buildStatusCard(),
               const SizedBox(height: 20),
+              _buildActionCard(
+                icon: Icons.grid_view_rounded,
+                title: 'All 12 Report Categories',
+                subtitle:
+                    'Mortality, Feed, Water, Growth, Finance, Audit & Export',
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1B6B8A), Color(0xFF2E7D32)],
+                ),
+                buttonLabel: 'Open Report Center',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ReportsDashboardScreen(
+                        initialFarmId: widget.farmId,
+                        initialBatchId: widget.batchId,
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
               _buildActionCard(
                 icon: Icons.picture_as_pdf_outlined,
                 title: 'Complete SKM Farm Record',

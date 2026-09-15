@@ -170,11 +170,13 @@ extension ExportFormatX on ExportFormat {
   }
 }
 
-enum DateRangePreset { today, last7Days, last30Days, custom }
+enum DateRangePreset { allTime, today, last7Days, last30Days, custom }
 
 extension DateRangePresetX on DateRangePreset {
   String get label {
     switch (this) {
+      case DateRangePreset.allTime:
+        return 'All Time';
       case DateRangePreset.today:
         return 'Today';
       case DateRangePreset.last7Days:
@@ -191,7 +193,7 @@ class ReportFilterState {
   const ReportFilterState({
     this.selectedFarmId,
     this.selectedBatchId,
-    this.datePreset = DateRangePreset.last30Days,
+    this.datePreset = DateRangePreset.allTime,
     this.customStartDate,
     this.customEndDate,
     this.searchQuery = '',
@@ -232,6 +234,8 @@ class ReportFilterState {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     switch (datePreset) {
+      case DateRangePreset.allTime:
+        return null;
       case DateRangePreset.today:
         return today;
       case DateRangePreset.last7Days:
@@ -246,6 +250,8 @@ class ReportFilterState {
   DateTime? get effectiveEndDate {
     final now = DateTime.now();
     switch (datePreset) {
+      case DateRangePreset.allTime:
+        return null;
       case DateRangePreset.today:
       case DateRangePreset.last7Days:
       case DateRangePreset.last30Days:

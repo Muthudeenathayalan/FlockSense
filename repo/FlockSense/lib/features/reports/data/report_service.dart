@@ -81,7 +81,7 @@ class ReportService {
       List<SalesRecordModel> sales = [];
       List<InventoryItemModel> inventory = [];
 
-      if (targetBatch.id.isNotEmpty) {
+      if (filter.selectedBatchId != null && targetBatch.id.isNotEmpty) {
         try {
           records = await DailyRecordService.getAllDailyRecords(
             farmId: targetFarm.id,
@@ -116,6 +116,49 @@ class ReportService {
             batchId: targetBatch.id,
           );
         } catch (_) {}
+      } else if (batches.isNotEmpty) {
+        // "All Batches" mode - aggregate telemetry across all batches of targetFarm
+        for (final b in batches) {
+          try {
+            final recs = await DailyRecordService.getAllDailyRecords(
+              farmId: targetFarm.id,
+              batchId: b.id,
+            );
+            records.addAll(recs);
+          } catch (_) {}
+
+          try {
+            final f = await FeedService.getFeedTransactions(
+              farmId: targetFarm.id,
+              batchId: b.id,
+            );
+            feeds.addAll(f);
+          } catch (_) {}
+
+          try {
+            final m = await MedicineService.getMedicineRecords(
+              farmId: targetFarm.id,
+              batchId: b.id,
+            );
+            meds.addAll(m);
+          } catch (_) {}
+
+          try {
+            final v = await VaccineService.getVaccineRecords(
+              farmId: targetFarm.id,
+              batchId: b.id,
+            );
+            vaccines.addAll(v);
+          } catch (_) {}
+
+          try {
+            final s = await SalesService.getBirdSales(
+              farmId: targetFarm.id,
+              batchId: b.id,
+            );
+            sales.addAll(s);
+          } catch (_) {}
+        }
       }
 
       try {
@@ -174,6 +217,7 @@ class ReportService {
       filter: ReportFilterState(
         selectedFarmId: farmId,
         selectedBatchId: batchId,
+        datePreset: DateRangePreset.allTime,
       ),
     );
   }
