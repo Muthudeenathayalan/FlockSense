@@ -128,7 +128,7 @@ class _SalesFormScreenState extends State<SalesFormScreen> {
           behavior: SnackBarBehavior.floating,
         ),
       );
-      Navigator.pop(context);
+      Navigator.pop(context, _remainingBirds <= 0);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

@@ -7,6 +7,7 @@ import 'package:flock_sense/features/batches/domain/batch_model.dart';
 import 'package:flock_sense/features/sales/data/sales_service.dart';
 import 'package:flock_sense/features/sales/domain/sales_record_model.dart';
 import 'package:flock_sense/features/sales/presentation/screens/sales_form_screen.dart';
+import 'package:flock_sense/features/reports/data/batch_completion_report_service.dart';
 
 class BirdSalesScreen extends StatefulWidget {
   const BirdSalesScreen({super.key, this.farmId, this.batchId, this.batchName});
@@ -318,17 +319,27 @@ class _BirdSalesScreenState extends State<BirdSalesScreen> {
             },
           ),
           floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => SalesFormScreen(
+            onPressed: () async {
+              final isCompleted = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SalesFormScreen(
+                    farmId: widget.farmId!,
+                    batchId: widget.batchId!,
+                    currentBatchAge: ageDays,
+                    availableBirds: batch?.currentBirds,
+                  ),
+                ),
+              );
+              if (isCompleted == true && context.mounted) {
+                await BatchCompletionReportService.promptAndHandleBatchCompletion(
+                  context: context,
                   farmId: widget.farmId!,
                   batchId: widget.batchId!,
-                  currentBatchAge: ageDays,
-                  availableBirds: batch?.currentBirds,
-                ),
-              ),
-            ),
+                  batchName: widget.batchName ?? 'Batch',
+                );
+              }
+            },
             icon: const Icon(Icons.add_rounded),
             label: const Text(
               'Add Sale',

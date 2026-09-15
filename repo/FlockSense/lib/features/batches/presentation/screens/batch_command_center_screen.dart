@@ -11,6 +11,7 @@ import 'package:flock_sense/features/performance/presentation/screens/batch_perf
 import 'package:flock_sense/features/reports/presentation/screens/reports_screen.dart';
 import 'package:flock_sense/features/sales/presentation/screens/bird_sales_screen.dart';
 import 'package:flock_sense/features/vaccine/presentation/screens/vaccine_records_screen.dart';
+import 'package:flock_sense/features/reports/data/batch_completion_report_service.dart';
 import 'package:flock_sense/core/widgets/app_dialog.dart';
 
 class BatchCommandCenterScreen extends StatefulWidget {
@@ -84,6 +85,37 @@ class _BatchCommandCenterScreenState extends State<BatchCommandCenterScreen> {
     }
   }
 
+  Future<void> _completeBatch(BatchModel b) async {
+    final confirmed = await AppDialog.confirm(
+      context: context,
+      title: 'Complete Flock Cycle',
+      message:
+          'Mark "${widget.batchName}" as completed/harvested? This will finalize the flock cycle.',
+      confirmLabel: 'Complete Batch',
+      icon: Icons.check_circle_outline_rounded,
+    );
+    if (!confirmed || !mounted) return;
+
+    try {
+      await BatchService.updateBatch(widget.farmId, widget.batchId, {'status': 'completed'});
+      if (!mounted) return;
+      await BatchCompletionReportService.promptAndHandleBatchCompletion(
+        context: context,
+        farmId: widget.farmId,
+        batchId: widget.batchId,
+        batchName: widget.batchName,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to complete batch: $e'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+    }
+  }
+
   int get _ageDays => _batch != null
       ? DateTime.now().difference(_batch!.placementDate).inDays
       : 0;
@@ -124,6 +156,24 @@ class _BatchCommandCenterScreenState extends State<BatchCommandCenterScreen> {
                 icon: const Icon(Icons.refresh_rounded, color: Colors.white),
                 onPressed: _load,
               ),
+              if (b != null && b.status == 'active')
+                IconButton(
+                  icon: const Icon(Icons.check_circle_outline_rounded, color: Colors.white),
+                  tooltip: 'Finish / Harvest Batch',
+                  onPressed: () => _completeBatch(b),
+                ),
+              if (b != null && b.status != 'active')
+                IconButton(
+                  icon: const Icon(Icons.download_rounded, color: Colors.white),
+                  tooltip: 'Save Report to Phone',
+                  onPressed: () => BatchCompletionReportService.promptAndHandleBatchCompletion(
+                    context: context,
+                    farmId: widget.farmId,
+                    batchId: widget.batchId,
+                    batchName: widget.batchName,
+                    forcePrompt: true,
+                  ),
+                ),
               IconButton(
                 icon: const Icon(Icons.delete_outline_rounded, color: Colors.white),
                 tooltip: 'Delete Batch',
@@ -280,6 +330,91 @@ class _BatchCommandCenterScreenState extends State<BatchCommandCenterScreen> {
                                 ),
                               ),
                             ],
+                          ),
+                        if (b != null && b.status != 'active')
+                          Container(
+                            margin: const EdgeInsets.only(top: 14),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF0FDF4),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFFBBF7D0)),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryLight,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(
+                                    Icons.verified_rounded,
+                                    color: AppColors.primary,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Batch Harvested & Completed',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF14532D),
+                                        ),
+                                      ),
+                                      Text(
+                                        '15-Page End-to-End Audit PDF Ready',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Color(0xFF166534),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                ElevatedButton.icon(
+                                  onPressed: () =>
+                                      BatchCompletionReportService
+                                          .promptAndHandleBatchCompletion(
+                                            context: context,
+                                            farmId: widget.farmId,
+                                            batchId: widget.batchId,
+                                            batchName: widget.batchName,
+                                            forcePrompt: true,
+                                          ),
+                                  icon: const Icon(
+                                    Icons.download_rounded,
+                                    size: 14,
+                                  ),
+                                  label: const Text('Save PDF'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 8,
+                                    ),
+                                    textStyle: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         const SizedBox(height: 20),
                         AppDesign.sectionTitle('Quick Actions'),
