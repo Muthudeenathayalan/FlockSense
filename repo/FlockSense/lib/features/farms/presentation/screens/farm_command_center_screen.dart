@@ -21,6 +21,9 @@ import 'package:flock_sense/features/performance/presentation/screens/batch_perf
 import 'package:flock_sense/features/reports/presentation/screens/reports_dashboard_screen.dart';
 import 'package:flock_sense/features/sales/presentation/screens/bird_sales_screen.dart';
 import 'package:flock_sense/features/vaccine/presentation/screens/vaccine_records_screen.dart';
+import 'package:flock_sense/features/sheds/data/shed_service.dart';
+import 'package:flock_sense/features/sheds/domain/shed_model.dart';
+import 'package:flock_sense/features/sheds/presentation/screens/shed_list_screen.dart';
 
 /// Farm Command Center & Management Screen.
 /// Aligned with the reference UI (Image 1) featuring:
@@ -165,81 +168,114 @@ class _FarmCommandCenterScreenState extends State<FarmCommandCenterScreen> {
           0,
           (sum, b) => sum + b.currentBirds,
         );
-        final shedsCount = _farm.capacity != null && _farm.capacity! > 0
-            ? 1
-            : (_farm.totalSqFt > 0 ? 1 : 1);
 
-        return Scaffold(
-          backgroundColor: AppColors.background,
-          body: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics(),
-            ),
-            slivers: [
-              // 1. Header (Emerald gradient, glow shapes, status chips, 4 header stats)
-              FarmIdentityHeader(
-                farm: _farm,
-                liveBirds: totalLiveBirds,
-                activeBatchesCount: activeBatches.length,
-                shedsCount: shedsCount,
-                onFarmUpdated: (updated) => setState(() => _farm = updated),
-                onDeleteFarm: _deleteFarm,
-                onRefresh: _reloadFarm,
-              ),
+        return StreamBuilder<List<ShedModel>>(
+          stream: ShedService.watchSheds(_farm.id),
+          builder: (context, shedSnapshot) {
+            final sheds = shedSnapshot.data ?? [];
+            final shedsCount = sheds.isNotEmpty
+                ? sheds.length
+                : (_farm.capacity != null && _farm.capacity! > 0
+                    ? 1
+                    : (_farm.totalSqFt > 0 ? 1 : 1));
 
-              // 2. Body Sections
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // 3 Mini Stat Cards (Total Birds, Capacity, Farm Type)
-                      FarmOperationalSummary(farm: _farm, batches: batches),
-
-                      const SizedBox(height: 20),
-
-                      // Quick Actions Section Header
-                      AppDesign.sectionTitle('Quick Actions'),
-
-                      // Quick Actions 4x2 Grid (matching Image 1)
-                      _buildQuickActionsGrid(batches),
-
-                      const SizedBox(height: 20),
-
-                      // Farm Details Section Header (matching Image 1 "Batch Details")
-                      AppDesign.sectionTitle('Farm Details'),
-
-                      // Farm Details Card
-                      FarmSpecsCard(farm: _farm),
-
-                      const SizedBox(height: 20),
-
-                      // Active Batches Section
-                      AppDesign.sectionTitle('Active Batches'),
-                      FarmActiveBatchesSection(farm: _farm),
-
-                      const SizedBox(height: 20),
-
-                      // Farm Status Control
-                      FarmStatusControlCard(
-                        farm: _farm,
-                        isToggling: _isTogglingStatus,
-                        onToggle: _toggleFarmStatus,
-                      ),
-
-                      const SizedBox(height: 100),
-                    ],
-                  ),
+            return Scaffold(
+              backgroundColor: AppColors.background,
+              body: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
                 ),
+                slivers: [
+                  // 1. Header (Emerald gradient, glow shapes, status chips, 4 header stats)
+                  FarmIdentityHeader(
+                    farm: _farm,
+                    liveBirds: totalLiveBirds,
+                    activeBatchesCount: activeBatches.length,
+                    shedsCount: shedsCount,
+                    onFarmUpdated: (updated) => setState(() => _farm = updated),
+                    onDeleteFarm: _deleteFarm,
+                    onRefresh: _reloadFarm,
+                    onShedsTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ShedListScreen(farm: _farm),
+                      ),
+                    ),
+                  ),
+
+                  // 2. Body Sections
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // 3 Mini Stat Cards (Total Birds, Capacity, Farm Type)
+                          FarmOperationalSummary(farm: _farm, batches: batches),
+
+                          const SizedBox(height: 20),
+
+                          // Quick Actions Section Header
+                          AppDesign.sectionTitle('Quick Actions'),
+
+                          // Quick Actions 4x2 Grid (matching Image 1)
+                          _buildQuickActionsGrid(batches),
+
+                          const SizedBox(height: 20),
+
+                          // Farm Details Section Header (with Sheds action button)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              AppDesign.sectionTitle('Farm Details'),
+                              TextButton.icon(
+                                onPressed: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ShedListScreen(farm: _farm),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.domain_rounded, size: 16),
+                                label: Text(
+                                  sheds.isNotEmpty
+                                      ? 'Sheds (${sheds.length})'
+                                      : 'Manage Sheds',
+                                  style: const TextStyle(fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          // Farm Details Card
+                          FarmSpecsCard(farm: _farm),
+
+                          const SizedBox(height: 20),
+
+                          // Active Batches Section
+                          AppDesign.sectionTitle('Active Batches'),
+                          FarmActiveBatchesSection(farm: _farm),
+
+                          const SizedBox(height: 20),
+
+                          // Farm Status Control
+                          FarmStatusControlCard(
+                            farm: _farm,
+                            isToggling: _isTogglingStatus,
+                            onToggle: _toggleFarmStatus,
+                          ),
+
+                          const SizedBox(height: 100),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
+              floatingActionButton: FloatingActionButton.extended(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
                   builder: (_) => BatchFormScreen(farmId: _farm.id),
                 ),
               );
@@ -254,6 +290,8 @@ class _FarmCommandCenterScreenState extends State<FarmCommandCenterScreen> {
             ),
           ),
         );
+      },
+    );
       },
     );
   }

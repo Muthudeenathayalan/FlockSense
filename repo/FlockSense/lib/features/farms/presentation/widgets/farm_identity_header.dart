@@ -16,6 +16,7 @@ class FarmIdentityHeader extends StatelessWidget {
     required this.onFarmUpdated,
     required this.onDeleteFarm,
     this.onRefresh,
+    this.onShedsTap,
   });
 
   final FarmModel farm;
@@ -25,6 +26,7 @@ class FarmIdentityHeader extends StatelessWidget {
   final ValueChanged<FarmModel> onFarmUpdated;
   final VoidCallback onDeleteFarm;
   final VoidCallback? onRefresh;
+  final VoidCallback? onShedsTap;
 
   String get _fmtDate {
     final d = farm.createdAt;
@@ -165,10 +167,13 @@ class FarmIdentityHeader extends StatelessWidget {
                           ),
                         ),
                         Expanded(
-                          child: AppDesign.headerStat(
-                            'Sheds',
-                            '$shedsCount',
-                            Icons.domain_rounded,
+                          child: GestureDetector(
+                            onTap: onShedsTap,
+                            child: AppDesign.headerStat(
+                              'Sheds',
+                              '$shedsCount',
+                              Icons.domain_rounded,
+                            ),
                           ),
                         ),
                         Expanded(
