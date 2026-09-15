@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
+import 'package:flock_sense/features/daily_records/data/daily_record_service.dart';
 import 'package:flock_sense/features/daily_records/domain/daily_record_model.dart';
+import 'package:flock_sense/features/daily_records/presentation/screens/daily_record_form_screen.dart';
 import 'package:flock_sense/features/performance/domain/performance_calculator.dart';
 
-class DailyRecordDetailScreen extends StatelessWidget {
+class DailyRecordDetailScreen extends StatefulWidget {
   const DailyRecordDetailScreen({
     super.key,
     required this.record,
@@ -14,44 +16,111 @@ class DailyRecordDetailScreen extends StatelessWidget {
   final String batchName;
 
   @override
+  State<DailyRecordDetailScreen> createState() => _DailyRecordDetailScreenState();
+}
+
+class _DailyRecordDetailScreenState extends State<DailyRecordDetailScreen> {
+  late DailyRecordModel _record;
+
+  @override
+  void initState() {
+    super.initState();
+    _record = widget.record;
+  }
+
+  Future<void> _editRecord() async {
+    final updated = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DailyRecordFormScreen(
+          farmId: _record.farmId,
+          batchId: _record.batchId,
+          batchName: widget.batchName,
+          existingRecord: _record,
+        ),
+      ),
+    );
+
+    if (updated == true || updated == null) {
+      final fresh = await DailyRecordService.getDailyRecordByDate(
+        farmId: _record.farmId,
+        batchId: _record.batchId,
+        recordDate: _record.recordDate,
+      );
+      if (fresh != null && mounted) {
+        setState(() => _record = fresh);
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final openingBirds = record.openingBirds;
-    final closingBirds = record.closingBirds;
+    final openingBirds = _record.openingBirds;
+    final closingBirds = _record.closingBirds;
     final standardWeight =
-        PerformanceCalculator.skmBodyWeightStd[record.batchAgeDay];
+        PerformanceCalculator.skmBodyWeightStd[_record.batchAgeDay];
     final diff = standardWeight != null
-        ? record.avgWeightGrams - standardWeight
+        ? _record.avgWeightGrams - standardWeight
         : null;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Day ${record.batchAgeDay} — $batchName'),
+        title: Text('Day ${_record.batchAgeDay} — ${widget.batchName}'),
         backgroundColor: AppColors.primaryDark,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_outlined, color: Colors.white),
+            tooltip: 'Edit Daily Record',
+            onPressed: _editRecord,
+          ),
+        ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: FilledButton.icon(
+            onPressed: _editRecord,
+            icon: const Icon(Icons.edit_rounded, size: 18),
+            label: Text(
+              'Edit Day ${_record.batchAgeDay} Record',
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            ),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              elevation: 2,
+            ),
+          ),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _chipRow(record),
+            _chipRow(_record),
             const SizedBox(height: 16),
             _sectionCard(
               title: '🐔 Birds',
               gradient: AppColors.emeraldGradient,
               rows: [
                 _detailRow('Opening Birds', openingBirds.toString()),
-                _detailRow('Mortality', record.mortalityCount.toString()),
-                _detailRow('Culls', record.cullCount.toString()),
+                _detailRow('Mortality', _record.mortalityCount.toString()),
+                _detailRow('Culls', _record.cullCount.toString()),
                 _detailRow(
                   'Closing Birds',
                   closingBirds.toString(),
                   valueColor:
                       closingBirds <
                           openingBirds -
-                              record.mortalityCount -
-                              record.cullCount
+                              _record.mortalityCount -
+                              _record.cullCount
                       ? AppColors.danger
                       : AppColors.emerald,
                 ),
@@ -64,19 +133,19 @@ class DailyRecordDetailScreen extends StatelessWidget {
               rows: [
                 _detailRow(
                   'Feed Consumed',
-                  '${record.feedConsumedKg.toStringAsFixed(2)} kg',
+                  '${_record.feedConsumedKg.toStringAsFixed(2)} kg',
                 ),
                 _detailRow(
                   'Water Given',
-                  '${record.waterConsumedLiters.toStringAsFixed(1)} L',
+                  '${_record.waterConsumedLiters.toStringAsFixed(1)} L',
                 ),
                 _detailRow(
                   'Feed/Bird',
-                  '${(record.feedConsumedKg * 1000 / (closingBirds > 0 ? closingBirds : 1)).toStringAsFixed(1)} g/bird',
+                  '${(_record.feedConsumedKg * 1000 / (closingBirds > 0 ? closingBirds : 1)).toStringAsFixed(1)} g/bird',
                 ),
                 _detailRow(
                   'Water/Bird',
-                  '${(record.waterConsumedLiters * 1000 / (closingBirds > 0 ? closingBirds : 1)).toStringAsFixed(1)} ml/bird',
+                  '${(_record.waterConsumedLiters * 1000 / (closingBirds > 0 ? closingBirds : 1)).toStringAsFixed(1)} ml/bird',
                 ),
               ],
             ),
@@ -89,7 +158,7 @@ class DailyRecordDetailScreen extends StatelessWidget {
               rows: [
                 _detailRow(
                   'Avg Weight',
-                  '${record.avgWeightGrams.toStringAsFixed(0)} g/bird',
+                  '${_record.avgWeightGrams.toStringAsFixed(0)} g/bird',
                 ),
                 _detailRow(
                   'SKM Standard',
@@ -112,23 +181,23 @@ class DailyRecordDetailScreen extends StatelessWidget {
                 ),
               ],
             ),
-            if (record.medicineGiven ||
-                record.vaccineGiven ||
-                record.symptoms != null ||
-                record.notes != null) ...[
+            if (_record.medicineGiven ||
+                _record.vaccineGiven ||
+                _record.symptoms != null ||
+                _record.notes != null) ...[
               const SizedBox(height: 14),
               _sectionCard(
                 title: '💊 Health',
                 gradient: AppColors.dangerGradient,
                 rows: [
-                  if (record.medicineGiven)
-                    _detailRow('Medicine', record.medicineName ?? '–'),
-                  if (record.vaccineGiven)
-                    _detailRow('Vaccination', record.vaccineName ?? '–'),
-                  if (record.symptoms != null && record.symptoms!.isNotEmpty)
-                    _detailRow('Symptoms', record.symptoms ?? '–'),
-                  if (record.notes != null && record.notes!.isNotEmpty)
-                    _detailRow('Notes', record.notes ?? '–'),
+                  if (_record.medicineGiven)
+                    _detailRow('Medicine', _record.medicineName ?? '–'),
+                  if (_record.vaccineGiven)
+                    _detailRow('Vaccination', _record.vaccineName ?? '–'),
+                  if (_record.symptoms != null && _record.symptoms!.isNotEmpty)
+                    _detailRow('Symptoms', _record.symptoms ?? '–'),
+                  if (_record.notes != null && _record.notes!.isNotEmpty)
+                    _detailRow('Notes', _record.notes ?? '–'),
                 ],
               ),
             ],

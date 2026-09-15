@@ -272,20 +272,46 @@ class _DailyRecordCard extends StatelessWidget {
                       color: Colors.white,
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Day ${record.batchAgeDay}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.18),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'Day ${record.batchAgeDay}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        icon: const Icon(Icons.edit_outlined, size: 18, color: Colors.white),
+                        tooltip: 'Edit Record',
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => DailyRecordFormScreen(
+                                farmId: record.farmId,
+                                batchId: record.batchId,
+                                batchName: batchName,
+                                existingRecord: record,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),

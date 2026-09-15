@@ -341,6 +341,7 @@ class _DailyRecordsDashboardScreenState
 
       final activeFarmId =
           widget.initialFarmId ??
+          widget.existingRecord?.farmId ??
           (lastFarmId != null && farms.any((f) => f.id == lastFarmId)
               ? lastFarmId
               : null) ??
@@ -355,20 +356,25 @@ class _DailyRecordsDashboardScreenState
       _selectedFarm = farm;
 
       ref.read(dailyRecordFarmIdProvider.notifier).selectFarm(farm.id);
-      final targetBatchId = widget.initialBatchId ?? lastBatchId;
+      final targetBatchId =
+          widget.initialBatchId ?? widget.existingRecord?.batchId ?? lastBatchId;
       await _loadBatchesForFarm(farm.id, targetBatchId: targetBatchId);
 
-      // Auto-skip Step 0 ONLY if there's exactly 1 farm and 1 active batch
+      // Preserve Step 1 if editing existingRecord, or auto-skip if 1 farm and 1 batch
       if (mounted) {
-        final activeBatches = _batches
-            .where((b) => b.isActive && b.status != 'archived')
-            .toList();
-        if (_farms.length == 1 &&
-            _selectedBatch != null &&
-            activeBatches.length == 1) {
+        if (widget.existingRecord != null) {
           _currentStep = 1;
         } else {
-          _currentStep = 0;
+          final activeBatches = _batches
+              .where((b) => b.isActive && b.status != 'archived')
+              .toList();
+          if (_farms.length == 1 &&
+              _selectedBatch != null &&
+              activeBatches.length == 1) {
+            _currentStep = 1;
+          } else {
+            _currentStep = 0;
+          }
         }
       }
     } catch (e) {
@@ -728,9 +734,6 @@ class _DailyRecordsDashboardScreenState
       final opening = existingRecord?.openingBirds ?? currentBirds;
       final ageDay =
           recordDate.difference(_selectedBatch!.placementDate).inDays + 1;
-      final prevMortality = existingRecord?.mortalityCount ?? 0;
-      final prevClosing = existingRecord?.closingBirds ?? opening;
-      int loggedMortality = 0;
 
       if (_isDailyOpsSelected) {
         // Path A: Write all 4 daily operations in one bundle action
@@ -886,6 +889,12 @@ class _DailyRecordsDashboardScreenState
           duration: Duration(seconds: 2, milliseconds: 500),
         ),
       );
+
+      // If editing an existing record, return back to the View Record screen immediately
+      if (widget.existingRecord != null && mounted) {
+        Navigator.of(context).pop(true);
+        return;
+      }
 
       // Reset form / step
       setState(() {
@@ -1120,16 +1129,20 @@ class _DailyRecordsDashboardScreenState
         backgroundColor: Colors.white,
         elevation: 0,
         foregroundColor: AppColors.textPrimary,
-        title: const Column(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Log Data Wizard',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              widget.existingRecord != null
+                  ? 'Edit Daily Record'
+                  : 'Log Data Wizard',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             Text(
-              'Record farm metrics in under 30 seconds',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              widget.existingRecord != null
+                  ? 'Day ${widget.existingRecord!.batchAgeDay} • ${_selectedRecordDate.day.toString().padLeft(2, '0')}/${_selectedRecordDate.month.toString().padLeft(2, '0')}/${_selectedRecordDate.year}'
+                  : 'Record farm metrics in under 30 seconds',
+              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
           ],
         ),
