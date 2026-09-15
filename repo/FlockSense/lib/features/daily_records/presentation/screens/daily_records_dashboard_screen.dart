@@ -745,7 +745,6 @@ class _DailyRecordsDashboardScreenState
             double.tryParse(_waterQuantityController.text.trim()) ?? 0.0;
         final mortalityCount =
             int.tryParse(_mortalityCountController.text.trim()) ?? 0;
-        loggedMortality = mortalityCount;
         final dgLevel = double.tryParse(_dgLevelController.text.trim());
         final dgAdded = double.tryParse(_dgAddedController.text.trim());
         final dgHours = double.tryParse(_dgHoursController.text.trim());
