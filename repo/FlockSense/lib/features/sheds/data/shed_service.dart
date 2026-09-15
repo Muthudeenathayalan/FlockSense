@@ -281,6 +281,38 @@ class ShedService {
         list.add(s);
       }
     }
+
+    // If no sheds exist but the parent farm has dimensions, auto-create Shed 1
+    if (list.isEmpty) {
+      try {
+        final farmDoc = await _db
+            .collection('users')
+            .doc(user.uid)
+            .collection('farms')
+            .doc(farmId)
+            .get();
+        if (farmDoc.exists) {
+          final data = farmDoc.data() ?? {};
+          final lengthFt = (data['lengthFt'] as num?)?.toDouble() ?? 0.0;
+          final widthFt = (data['widthFt'] as num?)?.toDouble() ?? 0.0;
+          final capacity = (data['capacity'] as num?)?.toInt();
+          if (lengthFt > 0 && widthFt > 0) {
+            final shed = await createShed(
+              farmId: farmId,
+              name: 'Shed 1',
+              lengthFt: lengthFt,
+              widthFt: widthFt,
+              capacity: capacity,
+              notes: 'Auto-created from farm dimensions',
+            );
+            list.add(shed);
+          }
+        }
+      } catch (e) {
+        debugPrint('[ShedService] Lazy shed migration ignored: $e');
+      }
+    }
+
     return list;
   }
 

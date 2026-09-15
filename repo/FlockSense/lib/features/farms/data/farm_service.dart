@@ -113,6 +113,33 @@ class FarmService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
+      // Auto-create Primary Shed ("Shed 1") with farm dimensions
+      final shedRef = farmRef.collection('sheds').doc();
+      final shedId = shedRef.id;
+      final autoCapacity = capacity ??
+          (resolvedTotalSqFt > 0
+              ? (farmType.toUpperCase() == 'EC'
+                  ? (resolvedTotalSqFt / 0.75).round()
+                  : (resolvedTotalSqFt / 1.2).round())
+              : null);
+
+      batch.set(shedRef, {
+        'id': shedId,
+        'farmId': farmId,
+        'userId': user.uid,
+        'ownerId': user.uid,
+        'name': 'Shed 1',
+        'shedName': 'Shed 1',
+        'lengthFt': lengthFt,
+        'widthFt': widthFt,
+        'totalSqFt': resolvedTotalSqFt,
+        'capacity': autoCapacity,
+        'status': 'active',
+        'notes': 'Primary shed created during farm setup',
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
       batch.set(userRef, {
         'hasFarm': true,
         if (isFirstFarm) 'activeFarmId': farmId,

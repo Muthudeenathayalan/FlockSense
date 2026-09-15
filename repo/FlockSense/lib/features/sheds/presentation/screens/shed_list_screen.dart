@@ -87,7 +87,7 @@ class ShedListScreen extends ConsumerWidget {
   void _openForm(BuildContext ctx, String farmId, {ShedModel? shed}) {
     Navigator.of(ctx).push(
       MaterialPageRoute(
-        builder: (_) => ShedFormScreen(farmId: farmId, existing: shed),
+        builder: (_) => ShedFormScreen(farmId: farmId, existing: shed, farm: farm),
       ),
     );
   }

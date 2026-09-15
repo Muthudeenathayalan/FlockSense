@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/features/batches/data/batch_service.dart';
 import 'package:flock_sense/features/batches/presentation/screens/batch_command_center_screen.dart';
+import 'package:flock_sense/features/farms/data/farm_service.dart';
+import 'package:flock_sense/features/farms/domain/farm_model.dart';
+import 'package:flock_sense/features/sheds/data/shed_service.dart';
+import 'package:flock_sense/features/sheds/domain/shed_model.dart';
 
 class BatchFormScreen extends StatefulWidget {
   const BatchFormScreen({super.key, required this.farmId, this.shedId});
@@ -34,7 +38,78 @@ class _BatchFormScreenState extends State<BatchFormScreen> {
   bool _saving = false;
   String? _countError;
 
+  List<ShedModel> _availableSheds = [];
+  String? _selectedShedId;
+  String? _selectedShedName;
+  FarmModel? _farm;
+
   static const _flockTypes = <String>['Broiler', 'Layer', 'Breeder', 'Country'];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedShedId = widget.shedId;
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    try {
+      final farm = await FarmService.getFarmById(widget.farmId);
+      final sheds = await ShedService.getShedsByFarmId(widget.farmId);
+      if (!mounted) return;
+
+      setState(() {
+        _farm = farm;
+        _availableSheds = sheds;
+
+        if (farm != null) {
+          _sizeUnit = farm.sizeUnit;
+          if (farm.flockType.trim().isNotEmpty) {
+            _selectedFlockType = farm.flockType;
+          }
+        }
+
+        ShedModel? targetShed;
+        if (_selectedShedId != null) {
+          targetShed = sheds.where((s) => s.id == _selectedShedId).firstOrNull;
+        }
+        targetShed ??= sheds.firstOrNull;
+
+        if (targetShed != null) {
+          _selectedShedId = targetShed.id;
+          _selectedShedName = targetShed.name;
+          final l = _sizeUnit == 'm' ? _ftToMeter(targetShed.lengthFt) : targetShed.lengthFt;
+          final w = _sizeUnit == 'm' ? _ftToMeter(targetShed.widthFt) : targetShed.widthFt;
+          _lengthController.text = _toDisplay(l);
+          _breadthController.text = _toDisplay(w);
+        } else if (farm != null && farm.lengthFt > 0 && farm.widthFt > 0) {
+          final l = _sizeUnit == 'm' ? _ftToMeter(farm.lengthFt) : farm.lengthFt;
+          final w = _sizeUnit == 'm' ? _ftToMeter(farm.widthFt) : farm.widthFt;
+          _lengthController.text = _toDisplay(l);
+          _breadthController.text = _toDisplay(w);
+        }
+
+        if (_batchNameController.text.trim().isEmpty) {
+          final now = DateTime.now();
+          final shedPrefix = _selectedShedName != null ? '$_selectedShedName - ' : '';
+          _batchNameController.text = '${shedPrefix}Batch ${now.day}/${now.month}';
+        }
+      });
+    } catch (_) {}
+  }
+
+  void _onShedSelected(ShedModel shed) {
+    setState(() {
+      _selectedShedId = shed.id;
+      _selectedShedName = shed.name;
+      final l = _sizeUnit == 'm' ? _ftToMeter(shed.lengthFt) : shed.lengthFt;
+      final w = _sizeUnit == 'm' ? _ftToMeter(shed.widthFt) : shed.widthFt;
+      _lengthController.text = _toDisplay(l);
+      _breadthController.text = _toDisplay(w);
+      final now = DateTime.now();
+      _batchNameController.text = '${shed.name} - Batch ${now.day}/${now.month}';
+    });
+  }
 
   double get _lengthInput =>
       double.tryParse(_lengthController.text.trim()) ?? 0;
@@ -90,7 +165,7 @@ class _BatchFormScreenState extends State<BatchFormScreen> {
     try {
       final batch = await BatchService.createBatch(
         farmId: widget.farmId,
-        shedId: widget.shedId,
+        shedId: _selectedShedId,
         batchName: _batchNameController.text.trim(),
         lengthFt: _lengthFt,
         widthFt: _breadthFt,
@@ -248,10 +323,37 @@ class _BatchFormScreenState extends State<BatchFormScreen> {
         children: [
           _SectionCard(
             title: 'Batch setup',
-            subtitle: 'Define size, type, and flock counts.',
+            subtitle: 'Define shed, size, type, and flock counts.',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (_availableSheds.isNotEmpty) ...[
+                  Text(
+                    'Assign to Shed',
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _availableSheds.map((s) {
+                      final isSelected = _selectedShedId == s.id;
+                      return ChoiceChip(
+                        avatar: Icon(
+                          Icons.domain_rounded,
+                          size: 16,
+                          color: isSelected ? Colors.white : AppColors.primary,
+                        ),
+                        label: Text('${s.name} (${s.lengthFt.toInt()}×${s.widthFt.toInt()} ft)'),
+                        selected: isSelected,
+                        onSelected: (_) => _onShedSelected(s),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                ],
                 TextFormField(
                   controller: _batchNameController,
                   decoration: const InputDecoration(labelText: 'Batch name'),
@@ -305,9 +407,36 @@ class _BatchFormScreenState extends State<BatchFormScreen> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                Text(
-                  'Area: ${_areaInSelectedUnit.toStringAsFixed(2)} ${_sizeUnit}\u00b2',
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.check_circle_outline_rounded,
+                        size: 16,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _selectedShedName != null
+                              ? 'Auto-filled from $_selectedShedName (${_areaInSelectedUnit.toStringAsFixed(0)} $_sizeUnit²). Adjust only if partitioning.'
+                              : 'Auto-filled from farm specs (${_areaInSelectedUnit.toStringAsFixed(0)} $_sizeUnit²).',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primaryDark,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -449,6 +578,12 @@ class _BatchFormScreenState extends State<BatchFormScreen> {
   }
 
   static double _meterToFt(double value) => value * 3.28084;
+  static double _ftToMeter(double value) => value / 3.28084;
+
+  static String _toDisplay(double value) {
+    if (value % 1 == 0) return value.toStringAsFixed(0);
+    return value.toStringAsFixed(2);
+  }
 }
 
 class _DateField extends StatelessWidget {
