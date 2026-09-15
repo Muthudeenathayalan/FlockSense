@@ -6,6 +6,7 @@ import 'package:flock_sense/features/farms/data/farm_service.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
 import 'package:flock_sense/features/sheds/data/shed_service.dart';
 import 'package:flock_sense/features/sheds/domain/shed_model.dart';
+import 'package:flock_sense/features/sheds/presentation/screens/shed_form_screen.dart';
 
 class BatchFormScreen extends StatefulWidget {
   const BatchFormScreen({super.key, required this.farmId, this.shedId});
@@ -357,6 +358,58 @@ class _BatchFormScreenState extends State<BatchFormScreen> {
                     }).toList(),
                   ),
                   const SizedBox(height: 16),
+                ] else ...[
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFFBEB),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFDE68A)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.domain_add_rounded,
+                          size: 22,
+                          color: Color(0xFFD97706),
+                        ),
+                        const SizedBox(width: 10),
+                        const Expanded(
+                          child: Text(
+                            'Step 2: No sheds found. Add a Shed first to house this flock.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF92400E),
+                            ),
+                          ),
+                        ),
+                        FilledButton.tonal(
+                          onPressed: () async {
+                            if (_farm != null) {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ShedFormScreen(
+                                    farmId: _farm!.id,
+                                    farm: _farm,
+                                  ),
+                                ),
+                              );
+                              _loadInitialData();
+                            }
+                          },
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text('Add Shed', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
                 TextFormField(
                   controller: _batchNameController,
