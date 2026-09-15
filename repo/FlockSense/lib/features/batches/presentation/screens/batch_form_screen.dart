@@ -267,7 +267,11 @@ class _BatchFormScreenState extends State<BatchFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Create Batch')),
+      appBar: AppBar(
+        title: Text(_selectedShedName != null
+            ? 'Create Batch in $_selectedShedName'
+            : 'Create Batch'),
+      ),
       body: Column(
         children: [
           Padding(

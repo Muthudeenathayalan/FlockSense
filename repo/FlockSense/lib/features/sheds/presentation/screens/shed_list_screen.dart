@@ -11,6 +11,7 @@ import 'package:flock_sense/features/farms/domain/farm_model.dart';
 import 'package:flock_sense/features/sheds/data/shed_service.dart';
 import 'package:flock_sense/features/sheds/domain/shed_model.dart';
 import 'package:flock_sense/features/sheds/presentation/providers/shed_providers.dart';
+import 'package:flock_sense/features/batches/presentation/screens/batch_form_screen.dart';
 import 'package:flock_sense/features/sheds/presentation/screens/shed_form_screen.dart';
 
 class ShedListScreen extends ConsumerWidget {
@@ -135,45 +136,91 @@ class _ShedCard extends StatelessWidget {
 
     return AppCard(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(Icons.home_work_outlined, color: statusColor, size: 22),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  shed.shedName,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(Icons.home_work_outlined, color: statusColor, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      shed.shedName,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Capacity: ${shed.physicalCapacity}  •  Area: ${shed.areaSqFt.toStringAsFixed(0)} ft²',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuButton<String>(
+                onSelected: (v) => v == 'edit' ? onEdit() : onDelete(),
+                itemBuilder: (_) => [
+                  const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Text(
+                      'Delete',
+                      style: TextStyle(color: AppColors.danger),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Capacity: ${shed.physicalCapacity}  •  Area: ${shed.areaSqFt.toStringAsFixed(0)} ft²',
-                  style: theme.textTheme.bodySmall,
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
-          PopupMenuButton<String>(
-            onSelected: (v) => v == 'edit' ? onEdit() : onDelete(),
-            itemBuilder: (_) => [
-              const PopupMenuItem(value: 'edit', child: Text('Edit')),
-              const PopupMenuItem(
-                value: 'delete',
-                child: Text(
-                  'Delete',
-                  style: TextStyle(color: AppColors.danger),
+          const SizedBox(height: 12),
+          const Divider(height: 1),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${shed.lengthFt.toInt()} × ${shed.widthFt.toInt()} ft',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              FilledButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => BatchFormScreen(
+                        farmId: farmId,
+                        shedId: shed.id,
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.add_rounded, size: 16),
+                label: const Text(
+                  'Place Batch in Shed',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ),
             ],

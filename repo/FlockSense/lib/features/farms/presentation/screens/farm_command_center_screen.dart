@@ -24,6 +24,8 @@ import 'package:flock_sense/features/vaccine/presentation/screens/vaccine_record
 import 'package:flock_sense/features/sheds/data/shed_service.dart';
 import 'package:flock_sense/features/sheds/domain/shed_model.dart';
 import 'package:flock_sense/features/sheds/presentation/screens/shed_list_screen.dart';
+import 'package:flock_sense/features/sheds/presentation/screens/shed_form_screen.dart';
+import 'package:flock_sense/features/farms/presentation/widgets/farm_sheds_section.dart';
 
 /// Farm Command Center & Management Screen.
 /// Aligned with the reference UI (Image 1) featuring:
@@ -251,6 +253,15 @@ class _FarmCommandCenterScreenState extends State<FarmCommandCenterScreen> {
 
                           const SizedBox(height: 20),
 
+                          // Sheds Section (Step 2: Inside Farm, manage Sheds & create Batches in Sheds)
+                          FarmShedsSection(
+                            farm: _farm,
+                            sheds: sheds,
+                            batches: batches,
+                          ),
+
+                          const SizedBox(height: 20),
+
                           // Active Batches Section
                           AppDesign.sectionTitle('Active Batches'),
                           FarmActiveBatchesSection(farm: _farm),
@@ -271,24 +282,46 @@ class _FarmCommandCenterScreenState extends State<FarmCommandCenterScreen> {
                   ),
                 ],
               ),
-              floatingActionButton: FloatingActionButton.extended(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                  builder: (_) => BatchFormScreen(farmId: _farm.id),
-                ),
-              );
-            },
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            elevation: 3,
-            icon: const Icon(Icons.add_rounded, size: 20),
-            label: const Text(
-              'Add Batch',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-            ),
-          ),
+              floatingActionButton: sheds.isEmpty
+                  ? FloatingActionButton.extended(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ShedFormScreen(
+                              farmId: _farm.id,
+                              farm: _farm,
+                            ),
+                          ),
+                        );
+                      },
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 3,
+                      icon: const Icon(Icons.add_business_rounded, size: 20),
+                      label: const Text(
+                        'Add Shed',
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                      ),
+                    )
+                  : FloatingActionButton.extended(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BatchFormScreen(farmId: _farm.id),
+                          ),
+                        );
+                      },
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 3,
+                      icon: const Icon(Icons.add_rounded, size: 20),
+                      label: const Text(
+                        'Add Batch',
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                      ),
+                    ),
         );
       },
     );
