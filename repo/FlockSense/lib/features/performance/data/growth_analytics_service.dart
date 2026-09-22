@@ -454,7 +454,6 @@ class GrowthAnalyticsService {
         : 0.0;
 
     final avgWeightKg = latestWeightGrams / 1000.0;
-    final chickWeightKg = chickWeightGrams / 1000.0;
 
     final placementDate = activeBatch?.placementDate ?? now;
     final calendarAgeDays = (now.difference(placementDate).inDays + 1).clamp(1, 365);

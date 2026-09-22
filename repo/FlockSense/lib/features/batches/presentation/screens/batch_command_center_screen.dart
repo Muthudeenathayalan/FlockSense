@@ -7,9 +7,9 @@ import 'package:flock_sense/features/daily_records/presentation/screens/daily_re
 import 'package:flock_sense/features/daily_records/presentation/screens/daily_records_screen.dart';
 import 'package:flock_sense/features/feed/presentation/screens/feed_records_screen.dart';
 import 'package:flock_sense/features/medicine/presentation/screens/medicine_records_screen.dart';
+import 'package:flock_sense/features/flock_plan/presentation/screens/flock_plan_screen.dart';
 import 'package:flock_sense/features/performance/presentation/screens/batch_performance_screen.dart';
 import 'package:flock_sense/features/reports/presentation/screens/reports_dashboard_screen.dart';
-import 'package:flock_sense/features/reports/presentation/screens/reports_screen.dart';
 import 'package:flock_sense/features/sales/presentation/screens/bird_sales_screen.dart';
 import 'package:flock_sense/features/vaccine/presentation/screens/vaccine_records_screen.dart';
 import 'package:flock_sense/features/reports/data/batch_completion_report_service.dart';
@@ -547,6 +547,23 @@ class _BatchCommandCenterScreenState extends State<BatchCommandCenterScreen> {
                                       farmId: widget.farmId,
                                       batchId: widget.batchId,
                                       batchName: widget.batchName,
+                                      batch: b,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            AppDesign.actionButton(
+                              icon: Icons.calendar_month_rounded,
+                              label: 'Daily Plan',
+                              gradient: AppDesign.actionDarkIndigo,
+                              onTap: () {
+                                if (b == null) return;
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => FlockPlanScreen(
+                                      farmId: widget.farmId,
                                       batch: b,
                                     ),
                                   ),

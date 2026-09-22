@@ -522,7 +522,6 @@ class _ShedFormScreenState extends State<ShedFormScreen> {
   }
 
   static double _meterToFt(double value) => value * 3.28084;
-  static double _ftToMeter(double value) => value / 3.28084;
 
   static String _toDisplay(double value) {
     if (value % 1 == 0) return value.toStringAsFixed(0);
@@ -585,13 +584,11 @@ class _SectionCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.child,
-    this.trailing,
   });
 
   final String title;
   final String subtitle;
   final Widget child;
-  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -606,29 +603,22 @@ class _SectionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey.shade600,
-                            ),
-                      ),
-                    ],
-                  ),
                 ),
-                if (trailing != null) trailing!,
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey.shade600,
+                      ),
+                ),
               ],
             ),
             const SizedBox(height: 16),

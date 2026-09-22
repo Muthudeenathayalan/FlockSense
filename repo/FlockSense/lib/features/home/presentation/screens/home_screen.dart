@@ -14,6 +14,7 @@ import 'package:flock_sense/features/inventory/presentation/screens/inventory_da
 import 'package:flock_sense/features/notifications/presentation/screens/notification_center_screen.dart';
 import 'package:flock_sense/features/reports/presentation/screens/reports_dashboard_screen.dart';
 import 'package:flock_sense/features/vaccination/presentation/screens/vaccination_screen.dart';
+import 'package:flock_sense/features/flock_plan/presentation/widgets/today_plan_home_card.dart';
 import 'package:flock_sense/features/home/presentation/providers/home_dashboard_provider.dart';
 import 'package:flock_sense/core/widgets/hen_icon.dart';
 
@@ -142,6 +143,16 @@ class HomeScreen extends ConsumerWidget {
                     activeBatchesCount: data.activeBatchCount,
                   ),
                   const SizedBox(height: 16),
+
+                  // Today's Action Plan & Advisor (when an active batch exists)
+                  if (activeBatches.isNotEmpty) ...[
+                    TodayPlanHomeCard(
+                      batch: activeBatches.first,
+                      farmId: targetFarmId,
+                      farmName: data.activeFarm?.farmName ?? 'Main Facility',
+                    ),
+                    const SizedBox(height: 20),
+                  ],
 
                   // Executive 2x2 KPIs
                   _ExecutiveKpiGrid(data: data),

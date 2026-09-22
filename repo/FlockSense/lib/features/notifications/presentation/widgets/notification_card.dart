@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:flock_sense/config/routes/app_routes.dart';
 import 'package:flock_sense/features/daily_records/presentation/screens/daily_records_dashboard_screen.dart';
 import 'package:flock_sense/features/notifications/data/models/notification_model.dart';
 import 'package:flock_sense/features/notifications/data/services/notification_firestore_service.dart';

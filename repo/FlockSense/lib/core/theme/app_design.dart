@@ -82,6 +82,12 @@ class AppDesign {
     colors: [Color(0xFF134E4A), Color(0xFF0F766E)],
   );
 
+  static const LinearGradient actionDarkIndigo = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF1E1B4B), Color(0xFF312E81)],
+  );
+
   static const LinearGradient actionDarkRed = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,

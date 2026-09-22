@@ -8,7 +8,6 @@ import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/features/reports/data/pdf_generator.dart';
 import 'package:flock_sense/features/reports/data/report_history_service.dart';
 import 'package:flock_sense/features/reports/data/report_service.dart';
-import 'package:flock_sense/features/reports/domain/report_data.dart';
 import 'package:flock_sense/features/reports/domain/report_types.dart';
 
 /// Service responsible for automatically generating, requesting user permission,

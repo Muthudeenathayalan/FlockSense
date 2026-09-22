@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/features/batches/domain/batch_model.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
 import 'package:flock_sense/features/farms/presentation/providers/farm_providers.dart';
