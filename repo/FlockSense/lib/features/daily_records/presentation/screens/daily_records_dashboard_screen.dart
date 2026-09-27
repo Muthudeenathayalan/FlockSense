@@ -127,6 +127,34 @@ class _DailyRecordsDashboardScreenState
   bool _isLoadingBatches = false;
   bool _isSaving = false;
   DateTime _selectedRecordDate = DateTime.now();
+  DailyRecordModel? _existingRecordForDate;
+  bool _isCheckingExistingRecord = false;
+
+  Future<void> _checkExistingRecordForDate() async {
+    if (_selectedFarm == null || _selectedBatch == null) {
+      if (_existingRecordForDate != null) {
+        setState(() => _existingRecordForDate = null);
+      }
+      return;
+    }
+
+    setState(() => _isCheckingExistingRecord = true);
+    try {
+      final record = await DailyRecordService.getDailyRecordByDate(
+        farmId: _selectedFarm!.id,
+        batchId: _selectedBatch!.id,
+        recordDate: _selectedRecordDate,
+      );
+      if (mounted) {
+        setState(() {
+          _existingRecordForDate = record;
+          _isCheckingExistingRecord = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isCheckingExistingRecord = false);
+    }
+  }
 
   List<FarmModel> _farms = [];
   List<BatchModel> _batches = [];
@@ -200,6 +228,7 @@ class _DailyRecordsDashboardScreenState
 
   void _prefillFromExistingRecord(DailyRecordModel record) {
     _selectedRecordDate = record.recordDate;
+    _existingRecordForDate = record;
     if (record.feedConsumedKg > 0 || record.feedType != null) {
       _isDailyOpsSelected = true;
       _feedTypeController.text = record.feedType ?? 'Broiler Starter';
@@ -431,6 +460,9 @@ class _DailyRecordsDashboardScreenState
           ref.read(dailyRecordBatchIdProvider.notifier).selectBatch(null);
         }
       });
+      if (_selectedBatch != null) {
+        _checkExistingRecordForDate();
+      }
     } catch (e) {
       debugPrint('[LogDataWizard] _loadBatchesForFarm error: $e');
       if (mounted) {
@@ -871,21 +903,24 @@ class _DailyRecordsDashboardScreenState
       ref.invalidate(dailyRecordsStreamProvider);
 
       // Show single unified success message — auto-dismisses, no mortality count
+      final wasExisting = existingRecord != null || _existingRecordForDate != null;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Row(
             children: [
-              Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-              SizedBox(width: 10),
+              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
               Text(
-                "Today's log record saved successfully",
-                style: TextStyle(fontWeight: FontWeight.w600),
+                wasExisting
+                    ? "Daily log record updated successfully"
+                    : "Today's log record saved successfully",
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ],
           ),
-          backgroundColor: Color(0xFF14532D), // dark green
+          backgroundColor: const Color(0xFF14532D), // dark green
           behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 2, milliseconds: 500),
+          duration: const Duration(seconds: 2, milliseconds: 500),
         ),
       );
 
@@ -1328,6 +1363,7 @@ class _DailyRecordsDashboardScreenState
                   );
                   if (picked != null) {
                     setState(() => _selectedRecordDate = picked);
+                    _checkExistingRecordForDate();
                   }
                 },
                 borderRadius: BorderRadius.circular(8),
@@ -1372,8 +1408,10 @@ class _DailyRecordsDashboardScreenState
               ChoiceChip(
                 label: const Text('Today', style: TextStyle(fontSize: 12)),
                 selected: isToday,
-                onSelected: (_) =>
-                    setState(() => _selectedRecordDate = DateTime.now()),
+                onSelected: (_) {
+                  setState(() => _selectedRecordDate = DateTime.now());
+                  _checkExistingRecordForDate();
+                },
                 selectedColor: AppColors.primaryLight,
                 labelStyle: TextStyle(
                   color: isToday
@@ -1386,8 +1424,10 @@ class _DailyRecordsDashboardScreenState
               ChoiceChip(
                 label: const Text('Yesterday', style: TextStyle(fontSize: 12)),
                 selected: isYesterday,
-                onSelected: (_) =>
-                    setState(() => _selectedRecordDate = yesterday),
+                onSelected: (_) {
+                  setState(() => _selectedRecordDate = yesterday);
+                  _checkExistingRecordForDate();
+                },
                 selectedColor: AppColors.primaryLight,
                 labelStyle: TextStyle(
                   color: isYesterday
@@ -1398,6 +1438,73 @@ class _DailyRecordsDashboardScreenState
               ),
             ],
           ),
+          if (_existingRecordForDate != null) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF3C7),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFF59E0B)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.info_outline_rounded,
+                    color: Color(0xFFD97706),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Record Already Logged for ${DateFormat('dd MMM yyyy').format(_selectedRecordDate)}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF92400E),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          'Saving will update this entry instead of creating a duplicate.',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFFB45309),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton.icon(
+                    icon: const Icon(Icons.download_rounded, size: 14),
+                    label: const Text(
+                      'Load Data',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFF92400E),
+                    ),
+                    onPressed: () {
+                      _prefillFromExistingRecord(_existingRecordForDate!);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Loaded existing daily record values into form.'),
+                          duration: Duration(seconds: 2),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

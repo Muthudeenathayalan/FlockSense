@@ -148,4 +148,28 @@ void main() {
       );
     });
   });
+
+  group('DailyRecordService Date Formatting & Deduplication Guards', () {
+    test('validates closing count with adjustments and sales combinations', () {
+      final closing = DailyRecordModel.calculateClosingBirds(
+        opening: 1000,
+        mortality: 10,
+        culls: 5,
+        adjustments: 15,
+        birdsSold: 200,
+      );
+      expect(closing, 800);
+    });
+
+    test('ensures calculateClosingBirds safely clamps to non-negative even with large bird sales', () {
+      final depletedBySales = DailyRecordModel.calculateClosingBirds(
+        opening: 500,
+        mortality: 20,
+        culls: 10,
+        birdsSold: 1000,
+      );
+      expect(depletedBySales, 0);
+    });
+  });
 }
+

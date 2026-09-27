@@ -371,14 +371,27 @@ class DailyRecordService {
     return record;
   }
 
+  /// Checks if a record has already been logged for a specific batch on a given date.
+  static Future<bool> hasRecordForDate({
+    required String farmId,
+    required String batchId,
+    required DateTime recordDate,
+  }) async {
+    final record = await getDailyRecordByDate(
+      farmId: farmId,
+      batchId: batchId,
+      recordDate: recordDate,
+    );
+    return record != null;
+  }
+
   /// Checks if today's record has already been logged for a specific batch.
   static Future<bool> hasTodayRecordForBatch(String farmId, String batchId) async {
-    final record = await getDailyRecordByDate(
+    return hasRecordForDate(
       farmId: farmId,
       batchId: batchId,
       recordDate: DateTime.now(),
     );
-    return record != null;
   }
 
   /// Delete a daily record and update batch bird counts automatically
