@@ -50,12 +50,25 @@ class _AiScreenState extends ConsumerState<AiScreen> {
     ref.read(aiSendingStateProvider.notifier).setSending(true);
 
     try {
-      // 1. Ensure Active Conversation with currently selected Firebase Farm
+      // 1. Ensure Active Conversation with currently selected Firebase Farm and Active Batch
       final activeFarmId = ref.read(selectedDashboardFarmIdProvider) ??
           ref.read(activeFarmIdProvider).value;
+      final batches = ref.read(allUserBatchesProvider).value ?? [];
+      String? activeBatchId;
+      for (final b in batches) {
+        if ((activeFarmId == null || b.farmId == activeFarmId) && b.isActive) {
+          activeBatchId = b.id;
+          break;
+        }
+      }
+      if (activeBatchId == null && batches.isNotEmpty) {
+        activeBatchId = batches.first.id;
+      }
+
       final activeNotifier = ref.read(activeConversationProvider.notifier);
       final conversation = await activeNotifier.ensureActiveConversation(
         farmId: activeFarmId,
+        batchId: activeBatchId,
       );
 
       // Retrieve existing conversation history BEFORE adding the new message
