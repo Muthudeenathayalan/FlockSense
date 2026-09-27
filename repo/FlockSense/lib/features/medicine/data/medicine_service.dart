@@ -2,13 +2,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flock_sense/core/exceptions/app_exceptions.dart';
+import 'package:flock_sense/features/inventory/data/inventory_service.dart';
 import 'package:flock_sense/features/medicine/domain/medicine_record_model.dart';
 
 class MedicineService {
   MedicineService._();
 
-  static final _db = FirebaseFirestore.instance;
-  static final _auth = FirebaseAuth.instance;
+  static FirebaseFirestore get _db => FirebaseFirestore.instance;
+  static FirebaseAuth? get _auth {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
 
   static CollectionReference<Map<String, dynamic>> _medicineRef(
     String uid,
@@ -30,7 +37,7 @@ class MedicineService {
     String batchId,
   ) {
     try {
-      final user = _auth.currentUser;
+      final user = _auth?.currentUser;
       if (user == null) return const Stream.empty();
 
       return _medicineRef(user.uid, farmId, batchId).snapshots().map((
@@ -52,7 +59,7 @@ class MedicineService {
     required String farmId,
     required String batchId,
   }) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) return [];
 
     final snapshot = await _medicineRef(user.uid, farmId, batchId).get();
@@ -75,7 +82,7 @@ class MedicineService {
     String? notes,
   }) async {
     try {
-      final user = _auth.currentUser;
+      final user = _auth?.currentUser;
       if (user == null) {
         throw AuthException('Sign in before saving medicine records.');
       }
@@ -116,6 +123,22 @@ class MedicineService {
         farmId,
         batchId,
       ).doc(record.id).set(record.toJson());
+
+      // Auto deduct from inventory if item exists in store
+      try {
+        final invService = InventoryService();
+        await invService.autoDeductStock(
+          uid: user.uid,
+          farmId: farmId,
+          category: 'Medicine',
+          itemName: trimmedName,
+          amountUsed: quantity,
+          reason: 'Administered ($trimmedName)',
+        );
+      } catch (e) {
+        debugPrint('[MedicineService] Auto deduct inventory error: $e');
+      }
+
       return record;
     } catch (e) {
       debugPrint('MedicineService.createMedicineRecord failed: $e');
@@ -129,7 +152,7 @@ class MedicineService {
     String recordId,
   ) async {
     try {
-      final user = _auth.currentUser;
+      final user = _auth?.currentUser;
       if (user == null) {
         throw AuthException('Sign in before deleting medicine records.');
       }
