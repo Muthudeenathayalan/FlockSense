@@ -10,6 +10,7 @@ import 'package:flock_sense/features/inventory/presentation/widgets/inventory_it
 import 'package:flock_sense/features/inventory/presentation/widgets/inventory_summary_cards.dart';
 import 'package:flock_sense/features/inventory/presentation/widgets/stock_movement_dialog.dart';
 import 'package:flock_sense/features/inventory/services/inventory_export_service.dart';
+import 'package:flock_sense/core/widgets/sync_status_banner.dart';
 
 class InventoryDashboardScreen extends ConsumerWidget {
   const InventoryDashboardScreen({super.key});
@@ -173,7 +174,11 @@ class InventoryDashboardScreen extends ConsumerWidget {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      body: inventoryAsync.when(
+      body: Column(
+        children: [
+          const SyncStatusBanner(),
+          Expanded(
+            child: inventoryAsync.when(
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppColors.primary),
         ),
@@ -485,6 +490,9 @@ class InventoryDashboardScreen extends ConsumerWidget {
           ],
         ),
       ),
+    ),
+  ],
+),
     );
   }
 
