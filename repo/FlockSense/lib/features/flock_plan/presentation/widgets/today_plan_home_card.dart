@@ -9,7 +9,7 @@ import 'package:flock_sense/features/flock_plan/presentation/widgets/day_analyti
 import 'package:flock_sense/features/inventory/presentation/screens/inventory_dashboard_screen.dart';
 import 'package:flock_sense/features/performance/presentation/screens/batch_performance_screen.dart';
 import 'package:flock_sense/features/reports/presentation/screens/reports_dashboard_screen.dart';
-import 'package:flock_sense/features/vaccination/presentation/screens/vaccination_screen.dart';
+import 'package:flock_sense/features/vaccine/presentation/screens/vaccine_records_screen.dart';
 
 class TodayPlanHomeCard extends StatefulWidget {
   const TodayPlanHomeCard({
@@ -120,7 +120,13 @@ class _TodayPlanHomeCardState extends State<TodayPlanHomeCard> {
       case '/vaccine':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const VaccinationScreen()),
+          MaterialPageRoute(
+            builder: (_) => VaccineRecordsScreen(
+              farmId: widget.farmId,
+              batchId: widget.batch.id,
+              batchName: widget.batch.batchName,
+            ),
+          ),
         ).then((_) => _loadPlan());
         break;
       case '/inventory':
