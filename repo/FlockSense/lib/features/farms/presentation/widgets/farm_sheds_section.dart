@@ -34,31 +34,38 @@ class FarmShedsSection extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 3,
-                  height: 14,
-                  decoration: BoxDecoration(
-                    color: _kPrimary,
-                    borderRadius: BorderRadius.circular(2),
+            Expanded(
+              child: Row(
+                children: [
+                  Container(
+                    width: 3,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: _kPrimary,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'SHEDS & HOUSES (${sheds.length})',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: _kTextSecondary,
-                    letterSpacing: 0.8,
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      'SHEDS & HOUSES (${sheds.length})',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _kTextSecondary,
+                        letterSpacing: 0.8,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
+            const SizedBox(width: 8),
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                if (sheds.length > 2)
+                if (sheds.length > 2) ...[
                   TextButton(
                     onPressed: () {
                       Navigator.push(
@@ -82,7 +89,8 @@ class FarmShedsSection extends StatelessWidget {
                       ),
                     ),
                   ),
-                const SizedBox(width: 4),
+                  const SizedBox(width: 4),
+                ],
                 FilledButton.tonalIcon(
                   onPressed: () {
                     Navigator.push(
@@ -386,24 +394,31 @@ class FarmShedsSection extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Row(
-                  children: [
-                    Icon(
-                      Icons.check_circle_outline_rounded,
-                      size: 16,
-                      color: Colors.blueGrey,
-                    ),
-                    SizedBox(width: 6),
-                    Text(
-                      'Shed is empty & sanitized',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: _kTextSecondary,
-                        fontWeight: FontWeight.w500,
+                const Expanded(
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.check_circle_outline_rounded,
+                        size: 16,
+                        color: Colors.blueGrey,
                       ),
-                    ),
-                  ],
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Shed is empty & sanitized',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _kTextSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 FilledButton.icon(
                   onPressed: () {
                     Navigator.push(
@@ -417,8 +432,10 @@ class FarmShedsSection extends StatelessWidget {
                     );
                   },
                   icon: const Icon(Icons.add_rounded, size: 16),
-                  label: Text('Create Batch in ${shed.name}',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                  label: const Text(
+                    'Create Batch',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                  ),
                   style: FilledButton.styleFrom(
                     backgroundColor: _kPrimary,
                     foregroundColor: Colors.white,
