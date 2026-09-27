@@ -8,17 +8,24 @@ import 'package:flock_sense/features/finance/data/models/finance_transaction_mod
 import 'package:flock_sense/features/sales/data/sales_service.dart';
 import 'package:flock_sense/features/medicine/data/medicine_service.dart';
 import 'package:flock_sense/features/feed/data/feed_service.dart';
-
+import 'package:flock_sense/features/vaccine/data/vaccine_service.dart';
+import 'package:flock_sense/features/inventory/data/inventory_service.dart';
 import 'package:flock_sense/features/daily_records/data/daily_record_service.dart';
 
 class FinanceService {
   FinanceService._();
 
-  static final _firestore = FirebaseFirestore.instance;
-  static final _auth = FirebaseAuth.instance;
+  static FirebaseFirestore get _firestore => FirebaseFirestore.instance;
+  static FirebaseAuth? get _auth {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
 
   static Stream<List<FinanceTransactionModel>> streamTransactions() {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) {
       return Stream.value(<FinanceTransactionModel>[]);
     }
@@ -50,7 +57,7 @@ class FinanceService {
     String? farmId,
     String? batchId,
   }) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     final list = <FinanceTransactionModel>[];
     final seenIds = <String>{};
 
@@ -80,7 +87,7 @@ class FinanceService {
         debugPrint('[FinanceService] Fetch Firestore transactions failed: $e');
       }
 
-      // Automatically integrate Bird Sales, Feed Purchases, Medicine, and Daily Record Costs
+      // Automatically integrate Bird Sales, Feed Purchases, Medicine, Vaccines, Inventory, and Daily Record Costs
       try {
         final allFarms = await FarmService.getUserFarms();
         final farms = (farmId != null && farmId.isNotEmpty && farmId != 'all')
@@ -222,7 +229,45 @@ class FinanceService {
               debugPrint('[FinanceService] Medicine integration error: $e');
             }
 
-            // 4. Daily Records with direct Feed or Medicine Costs -> Expense
+            // 4. Vaccine Records -> Expense
+            try {
+              final vaccines = await VaccineService.getVaccineRecords(
+                farmId: farm.id,
+                batchId: batch.id,
+              );
+              for (final v in vaccines) {
+                final txId = 'vac_${v.id}';
+                if (seenIds.add(txId)) {
+                  final nominalCost = v.quantity * 2.5; // Average cost per dose in INR
+                  list.add(
+                    FinanceTransactionModel(
+                      id: txId,
+                      farmId: v.farmId,
+                      batchId: v.batchId,
+                      ownerId: v.ownerId,
+                      type: FinanceTransactionType.expense,
+                      category: 'Vaccine',
+                      date: v.date,
+                      customerOrSupplier: v.doneBy?.isNotEmpty == true ? v.doneBy! : 'Veterinary Services',
+                      quantity: v.quantity,
+                      unitPrice: 2.5,
+                      totalAmount: nominalCost,
+                      paymentMethod: 'Cash',
+                      paymentStatus: PaymentStatus.paid,
+                      paidAmount: nominalCost,
+                      invoiceNumber: 'INV-VAC-${v.id.length > 5 ? v.id.substring(0, 5) : v.id}',
+                      notes: '${v.vaccineName} (${v.route} at Day ${v.batchAgeDay})',
+                      createdAt: v.createdAt,
+                      updatedAt: v.updatedAt,
+                    ),
+                  );
+                }
+              }
+            } catch (e) {
+              debugPrint('[FinanceService] Vaccine integration error: $e');
+            }
+
+            // 5. Daily Records with direct Feed or Medicine Costs -> Expense
             try {
               final dailyRecords = await DailyRecordService.getAllDailyRecords(
                 farmId: farm.id,
@@ -292,6 +337,46 @@ class FinanceService {
               debugPrint('[FinanceService] Daily records financial integration error: $e');
             }
           }
+
+          // 6. Direct Inventory Items Purchases -> Expense
+          try {
+            final invService = InventoryService();
+            final items = await invService.watchInventoryItems(uid: user.uid, farmId: farm.id).first.timeout(
+              const Duration(seconds: 2),
+              onTimeout: () => [],
+            );
+            for (final item in items) {
+              if (item.purchasePrice > 0 && item.quantityAvailable > 0) {
+                final txId = 'inv_${item.id}';
+                if (seenIds.add(txId)) {
+                  list.add(
+                    FinanceTransactionModel(
+                      id: txId,
+                      farmId: item.farmId,
+                      batchId: batchId ?? 'all',
+                      ownerId: item.ownerId,
+                      type: FinanceTransactionType.expense,
+                      category: item.category.isNotEmpty ? item.category : 'Inventory',
+                      date: item.purchaseDate,
+                      customerOrSupplier: item.supplier.isNotEmpty ? item.supplier : 'Farm Supplies Store',
+                      quantity: item.quantityAvailable,
+                      unitPrice: item.purchasePrice,
+                      totalAmount: item.totalValue,
+                      paymentMethod: 'Cash',
+                      paymentStatus: PaymentStatus.paid,
+                      paidAmount: item.totalValue,
+                      invoiceNumber: 'INV-STK-${item.id.length > 5 ? item.id.substring(0, 5) : item.id}',
+                      notes: '${item.itemName} (${item.quantityAvailable} ${item.unit} at storage: ${item.storageLocation})',
+                      createdAt: item.createdAt,
+                      updatedAt: item.updatedAt,
+                    ),
+                  );
+                }
+              }
+            }
+          } catch (e) {
+            debugPrint('[FinanceService] Inventory purchases financial integration error: $e');
+          }
         }
       } catch (e) {
         debugPrint('[FinanceService] Farm batch integration error: $e');
@@ -305,7 +390,7 @@ class FinanceService {
   static Future<FinanceTransactionModel> createTransaction(
     FinanceTransactionModel transaction,
   ) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
 
     if (user != null) {
       try {
@@ -324,7 +409,7 @@ class FinanceService {
   }
 
   static Future<void> deleteTransaction(String transactionId) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
 
     if (user != null) {
       try {
@@ -342,7 +427,7 @@ class FinanceService {
 
   // --- Budget Management ---
   static Stream<FinanceBudgetModel> streamBudget(String monthYear) {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     final fallback = FinanceBudgetModel(
       id: 'bud_$monthYear',
       farmId: 'all',
@@ -366,7 +451,7 @@ class FinanceService {
   }
 
   static Future<void> setBudget(FinanceBudgetModel budget) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user != null) {
       try {
         await _firestore
