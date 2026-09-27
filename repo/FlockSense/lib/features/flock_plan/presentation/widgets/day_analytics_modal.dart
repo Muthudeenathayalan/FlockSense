@@ -5,7 +5,7 @@ import 'package:flock_sense/features/daily_records/presentation/screens/daily_re
 import 'package:flock_sense/features/flock_plan/data/flock_plan_service.dart';
 import 'package:flock_sense/features/flock_plan/domain/daily_plan_model.dart';
 import 'package:flock_sense/features/flock_plan/domain/flock_lifecycle_standard.dart';
-import 'package:flock_sense/features/vaccination/presentation/screens/vaccination_screen.dart';
+import 'package:flock_sense/features/vaccine/presentation/screens/vaccine_records_screen.dart';
 
 class DayAnalyticsModal extends StatelessWidget {
   const DayAnalyticsModal({
@@ -369,7 +369,11 @@ class DayAnalyticsModal extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => const VaccinationScreen(),
+                                  builder: (_) => VaccineRecordsScreen(
+                                    farmId: farmId,
+                                    batchId: batch.id,
+                                    batchName: batch.batchName,
+                                  ),
                                 ),
                               );
                             },
