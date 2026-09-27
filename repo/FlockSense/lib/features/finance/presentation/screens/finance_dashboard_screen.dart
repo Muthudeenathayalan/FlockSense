@@ -14,6 +14,7 @@ import 'package:flock_sense/features/finance/presentation/widgets/finance_summar
 import 'package:flock_sense/features/finance/presentation/widgets/transaction_form_dialog.dart';
 import 'package:flock_sense/features/home/presentation/providers/home_dashboard_provider.dart';
 import 'package:flock_sense/features/reports/domain/report_types.dart';
+import 'package:flock_sense/core/widgets/sync_status_banner.dart';
 
 class FinanceDashboardScreen extends ConsumerStatefulWidget {
   const FinanceDashboardScreen({super.key});
@@ -244,10 +245,14 @@ class _FinanceDashboardScreenState
           ),
         ],
       ),
-      body: RefreshIndicator(
-        color: const Color(0xFF104422),
-        onRefresh: () async => ref.invalidate(financeTransactionsProvider),
-        child: SingleChildScrollView(
+      body: Column(
+        children: [
+          const SyncStatusBanner(),
+          Expanded(
+            child: RefreshIndicator(
+              color: const Color(0xFF104422),
+              onRefresh: () async => ref.invalidate(financeTransactionsProvider),
+              child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -717,7 +722,10 @@ class _FinanceDashboardScreenState
           ),
         ),
       ),
-    );
+    ),
+  ],
+),
+);
   }
 
   Widget _buildFarmBatchFilterBar({
