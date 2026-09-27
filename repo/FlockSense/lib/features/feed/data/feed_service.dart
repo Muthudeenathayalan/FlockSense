@@ -1,15 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flock_sense/core/exceptions/app_exceptions.dart';
 import 'package:flock_sense/features/daily_records/domain/daily_record_model.dart';
 import 'package:flock_sense/features/feed/domain/feed_summary.dart';
 import 'package:flock_sense/features/feed/domain/feed_transaction_model.dart';
+import 'package:flock_sense/features/inventory/data/inventory_service.dart';
 
 class FeedService {
   FeedService._();
 
-  static final _db = FirebaseFirestore.instance;
-  static final _auth = FirebaseAuth.instance;
+  static FirebaseFirestore get _db => FirebaseFirestore.instance;
+  static FirebaseAuth? get _auth {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
 
   static CollectionReference<Map<String, dynamic>> _feedTransactionsRef(
     String uid,
@@ -58,7 +66,7 @@ class FeedService {
     double totalCost = 0,
     String? notes,
   }) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null)
       throw AuthException('Sign in before saving feed transactions.');
 
@@ -118,6 +126,24 @@ class FeedService {
       farmId,
       batchId,
     ).doc(transactionId).set(transaction.toJson());
+
+    // Synchronize with Inventory Service
+    try {
+      final invService = InventoryService();
+      if (transactionType == 'transferOut' || transactionType == 'consumption') {
+        await invService.autoDeductStock(
+          uid: user.uid,
+          farmId: farmId,
+          category: 'Feed',
+          itemName: feedType.trim(),
+          amountUsed: computedTotalKg,
+          reason: 'Feed $transactionType (${feedType.trim()})',
+        );
+      }
+    } catch (e) {
+      debugPrint('[FeedService] Inventory sync error: $e');
+    }
+
     return transaction;
   }
 
@@ -139,7 +165,7 @@ class FeedService {
     double totalCost = 0,
     String? notes,
   }) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null)
       throw AuthException('Sign in before updating feed transactions.');
 
@@ -195,7 +221,7 @@ class FeedService {
     required String batchId,
     required String transactionId,
   }) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null)
       throw AuthException('Sign in before deleting feed transactions.');
 
@@ -210,7 +236,7 @@ class FeedService {
     required String farmId,
     required String batchId,
   }) {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) return const Stream.empty();
 
     return _feedTransactionsRef(user.uid, farmId, batchId)
@@ -227,7 +253,7 @@ class FeedService {
     required String farmId,
     required String batchId,
   }) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) return [];
 
     final snapshot = await _feedTransactionsRef(
@@ -244,7 +270,7 @@ class FeedService {
     required String farmId,
     required String batchId,
   }) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) return FeedSummary.empty;
 
     try {
@@ -318,7 +344,7 @@ class FeedService {
   static Future<List<Map<String, dynamic>>> getLowFeedStockAlerts(
     String uid,
   ) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null || uid != user.uid) return const [];
 
     try {
