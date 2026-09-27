@@ -4,8 +4,8 @@ import 'package:flock_sense/core/models/sync_status.dart';
 import 'package:flock_sense/core/providers/connectivity_provider.dart';
 
 class SyncStatusBanner extends ConsumerWidget {
-  const SyncStatusBanner({super.key, required this.syncStatus});
-  final SyncStatus syncStatus;
+  const SyncStatusBanner({super.key, this.syncStatus});
+  final SyncStatus? syncStatus;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -22,7 +22,7 @@ class SyncStatusBanner extends ConsumerWidget {
           "You're offline. Changes are saved locally and will sync when back online.";
       color = Colors.orange.shade800;
       icon = Icons.cloud_off_outlined;
-    } else if (syncStatus.hasPendingWrites) {
+    } else if (syncStatus?.hasPendingWrites == true) {
       message = 'Syncing your changes to the cloud...';
       color = Colors.blue.shade700;
       icon = Icons.cloud_sync_outlined;
