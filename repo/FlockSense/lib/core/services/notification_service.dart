@@ -160,6 +160,8 @@ class NotificationService {
     required bool mortality,
     required bool vaccine,
     required bool feed,
+    int? dailyHour,
+    int? dailyMinute,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
@@ -169,11 +171,13 @@ class NotificationService {
         'mortality': mortality,
         'vaccine': vaccine,
         'feed': feed,
+        if (dailyHour != null) 'dailyHour': dailyHour,
+        if (dailyMinute != null) 'dailyMinute': dailyMinute,
       }),
     );
 
     if (daily) {
-      await scheduleDailyRecordReminder();
+      await scheduleDailyRecordReminder(hour: dailyHour, minute: dailyMinute);
     } else {
       await cancelDailyReminder();
     }
@@ -339,21 +343,42 @@ class NotificationService {
     }
   }
 
-  static Future<void> scheduleDailyRecordReminder() async {
+  static Future<void> scheduleDailyRecordReminder({int? hour, int? minute}) async {
     final prefsMap = await getPreferences();
     if (prefsMap['daily'] != true) return;
 
-    final now = DateTime.now();
-    final scheduled = DateTime(now.year, now.month, now.day, 19);
-    final target = scheduled.isBefore(now)
-        ? scheduled.add(const Duration(days: 1))
-        : scheduled;
+    int targetHour = hour ?? 18;
+    int targetMinute = minute ?? 0;
 
-    final scheduledDate = tz.TZDateTime.from(target, tz.local);
+    if (hour == null || minute == null) {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_prefsKey);
+      if (raw != null) {
+        try {
+          final decoded = jsonDecode(raw);
+          if (decoded is Map<String, dynamic>) {
+            if (hour == null && decoded['dailyHour'] is int) {
+              targetHour = decoded['dailyHour'] as int;
+            }
+            if (minute == null && decoded['dailyMinute'] is int) {
+              targetMinute = decoded['dailyMinute'] as int;
+            }
+          }
+        } catch (_) {}
+      }
+    }
+
+    final now = DateTime.now();
+    var scheduled = DateTime(now.year, now.month, now.day, targetHour, targetMinute);
+    if (scheduled.isBefore(now)) {
+      scheduled = scheduled.add(const Duration(days: 1));
+    }
+
+    final scheduledDate = tz.TZDateTime.from(scheduled, tz.local);
     await _local.zonedSchedule(
       9999,
-      'Daily record pending',
-      "Don't forget to log today's farm records",
+      '📝 Daily Farm Telemetry Reminder',
+      "Don't forget to enter today's mortality, feed consumed & water. Keep your flock's FCR accurate!",
       scheduledDate,
       NotificationDetails(
         android: AndroidNotificationDetails(
@@ -383,19 +408,27 @@ class NotificationService {
   }
 
   /// Sends a real-time notification that today's daily log is pending for an active batch
+  /// with age-specific recommendations included
   static Future<void> checkDailyRecordPendingAlert({
     required String batchName,
     required String farmName,
     required String batchId,
+    String? recommendationTip,
+    int? batchAgeDay,
   }) async {
     final prefsMap = await getPreferences();
     if (prefsMap['daily'] != true) return;
 
     final notifId = 8800 + (batchId.hashCode.abs() % 1000);
+    final ageStr = batchAgeDay != null ? ' (Day $batchAgeDay)' : '';
+    final tipStr = recommendationTip != null && recommendationTip.isNotEmpty
+        ? '\n💡 Today\'s Tip: $recommendationTip'
+        : '';
+
     await _showLocalNotification(
       id: notifId,
-      title: 'Daily Record Pending — $batchName',
-      body: "You haven't logged today's daily record for $batchName ($farmName). Tap to log records now.",
+      title: 'Daily Record Pending — $batchName$ageStr',
+      body: "You haven't logged today's records for $batchName ($farmName).$tipStr",
       payload: '/main',
     );
   }
