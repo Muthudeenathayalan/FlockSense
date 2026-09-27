@@ -15,6 +15,7 @@ class BatchModel {
   final String sizeUnit;
   final DateTime hatchDate;
   final DateTime placementDate;
+  final DateTime? targetDeliveryDate;
   final int maleCount;
   final int femaleCount;
   final int totalBirds;
@@ -43,6 +44,7 @@ class BatchModel {
     this.sizeUnit = 'ft',
     required this.hatchDate,
     required this.placementDate,
+    this.targetDeliveryDate,
     required this.maleCount,
     required this.femaleCount,
     required this.totalBirds,
@@ -62,6 +64,20 @@ class BatchModel {
 
   bool get isActive => status.toLowerCase() == 'active';
   bool get isCompleted => status.toLowerCase() == 'completed';
+
+  /// Total target cycle duration in days calculated from hatchDate to deliveryDate.
+  /// If targetDeliveryDate is set, difference from hatchDate is used.
+  /// If placementDate is >= 20 days after hatchDate, that difference is used.
+  /// Otherwise cleanly defaults to 42 standard days.
+  int get cycleTargetDays {
+    if (targetDeliveryDate != null) {
+      final diff = targetDeliveryDate!.difference(hatchDate).inDays;
+      if (diff > 0) return diff;
+    }
+    final placementDiff = placementDate.difference(hatchDate).inDays;
+    if (placementDiff >= 20) return placementDiff;
+    return 42;
+  }
 
   /// Validates placement bird count (must be positive).
   static bool isValidBirdCount(int birds) => birds > 0;
@@ -142,6 +158,9 @@ class BatchModel {
       sizeUnit: json['sizeUnit'] as String? ?? 'ft',
       hatchDate: parseDate(json['hatchDate']),
       placementDate: parseDate(json['placementDate']),
+      targetDeliveryDate: json['targetDeliveryDate'] != null
+          ? parseDate(json['targetDeliveryDate'])
+          : (json['deliveryDate'] != null ? parseDate(json['deliveryDate']) : null),
       maleCount: maleCount,
       femaleCount: femaleCount,
       totalBirds: totalBirds,
@@ -180,6 +199,8 @@ class BatchModel {
     'sizeUnit': sizeUnit,
     'hatchDate': hatchDate.toIso8601String(),
     'placementDate': placementDate.toIso8601String(),
+    if (targetDeliveryDate != null)
+      'targetDeliveryDate': targetDeliveryDate!.toIso8601String(),
     'maleCount': maleCount,
     'femaleCount': femaleCount,
     'totalBirds': totalBirds,
@@ -209,6 +230,7 @@ class BatchModel {
     String? sizeUnit,
     DateTime? hatchDate,
     DateTime? placementDate,
+    DateTime? targetDeliveryDate,
     int? maleCount,
     int? femaleCount,
     int? totalBirds,
@@ -241,6 +263,7 @@ class BatchModel {
       sizeUnit: sizeUnit ?? this.sizeUnit,
       hatchDate: hatchDate ?? this.hatchDate,
       placementDate: placementDate ?? this.placementDate,
+      targetDeliveryDate: targetDeliveryDate ?? this.targetDeliveryDate,
       maleCount: newMale,
       femaleCount: newFemale,
       totalBirds: newTotal,
