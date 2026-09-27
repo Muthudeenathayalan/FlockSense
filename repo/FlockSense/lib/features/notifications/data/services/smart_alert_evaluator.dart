@@ -9,6 +9,8 @@ import 'package:flock_sense/features/inventory/data/inventory_service.dart';
 import 'package:flock_sense/features/notifications/data/models/notification_model.dart';
 import 'package:flock_sense/features/notifications/data/services/fcm_local_notification_service.dart';
 import 'package:flock_sense/features/notifications/data/services/notification_firestore_service.dart';
+import 'package:flock_sense/features/notifications/data/services/daily_recommendation_service.dart';
+import 'package:flock_sense/features/notifications/data/services/data_anomaly_detector_service.dart';
 
 class SmartAlertEvaluator {
   SmartAlertEvaluator._();
@@ -19,7 +21,11 @@ class SmartAlertEvaluator {
     final alerts = <NotificationModel>[];
 
     try {
-      final user = FirebaseAuth.instance.currentUser;
+      FirebaseAuth? auth;
+      try {
+        auth = FirebaseAuth.instance;
+      } catch (_) {}
+      final user = auth?.currentUser;
       if (user != null) {
         try {
           final inventoryService = InventoryService();
@@ -128,12 +134,20 @@ class SmartAlertEvaluator {
                   final pendingAlertId = 'daily_record_pending_${b.id}';
 
                   if (todayRecord == null) {
+                    final recentRecords = await DailyRecordService.getAllDailyRecords(
+                      farmId: farm.id,
+                      batchId: b.id,
+                    );
+                    final guidance = DailyRecommendationService.getGuidanceForBatch(
+                      batch: b,
+                      recentRecords: recentRecords,
+                    );
+
                     alerts.add(
                       NotificationModel(
                         id: pendingAlertId,
-                        title: 'Daily Record Pending — ${b.batchName}',
-                        body:
-                            "You haven't entered today's daily record for ${b.batchName} (${farm.farmName}). Log mortality, feed, and water to keep flock tracking up-to-date.",
+                        title: guidance.pushNotificationTitle,
+                        body: guidance.pushNotificationBody,
                         type: NotificationType.batch,
                         priority: NotificationPriority.high,
                         createdAt: DateTime.now(),
@@ -141,6 +155,16 @@ class SmartAlertEvaluator {
                         relatedFarmId: farm.id,
                         relatedBatchId: b.id,
                         actionUrl: '/daily-record',
+                        metadata: {
+                          'batchId': b.id,
+                          'farmId': farm.id,
+                          'batchAgeDay': guidance.ageDays,
+                          'recommendations': guidance.actionItems,
+                          'primaryTip': guidance.primaryTip,
+                          'phase': guidance.phase,
+                          'targetWeightGrams': guidance.targetWeightGrams,
+                          'totalEstimatedFeedKg': guidance.totalEstimatedFeedKg,
+                        },
                       ),
                     );
                   } else {
@@ -195,7 +219,7 @@ class SmartAlertEvaluator {
                 );
               }
 
-              // Mortality Spike Alert from live daily records
+              // Telemetry Anomaly Detection from live user daily records
               try {
                 final records = await DailyRecordService.getAllDailyRecords(
                   farmId: farm.id,
@@ -204,34 +228,21 @@ class SmartAlertEvaluator {
                 if (records.isNotEmpty) {
                   records.sort((x, y) => y.recordDate.compareTo(x.recordDate));
                   final latest = records.first;
-                  if (latest.batchAgeDay > 0 &&
-                      latest.mortalityCount > 0 &&
-                      latest.openingBirds > 0 &&
-                      b.currentBirds > 0) {
-                    final mortPct =
-                        (latest.mortalityCount / latest.openingBirds) * 100;
-                    if (mortPct >= 1.0) {
-                      alerts.add(
-                        NotificationModel(
-                          id: 'smart_mort_spike_${b.id}_${latest.batchAgeDay}',
-                          title:
-                              'CRITICAL: High Mortality Spike — ${b.batchName}',
-                          body:
-                              '${latest.mortalityCount} bird mortality recorded (${mortPct.toStringAsFixed(1)}% of flock) on Day ${latest.batchAgeDay}. Check ventilation, water lines, and bird health immediately.',
-                          type: NotificationType.batch,
-                          priority: NotificationPriority.critical,
-                          createdAt: DateTime.now(),
-                          isSmartAlert: true,
-                          relatedFarmId: farm.id,
-                          relatedBatchId: b.id,
-                        ),
+                  final prior = records.length > 1 ? records[1] : null;
+
+                  final telemetryAnomalies =
+                      await DataAnomalyDetectorService.detectAndDispatchAnomalies(
+                        record: latest,
+                        farmId: farm.id,
+                        batchId: b.id,
+                        batch: b,
+                        previousRecord: prior,
                       );
-                    }
-                  }
+                  alerts.addAll(telemetryAnomalies);
                 }
               } catch (e) {
                 debugPrint(
-                  '[SmartAlertEvaluator] Batch record evaluation error: $e',
+                  '[SmartAlertEvaluator] Batch anomaly evaluation error: $e',
                 );
               }
             }
@@ -250,15 +261,16 @@ class SmartAlertEvaluator {
             '${alert.id}_${now.year}_${now.month}_${now.day}';
 
         final shouldPush = alert.priority == NotificationPriority.critical ||
-            (alert.priority == NotificationPriority.high &&
-                alert.id.startsWith('daily_record_pending'));
+            alert.priority == NotificationPriority.high;
 
         if (shouldPush && !_recentlyNotifiedPushKeys.contains(pushKey)) {
           _recentlyNotifiedPushKeys.add(pushKey);
+          final settings = await NotificationFirestoreService.getSettings();
           await FcmLocalNotificationService.showLocalNotification(
             title: alert.title,
             body: alert.body,
             priority: alert.priority,
+            settings: settings,
           );
         }
       }
