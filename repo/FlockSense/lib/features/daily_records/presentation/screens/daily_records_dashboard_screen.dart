@@ -128,7 +128,6 @@ class _DailyRecordsDashboardScreenState
   bool _isSaving = false;
   DateTime _selectedRecordDate = DateTime.now();
   DailyRecordModel? _existingRecordForDate;
-  bool _isCheckingExistingRecord = false;
 
   Future<void> _checkExistingRecordForDate() async {
     if (_selectedFarm == null || _selectedBatch == null) {
@@ -138,7 +137,6 @@ class _DailyRecordsDashboardScreenState
       return;
     }
 
-    setState(() => _isCheckingExistingRecord = true);
     try {
       final record = await DailyRecordService.getDailyRecordByDate(
         farmId: _selectedFarm!.id,
@@ -148,11 +146,10 @@ class _DailyRecordsDashboardScreenState
       if (mounted) {
         setState(() {
           _existingRecordForDate = record;
-          _isCheckingExistingRecord = false;
         });
       }
     } catch (_) {
-      if (mounted) setState(() => _isCheckingExistingRecord = false);
+      return;
     }
   }
 
