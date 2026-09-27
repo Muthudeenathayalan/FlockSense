@@ -8,7 +8,7 @@ import 'package:flock_sense/features/batches/presentation/providers/batch_provid
 import 'package:flock_sense/features/batches/presentation/screens/batch_command_center_screen.dart';
 import 'package:flock_sense/features/batches/presentation/screens/batch_form_screen.dart';
 
-class BatchListScreen extends ConsumerWidget {
+class BatchListScreen extends ConsumerStatefulWidget {
   const BatchListScreen({
     super.key,
     required this.farmId,
@@ -18,6 +18,21 @@ class BatchListScreen extends ConsumerWidget {
   final String farmId;
   final String? farmName;
   final String? shedId;
+
+  @override
+  ConsumerState<BatchListScreen> createState() => _BatchListScreenState();
+}
+
+class _BatchListScreenState extends ConsumerState<BatchListScreen> {
+  String _searchQuery = '';
+  String? _selectedStatusFilter; // null = all, 'active', 'completed'
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   Future<void> _deleteBatch(BuildContext context, BatchModel batch) async {
     final confirmed = await AppDialog.confirm(
@@ -29,11 +44,11 @@ class BatchListScreen extends ConsumerWidget {
       isDanger: true,
       icon: Icons.delete_outline_rounded,
     );
-    if (!confirmed) return;
+    if (!confirmed || !mounted) return;
 
     try {
-      await BatchService.deleteBatch(farmId, batch.id);
-      if (context.mounted) {
+      await BatchService.deleteBatch(widget.farmId, batch.id);
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Batch "${batch.batchName}" deleted'),
@@ -42,7 +57,7 @@ class BatchListScreen extends ConsumerWidget {
         );
       }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to delete batch: $e'),
@@ -53,14 +68,41 @@ class BatchListScreen extends ConsumerWidget {
     }
   }
 
+  void _openForm(BuildContext ctx) => Navigator.push(
+    ctx,
+    MaterialPageRoute(
+      builder: (_) => BatchFormScreen(farmId: widget.farmId, shedId: widget.shedId),
+    ),
+  );
+
+  Widget _buildFilterChip(String label, String? statusValue) {
+    final isSelected = _selectedStatusFilter == statusValue;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) => setState(() => _selectedStatusFilter = statusValue),
+      selectedColor: AppColors.primary.withValues(alpha: 0.15),
+      backgroundColor: AppColors.background,
+      labelStyle: TextStyle(
+        fontSize: 12,
+        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+        color: isSelected ? AppColors.primary : AppColors.textSecondary,
+      ),
+      side: BorderSide(
+        color: isSelected ? AppColors.primary : AppColors.border,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+    );
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final batchesAsync = ref.watch(batchListProvider(farmId));
+  Widget build(BuildContext context) {
+    final batchesAsync = ref.watch(batchListProvider(widget.farmId));
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          farmName != null ? '$farmName — Batches' : 'Batches',
+          widget.farmName != null ? '${widget.farmName} — Batches' : 'Batches',
           style: const TextStyle(fontWeight: FontWeight.w700),
         ),
         backgroundColor: Colors.white,
@@ -77,26 +119,121 @@ class BatchListScreen extends ConsumerWidget {
           ),
         ),
         data: (batches) {
-          if (batches.isEmpty)
+          if (batches.isEmpty) {
             return _EmptyState(onAdd: () => _openForm(context));
-          return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-            itemCount: batches.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (_, i) => _BatchCard(
-              batch: batches[i],
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => BatchCommandCenterScreen(
-                    farmId: farmId,
-                    batchId: batches[i].id,
-                    batchName: batches[i].batchName,
-                  ),
+          }
+
+          final activeCount = batches.where((b) => b.isActive).length;
+          final completedCount = batches.where((b) => !b.isActive).length;
+
+          final filtered = batches.where((b) {
+            final matchesQuery = _searchQuery.isEmpty ||
+                b.batchName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                b.breedOrFlockType.toLowerCase().contains(_searchQuery.toLowerCase());
+
+            final matchesStatus = _selectedStatusFilter == null ||
+                (_selectedStatusFilter == 'active' && b.isActive) ||
+                (_selectedStatusFilter == 'completed' && !b.isActive);
+
+            return matchesQuery && matchesStatus;
+          }).toList();
+
+          return Column(
+            children: [
+              // Search & Filter header
+              Container(
+                color: Colors.white,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search batch name or breed...',
+                        hintStyle: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                        prefixIcon: const Icon(Icons.search_rounded, size: 20, color: AppColors.textSecondary),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear, size: 18),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _searchQuery = '');
+                                },
+                              )
+                            : null,
+                        filled: true,
+                        fillColor: AppColors.background,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                    ),
+                    const SizedBox(height: 10),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildFilterChip('All (${batches.length})', null),
+                          const SizedBox(width: 8),
+                          _buildFilterChip('Active ($activeCount)', 'active'),
+                          const SizedBox(width: 8),
+                          _buildFilterChip('Completed ($completedCount)', 'completed'),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              onDelete: () => _deleteBatch(context, batches[i]),
-            ),
+
+              // Filtered List
+              Expanded(
+                child: filtered.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.filter_list_off_rounded, size: 48, color: AppColors.textSecondary.withValues(alpha: 0.5)),
+                              const SizedBox(height: 12),
+                              Text(
+                                _searchQuery.isNotEmpty
+                                    ? 'No batches match "$_searchQuery"'
+                                    : 'No ${_selectedStatusFilter ?? ''} batches found',
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (_, i) => _BatchCard(
+                          batch: filtered[i],
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => BatchCommandCenterScreen(
+                                farmId: widget.farmId,
+                                batchId: filtered[i].id,
+                                batchName: filtered[i].batchName,
+                              ),
+                            ),
+                          ),
+                          onDelete: () => _deleteBatch(context, filtered[i]),
+                        ),
+                      ),
+              ),
+            ],
           );
         },
       ),
@@ -111,13 +248,6 @@ class BatchListScreen extends ConsumerWidget {
       ),
     );
   }
-
-  void _openForm(BuildContext ctx) => Navigator.push(
-    ctx,
-    MaterialPageRoute(
-      builder: (_) => BatchFormScreen(farmId: farmId, shedId: shedId),
-    ),
-  );
 }
 
 class _BatchCard extends StatelessWidget {
@@ -203,7 +333,7 @@ class _BatchCard extends StatelessWidget {
                     ),
                   ),
                   _Pill(
-                    'Day $_age',
+                    _isActive ? 'Day $_age' : 'Completed',
                     Colors.white.withValues(alpha: 0.25),
                     Colors.white,
                   ),
@@ -271,7 +401,7 @@ class _BatchCard extends StatelessWidget {
                   ),
                   _vDivider(),
                   _Pill(
-                    _isActive ? 'Active' : 'Closed',
+                    _isActive ? 'Active' : 'Completed',
                     _isActive ? AppColors.emeraldLight : AppColors.surfaceSoft,
                     _isActive ? AppColors.emerald : AppColors.textSecondary,
                   ),

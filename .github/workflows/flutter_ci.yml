@@ -1,4 +1,4 @@
-name: Flutter CI
+﻿name: Flutter CI
 
 on:
   push:
@@ -29,10 +29,13 @@ jobs:
           cache: true
 
       - name: Install Dependencies
+        working-directory: repo/FlockSense
         run: flutter pub get
 
       - name: Analyze Dart Code
+        working-directory: repo/FlockSense
         run: flutter analyze --no-fatal-infos
 
       - name: Execute Automated Test Suite
-        run: flutter test --coverage
+        working-directory: repo/FlockSense
+        run: flutter test

@@ -210,6 +210,9 @@ class _AllBatchesScreenState extends ConsumerState<AllBatchesScreen> {
           onButtonPressed: () => ref.invalidate(allUserBatchesProvider),
         ),
         data: (allBatches) {
+          final activeCount = allBatches.where((b) => b.isActive).length;
+          final completedCount = allBatches.where((b) => !b.isActive).length;
+
           // Filter by search query
           var filtered = allBatches.where((b) {
             final fName = farmMap[b.farmId] ?? '';
@@ -268,11 +271,11 @@ class _AllBatchesScreenState extends ConsumerState<AllBatchesScreen> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          _buildFilterChip('All', null),
+                          _buildFilterChip('All (${allBatches.length})', null),
                           const SizedBox(width: 8),
-                          _buildFilterChip('Active', 'active'),
+                          _buildFilterChip('Active ($activeCount)', 'active'),
                           const SizedBox(width: 8),
-                          _buildFilterChip('Closed', 'completed'),
+                          _buildFilterChip('Completed ($completedCount)', 'completed'),
                           if (farms.length > 1) ...[
                             const SizedBox(width: 12),
                             Container(width: 1, height: 20, color: AppColors.border),
@@ -505,7 +508,7 @@ class _AllBatchesCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Text(
-                      _isActive ? 'Day $_age' : 'Closed',
+                      _isActive ? 'Day $_age' : 'Completed',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
@@ -620,7 +623,7 @@ class _AllBatchesCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
-        isActive ? 'Active' : 'Closed',
+        isActive ? 'Active' : 'Completed',
         style: TextStyle(
           color: isActive ? AppColors.emerald : AppColors.textSecondary,
           fontSize: 11,
