@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flock_sense/core/providers/connectivity_provider.dart';
 import 'package:flock_sense/core/services/sync_service.dart';
 import 'package:flock_sense/features/batches/domain/batch_model.dart';
-import 'package:flock_sense/features/daily_records/presentation/screens/daily_record_form_screen.dart';
 import 'package:flock_sense/features/daily_records/presentation/screens/daily_records_dashboard_screen.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
 import 'package:flock_sense/features/home/presentation/screens/home_screen.dart';
@@ -143,18 +142,6 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
     } finally {
       if (mounted) setState(() => _openingRecordFlow = false);
     }
-  }
-
-  void _openDailyRecordWizard(FarmModel farm, BatchModel batch) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => DailyRecordFormScreen(
-          farmId: farm.id,
-          batchId: batch.id,
-          batchName: batch.batchName,
-        ),
-      ),
-    );
   }
 
   Future<void> _syncOnReconnect() async {
