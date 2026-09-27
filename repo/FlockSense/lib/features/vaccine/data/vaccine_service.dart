@@ -2,13 +2,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flock_sense/core/exceptions/app_exceptions.dart';
+import 'package:flock_sense/features/inventory/data/inventory_service.dart';
 import 'package:flock_sense/features/vaccine/domain/vaccine_record_model.dart';
 
 class VaccineService {
   VaccineService._();
 
-  static final _db = FirebaseFirestore.instance;
-  static final _auth = FirebaseAuth.instance;
+  static FirebaseFirestore get _db => FirebaseFirestore.instance;
+  static FirebaseAuth? get _auth {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
 
   static CollectionReference<Map<String, dynamic>> _vaccineRef(
     String uid,
@@ -30,7 +37,7 @@ class VaccineService {
     String batchId,
   ) {
     try {
-      final user = _auth.currentUser;
+      final user = _auth?.currentUser;
       if (user == null) return const Stream.empty();
 
       return _vaccineRef(user.uid, farmId, batchId).snapshots().map((snapshot) {
@@ -50,7 +57,7 @@ class VaccineService {
     required String farmId,
     required String batchId,
   }) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) return [];
 
     final snapshot = await _vaccineRef(user.uid, farmId, batchId).get();
@@ -75,12 +82,13 @@ class VaccineService {
     String? notes,
   }) async {
     try {
-      final user = _auth.currentUser;
+      final user = _auth?.currentUser;
       if (user == null) {
         throw AuthException('Sign in before saving vaccine records.');
       }
 
-      if (vaccineName.trim().isEmpty) {
+      final trimmedName = vaccineName.trim();
+      if (trimmedName.isEmpty) {
         throw ValidationException('Vaccine name is required.');
       }
       if (quantity <= 0) {
@@ -100,7 +108,7 @@ class VaccineService {
         updatedAt: now,
         date: date,
         batchAgeDay: batchAgeDay,
-        vaccineName: vaccineName.trim(),
+        vaccineName: trimmedName,
         vaccineType: vaccineType.trim().isEmpty ? 'Other' : vaccineType.trim(),
         batchNumber: batchNumber?.trim(),
         expiryDate: expiryDate,
@@ -116,6 +124,22 @@ class VaccineService {
         farmId,
         batchId,
       ).doc(record.id).set(record.toJson());
+
+      // Auto deduct stock in inventory if tracked
+      try {
+        final invService = InventoryService();
+        await invService.autoDeductStock(
+          uid: user.uid,
+          farmId: farmId,
+          category: 'Vaccines',
+          itemName: trimmedName,
+          amountUsed: quantity,
+          reason: 'Vaccine Administered ($trimmedName)',
+        );
+      } catch (e) {
+        debugPrint('[VaccineService] Auto deduct inventory error: $e');
+      }
+
       return record;
     } catch (e) {
       debugPrint('VaccineService.createVaccineRecord failed: $e');
@@ -129,7 +153,7 @@ class VaccineService {
     String recordId,
   ) async {
     try {
-      final user = _auth.currentUser;
+      final user = _auth?.currentUser;
       if (user == null) {
         throw AuthException('Sign in before deleting vaccine records.');
       }
