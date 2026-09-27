@@ -292,7 +292,9 @@ class GrowthAnalyticsService {
           },
           onError: (e) {
             debugPrint('[GrowthAnalytics] Error watching farms: $e');
-            controller.addError(e);
+            if (!controller.isClosed) {
+              controller.add(getFallbackData(filter: filter));
+            }
           },
         );
 
