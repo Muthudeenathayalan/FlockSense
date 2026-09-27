@@ -261,6 +261,9 @@ class NotificationSettingsModel {
   final String quietHoursStart; // "22:00"
   final String quietHoursEnd; // "06:00"
   final bool emergencyOverride;
+  final bool dailyReminderEnabled;
+  final String dailyReminderTime; // e.g. "18:00"
+  final bool dailySmartTipsEnabled;
 
   const NotificationSettingsModel({
     this.pushEnabled = true,
@@ -272,6 +275,9 @@ class NotificationSettingsModel {
     this.quietHoursStart = '22:00',
     this.quietHoursEnd = '06:00',
     this.emergencyOverride = true,
+    this.dailyReminderEnabled = true,
+    this.dailyReminderTime = '18:00',
+    this.dailySmartTipsEnabled = true,
   });
 
   Map<String, dynamic> toJson() {
@@ -285,6 +291,9 @@ class NotificationSettingsModel {
       'quietHoursStart': quietHoursStart,
       'quietHoursEnd': quietHoursEnd,
       'emergencyOverride': emergencyOverride,
+      'dailyReminderEnabled': dailyReminderEnabled,
+      'dailyReminderTime': dailyReminderTime,
+      'dailySmartTipsEnabled': dailySmartTipsEnabled,
     };
   }
 
@@ -299,6 +308,9 @@ class NotificationSettingsModel {
       quietHoursStart: json['quietHoursStart'] as String? ?? '22:00',
       quietHoursEnd: json['quietHoursEnd'] as String? ?? '06:00',
       emergencyOverride: json['emergencyOverride'] as bool? ?? true,
+      dailyReminderEnabled: json['dailyReminderEnabled'] as bool? ?? true,
+      dailyReminderTime: json['dailyReminderTime'] as String? ?? '18:00',
+      dailySmartTipsEnabled: json['dailySmartTipsEnabled'] as bool? ?? true,
     );
   }
 
@@ -312,6 +324,9 @@ class NotificationSettingsModel {
     String? quietHoursStart,
     String? quietHoursEnd,
     bool? emergencyOverride,
+    bool? dailyReminderEnabled,
+    String? dailyReminderTime,
+    bool? dailySmartTipsEnabled,
   }) {
     return NotificationSettingsModel(
       pushEnabled: pushEnabled ?? this.pushEnabled,
@@ -323,6 +338,10 @@ class NotificationSettingsModel {
       quietHoursStart: quietHoursStart ?? this.quietHoursStart,
       quietHoursEnd: quietHoursEnd ?? this.quietHoursEnd,
       emergencyOverride: emergencyOverride ?? this.emergencyOverride,
+      dailyReminderEnabled: dailyReminderEnabled ?? this.dailyReminderEnabled,
+      dailyReminderTime: dailyReminderTime ?? this.dailyReminderTime,
+      dailySmartTipsEnabled:
+          dailySmartTipsEnabled ?? this.dailySmartTipsEnabled,
     );
   }
 }
