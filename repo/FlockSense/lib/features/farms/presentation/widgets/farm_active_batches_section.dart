@@ -7,6 +7,9 @@ import 'package:flock_sense/features/batches/presentation/screens/batch_command_
 import 'package:flock_sense/features/batches/presentation/screens/batch_form_screen.dart';
 import 'package:flock_sense/features/batches/presentation/screens/batch_list_screen.dart';
 import 'package:flock_sense/features/farms/domain/farm_model.dart';
+import 'package:flock_sense/features/sheds/data/shed_service.dart';
+import 'package:flock_sense/features/sheds/domain/shed_model.dart';
+import 'package:flock_sense/features/sheds/presentation/screens/shed_form_screen.dart';
 
 const Color _kPrimary = Color(0xFF16A34A);
 const Color _kTextPrimary = Color(0xFF0F172A);
@@ -14,9 +17,16 @@ const Color _kTextSecondary = Color(0xFF64748B);
 
 /// Displays the active batches list within a farm.
 class FarmActiveBatchesSection extends StatelessWidget {
-  const FarmActiveBatchesSection({super.key, required this.farm});
+  const FarmActiveBatchesSection({
+    super.key,
+    required this.farm,
+    this.sheds,
+    this.batches,
+  });
 
   final FarmModel farm;
+  final List<ShedModel>? sheds;
+  final List<BatchModel>? batches;
 
   @override
   Widget build(BuildContext context) {
@@ -26,28 +36,34 @@ class FarmActiveBatchesSection extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 3,
-                  height: 14,
-                  decoration: BoxDecoration(
-                    color: _kPrimary,
-                    borderRadius: BorderRadius.circular(2),
+            Expanded(
+              child: Row(
+                children: [
+                  Container(
+                    width: 3,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: _kPrimary,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'ACTIVE BATCHES',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: _kTextSecondary,
-                    letterSpacing: 0.8,
+                  const SizedBox(width: 8),
+                  const Flexible(
+                    child: Text(
+                      'ACTIVE BATCHES',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _kTextSecondary,
+                        letterSpacing: 0.8,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
+            const SizedBox(width: 8),
             TextButton(
               onPressed: () {
                 Navigator.push(
@@ -77,116 +93,150 @@ class FarmActiveBatchesSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        StreamBuilder<List<BatchModel>>(
-          stream: BatchService.watchBatches(farm.id),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting &&
-                !snapshot.hasData) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: CircularProgressIndicator(
-                    color: _kPrimary,
-                    strokeWidth: 2.5,
+        if (batches != null)
+          _buildBatchesList(context, batches!)
+        else
+          StreamBuilder<List<BatchModel>>(
+            stream: BatchService.watchBatches(farm.id),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting &&
+                  !snapshot.hasData) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: CircularProgressIndicator(
+                      color: _kPrimary,
+                      strokeWidth: 2.5,
+                    ),
                   ),
-                ),
-              );
-            }
+                );
+              }
 
-            final batches = snapshot.data ?? [];
-            final activeBatches = batches
-                .where((b) => b.status.toLowerCase() == 'active')
-                .toList();
-
-            if (activeBatches.isEmpty) {
-              return Container(
-                width: double.infinity,
-                decoration: AppDesign.cardDecoration,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 28,
-                  horizontal: 20,
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF1F5F9),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.layers_outlined,
-                        color: _kTextSecondary,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'No Active Batches',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: _kTextPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Start a new flock cycle on this farm',
-                      style: TextStyle(fontSize: 13, color: _kTextSecondary),
-                    ),
-                    const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => BatchFormScreen(farmId: farm.id),
-                          ),
-                        );
-                      },
-                      icon: const Icon(
-                        Icons.add_rounded,
-                        size: 16,
-                        color: _kPrimary,
-                      ),
-                      label: const Text(
-                        'Add First Batch',
-                        style: TextStyle(
-                          color: _kPrimary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFF86EFAC)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: activeBatches.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemBuilder: (context, index) {
-                final batch = activeBatches[index];
-                return _ActiveBatchCard(batch: batch, farm: farm);
-              },
-            );
-          },
-        ),
+              final b = snapshot.data ?? [];
+              return _buildBatchesList(context, b);
+            },
+          ),
       ],
+    );
+  }
+
+  Widget _buildBatchesList(BuildContext context, List<BatchModel> allBatches) {
+    final activeBatches = allBatches
+        .where((b) => b.status.toLowerCase() == 'active')
+        .toList();
+
+    if (activeBatches.isEmpty) {
+      if (sheds != null) {
+        return _buildEmptyCard(context, sheds!.isEmpty);
+      }
+      return StreamBuilder<List<ShedModel>>(
+        stream: ShedService.watchSheds(farm.id),
+        builder: (context, shedSnap) {
+          final s = shedSnap.data ?? [];
+          return _buildEmptyCard(context, s.isEmpty);
+        },
+      );
+    }
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: activeBatches.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (context, index) {
+        final batch = activeBatches[index];
+        return _ActiveBatchCard(batch: batch, farm: farm);
+      },
+    );
+  }
+
+  Widget _buildEmptyCard(BuildContext context, bool noSheds) {
+    return Container(
+      width: double.infinity,
+      decoration: AppDesign.cardDecoration,
+      padding: const EdgeInsets.symmetric(
+        vertical: 28,
+        horizontal: 20,
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: const BoxDecoration(
+              color: Color(0xFFF1F5F9),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              noSheds ? Icons.domain_add_rounded : Icons.layers_outlined,
+              color: _kTextSecondary,
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            noSheds ? 'Shed Required First' : 'No Active Batches',
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: _kTextPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            noSheds
+                ? 'Create a shed before placing flock batches'
+                : 'Start a new flock cycle on this farm',
+            style: const TextStyle(fontSize: 13, color: _kTextSecondary),
+          ),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: () {
+              if (noSheds) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ShedFormScreen(
+                      farmId: farm.id,
+                      farm: farm,
+                    ),
+                  ),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BatchFormScreen(farmId: farm.id),
+                  ),
+                );
+              }
+            },
+            icon: Icon(
+              noSheds ? Icons.add_business_rounded : Icons.add_rounded,
+              size: 16,
+              color: _kPrimary,
+            ),
+            label: Text(
+              noSheds ? 'Add Shed First' : 'Add First Batch',
+              style: const TextStyle(
+                color: _kPrimary,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFF86EFAC)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
