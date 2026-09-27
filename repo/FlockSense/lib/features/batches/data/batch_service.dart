@@ -9,8 +9,14 @@ import 'package:flock_sense/core/exceptions/app_exceptions.dart';
 class BatchService {
   BatchService._();
 
-  static final _db = FirebaseFirestore.instance;
-  static final _auth = FirebaseAuth.instance;
+  static FirebaseFirestore get _db => FirebaseFirestore.instance;
+  static FirebaseAuth? get _auth {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
 
   static CollectionReference<Map<String, dynamic>> _batchesRef(
     String uid,
@@ -23,7 +29,7 @@ class BatchService {
       .collection('batches');
 
   static Stream<List<BatchModel>> watchBatches(String farmId) {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null || farmId.trim().isEmpty) {
       return Stream.value(<BatchModel>[]);
     }
@@ -52,7 +58,7 @@ class BatchService {
   }
 
   static Stream<BatchModel?> watchBatch(String farmId, String batchId) {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null || farmId.trim().isEmpty || batchId.trim().isEmpty) {
       return Stream.value(null);
     }
@@ -155,7 +161,7 @@ class BatchService {
   }
 
   static Future<BatchModel?> getBatchById(String farmId, String batchId) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) return null;
 
     final snapshot = await _batchesRef(user.uid, farmId).doc(batchId).get();
@@ -169,7 +175,7 @@ class BatchService {
 
   /// Get all batches for a specific farm
   static Future<List<BatchModel>> getBatchesByFarmId(String farmId) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) return [];
 
     final snap = await _batchesRef(user.uid, farmId).get();
@@ -242,6 +248,7 @@ class BatchService {
     required String sizeUnit,
     required DateTime hatchDate,
     required DateTime placementDate,
+    DateTime? targetDeliveryDate,
     required int maleCount,
     required int femaleCount,
     required String breedOrFlockType,
@@ -253,13 +260,17 @@ class BatchService {
     String? vehicleNumber,
     String? notes,
   }) async {
-    final user = _auth.currentUser;
-    if (user == null) throw AuthException('Sign in before creating a batch.');
-
     final totalBirds = maleCount + femaleCount;
     if (totalBirds <= 0) {
       throw ValidationException('Total birds must be greater than zero.');
     }
+
+    if (shedId == null || shedId.trim().isEmpty) {
+      throw ValidationException('A shed must be assigned to this batch.');
+    }
+
+    final user = _auth?.currentUser;
+    if (user == null) throw AuthException('Sign in before creating a batch.');
 
     final trimmedBatchName = batchName.trim();
     if (trimmedBatchName.isEmpty) {
@@ -288,6 +299,8 @@ class BatchService {
         'sizeUnit': sizeUnit,
         'hatchDate': hatchDate.toIso8601String(),
         'placementDate': placementDate.toIso8601String(),
+        if (targetDeliveryDate != null)
+          'targetDeliveryDate': targetDeliveryDate.toIso8601String(),
         'maleCount': maleCount,
         'femaleCount': femaleCount,
         'totalBirds': totalBirds,
@@ -320,6 +333,7 @@ class BatchService {
         sizeUnit: sizeUnit,
         hatchDate: hatchDate,
         placementDate: placementDate,
+        targetDeliveryDate: targetDeliveryDate,
         maleCount: maleCount,
         femaleCount: femaleCount,
         totalBirds: totalBirds,
@@ -357,6 +371,8 @@ class BatchService {
       'sizeUnit': sizeUnit,
       'hatchDate': hatchDate.toIso8601String(),
       'placementDate': placementDate.toIso8601String(),
+      if (targetDeliveryDate != null)
+        'targetDeliveryDate': targetDeliveryDate.toIso8601String(),
       'maleCount': maleCount,
       'femaleCount': femaleCount,
       'totalBirds': totalBirds,
@@ -389,6 +405,7 @@ class BatchService {
       sizeUnit: sizeUnit,
       hatchDate: hatchDate,
       placementDate: placementDate,
+      targetDeliveryDate: targetDeliveryDate,
       maleCount: maleCount,
       femaleCount: femaleCount,
       totalBirds: totalBirds,
@@ -446,7 +463,7 @@ class BatchService {
     String batchId,
     Map<String, dynamic> updates,
   ) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) throw AuthException('Sign in before updating a batch.');
 
     await _batchesRef(user.uid, farmId).doc(batchId).set({
@@ -456,7 +473,7 @@ class BatchService {
   }
 
   static Future<void> deleteBatch(String farmId, String batchId) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) throw AuthException('Sign in before deleting a batch.');
 
     final batchDocRef = _batchesRef(user.uid, farmId).doc(batchId);
@@ -485,7 +502,7 @@ class BatchService {
   }
 
   static Future<List<BatchModel>> getBatchesForFarm(String farmId) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) return const [];
 
     final snapshot = await _batchesRef(
