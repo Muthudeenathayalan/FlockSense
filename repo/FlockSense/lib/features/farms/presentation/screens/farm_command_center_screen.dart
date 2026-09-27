@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/core/theme/app_design.dart';
 import 'package:flock_sense/core/widgets/app_dialog.dart';
@@ -47,6 +48,8 @@ class FarmCommandCenterScreen extends StatefulWidget {
 class _FarmCommandCenterScreenState extends State<FarmCommandCenterScreen> {
   late FarmModel _farm;
   bool _isTogglingStatus = false;
+
+  int _selectedSegment = 0;
 
   @override
   void initState() {
@@ -123,6 +126,7 @@ class _FarmCommandCenterScreenState extends State<FarmCommandCenterScreen> {
 
   void _openBatchFeature(
     List<BatchModel> batches,
+    List<ShedModel> sheds,
     Widget Function(BatchModel batch) screenBuilder, {
     required String featureName,
   }) {
@@ -136,6 +140,26 @@ class _FarmCommandCenterScreenState extends State<FarmCommandCenterScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => screenBuilder(targetBatch)),
+      );
+    } else if (sheds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please add a shed first before creating a batch to access $featureName.'),
+          action: SnackBarAction(
+            label: 'Add Shed',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ShedFormScreen(
+                    farmId: _farm.id,
+                    farm: _farm,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -155,6 +179,125 @@ class _FarmCommandCenterScreenState extends State<FarmCommandCenterScreen> {
         ),
       );
     }
+  }
+
+  Widget _buildSegmentedControl(int shedsCount, int batchesCount) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          _buildSegmentItem(
+            index: 0,
+            label: 'Infrastructure',
+            badgeText: '$shedsCount Sheds • $batchesCount Batches',
+            icon: Icons.grid_view_rounded,
+          ),
+          _buildSegmentItem(
+            index: 1,
+            label: 'Operations',
+            icon: Icons.bolt_rounded,
+          ),
+          _buildSegmentItem(
+            index: 2,
+            label: 'Farm Specs',
+            icon: Icons.info_outline_rounded,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSegmentItem({
+    required int index,
+    required String label,
+    String? badgeText,
+    required IconData icon,
+  }) {
+    final isSelected = _selectedSegment == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          if (_selectedSegment != index) {
+            HapticFeedback.selectionClick();
+            setState(() => _selectedSegment = index);
+          }
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFF104422) : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFF104422).withValues(alpha: 0.25),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    icon,
+                    size: 13,
+                    color: isSelected ? Colors.white : const Color(0xFF64748B),
+                  ),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                        color: isSelected ? Colors.white : const Color(0xFF475569),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (badgeText != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  badgeText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected
+                        ? Colors.white.withValues(alpha: 0.85)
+                        : const Color(0xFF94A3B8),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -215,67 +358,128 @@ class _FarmCommandCenterScreenState extends State<FarmCommandCenterScreen> {
                           // 3 Mini Stat Cards (Total Birds, Capacity, Farm Type)
                           FarmOperationalSummary(farm: _farm, batches: batches),
 
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 16),
 
-                          // Quick Actions Section Header
-                          AppDesign.sectionTitle('Quick Actions'),
+                          // Segmented Navigation Pill
+                          _buildSegmentedControl(sheds.length, activeBatches.length),
 
-                          // Quick Actions 4x2 Grid (matching Image 1)
-                          _buildQuickActionsGrid(batches),
+                          const SizedBox(height: 16),
 
-                          const SizedBox(height: 20),
-
-                          // Farm Details Section Header (with Sheds action button)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              AppDesign.sectionTitle('Farm Details'),
-                              TextButton.icon(
-                                onPressed: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => ShedListScreen(farm: _farm),
-                                  ),
+                          // Segmented Views with Smooth Animated Transition
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 260),
+                            switchInCurve: Curves.easeOutCubic,
+                            switchOutCurve: Curves.easeInCubic,
+                            transitionBuilder: (child, animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(0.0, 0.03),
+                                    end: Offset.zero,
+                                  ).animate(animation),
+                                  child: child,
                                 ),
-                                icon: const Icon(Icons.domain_rounded, size: 16),
-                                label: Text(
-                                  sheds.isNotEmpty
-                                      ? 'Sheds (${sheds.length})'
-                                      : 'Manage Sheds',
-                                  style: const TextStyle(fontWeight: FontWeight.w700),
-                                ),
+                              );
+                            },
+                            child: KeyedSubtree(
+                              key: ValueKey<int>(_selectedSegment),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  if (_selectedSegment == 0) ...[
+                                    // Sheds Section
+                                    FarmShedsSection(
+                                      farm: _farm,
+                                      sheds: sheds,
+                                      batches: batches,
+                                    ),
+                                    const SizedBox(height: 20),
+                                    // Active Batches Section Header
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        AppDesign.sectionTitle('Active Batches'),
+                                        if (activeBatches.isNotEmpty)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFF0FDF4),
+                                              borderRadius: BorderRadius.circular(8),
+                                              border: Border.all(color: const Color(0xFFBBF7D0)),
+                                            ),
+                                            child: Text(
+                                              '${activeBatches.length} Active',
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w700,
+                                                color: Color(0xFF166534),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    FarmActiveBatchesSection(
+                                      farm: _farm,
+                                      sheds: sheds,
+                                      batches: batches,
+                                    ),
+                                  ] else if (_selectedSegment == 1) ...[
+                                    // Quick Actions Section Header
+                                    AppDesign.sectionTitle('Quick Actions'),
+                                    const SizedBox(height: 8),
+                                    // Quick Actions 4x2 Grid
+                                    _buildQuickActionsGrid(batches, sheds),
+                                    const SizedBox(height: 20),
+                                    // Farm Status Control
+                                    FarmStatusControlCard(
+                                      farm: _farm,
+                                      isToggling: _isTogglingStatus,
+                                      onToggle: _toggleFarmStatus,
+                                    ),
+                                  ] else ...[
+                                    // Farm Details Section Header
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: AppDesign.sectionTitle('Farm Details & Specs'),
+                                        ),
+                                        TextButton.icon(
+                                          onPressed: () => Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => ShedListScreen(farm: _farm),
+                                            ),
+                                          ),
+                                          icon: const Icon(Icons.domain_rounded, size: 16),
+                                          label: Text(
+                                            sheds.isNotEmpty
+                                                ? 'Sheds (${sheds.length})'
+                                                : 'Manage Sheds',
+                                            style: const TextStyle(fontWeight: FontWeight.w700),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    // Farm Details Card
+                                    FarmSpecsCard(farm: _farm),
+                                    const SizedBox(height: 20),
+                                    // Farm Status Control
+                                    FarmStatusControlCard(
+                                      farm: _farm,
+                                      isToggling: _isTogglingStatus,
+                                      onToggle: _toggleFarmStatus,
+                                    ),
+                                  ],
+                                ],
                               ),
-                            ],
+                            ),
                           ),
 
-                          // Farm Details Card
-                          FarmSpecsCard(farm: _farm),
-
-                          const SizedBox(height: 20),
-
-                          // Sheds Section (Step 2: Inside Farm, manage Sheds & create Batches in Sheds)
-                          FarmShedsSection(
-                            farm: _farm,
-                            sheds: sheds,
-                            batches: batches,
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          // Active Batches Section
-                          AppDesign.sectionTitle('Active Batches'),
-                          FarmActiveBatchesSection(farm: _farm),
-
-                          const SizedBox(height: 20),
-
-                          // Farm Status Control
-                          FarmStatusControlCard(
-                            farm: _farm,
-                            isToggling: _isTogglingStatus,
-                            onToggle: _toggleFarmStatus,
-                          ),
-
-                          const SizedBox(height: 100),
+                          const SizedBox(height: 90),
                         ],
                       ),
                     ),
@@ -329,7 +533,10 @@ class _FarmCommandCenterScreenState extends State<FarmCommandCenterScreen> {
     );
   }
 
-  Widget _buildQuickActionsGrid(List<BatchModel> batches) {
+  Widget _buildQuickActionsGrid(
+    List<BatchModel> batches,
+    List<ShedModel> sheds,
+  ) {
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -394,6 +601,7 @@ class _FarmCommandCenterScreenState extends State<FarmCommandCenterScreen> {
           onTap: () {
             _openBatchFeature(
               batches,
+              sheds,
               (batch) => FeedRecordsScreen(
                 farmId: _farm.id,
                 batchId: batch.id,
@@ -412,6 +620,7 @@ class _FarmCommandCenterScreenState extends State<FarmCommandCenterScreen> {
           onTap: () {
             _openBatchFeature(
               batches,
+              sheds,
               (batch) => MedicineRecordsScreen(
                 farmId: _farm.id,
                 batchId: batch.id,
@@ -430,6 +639,7 @@ class _FarmCommandCenterScreenState extends State<FarmCommandCenterScreen> {
           onTap: () {
             _openBatchFeature(
               batches,
+              sheds,
               (batch) => VaccineRecordsScreen(
                 farmId: _farm.id,
                 batchId: batch.id,
@@ -448,6 +658,7 @@ class _FarmCommandCenterScreenState extends State<FarmCommandCenterScreen> {
           onTap: () {
             _openBatchFeature(
               batches,
+              sheds,
               (batch) => BirdSalesScreen(
                 farmId: _farm.id,
                 batchId: batch.id,
@@ -466,6 +677,7 @@ class _FarmCommandCenterScreenState extends State<FarmCommandCenterScreen> {
           onTap: () {
             _openBatchFeature(
               batches,
+              sheds,
               (batch) => BatchPerformanceScreen(
                 farmId: _farm.id,
                 batchId: batch.id,
