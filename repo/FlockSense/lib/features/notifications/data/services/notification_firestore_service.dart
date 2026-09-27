@@ -6,8 +6,21 @@ import 'package:flock_sense/features/notifications/data/models/notification_mode
 class NotificationFirestoreService {
   NotificationFirestoreService._();
 
-  static final _firestore = FirebaseFirestore.instance;
-  static final _auth = FirebaseAuth.instance;
+  static FirebaseFirestore? get _firestore {
+    try {
+      return FirebaseFirestore.instance;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static FirebaseAuth? get _auth {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
 
   static final List<NotificationModel> _localNotifications = [];
   static final List<ReminderModel> _localReminders = [];
@@ -42,8 +55,9 @@ class NotificationFirestoreService {
 
   // --- Notifications Stream & CRUD ---
   static Stream<List<NotificationModel>> streamNotifications() {
-    final user = _auth.currentUser;
-    if (user == null) {
+    final user = _auth?.currentUser;
+    final db = _firestore;
+    if (user == null || db == null) {
       final deduplicated = <NotificationModel>[];
       final seenKeys = <String>{};
       for (final n in _localNotifications) {
@@ -57,7 +71,7 @@ class NotificationFirestoreService {
       );
     }
 
-    return _firestore
+    return db
         .collection('users')
         .doc(user.uid)
         .collection('notifications')
@@ -106,10 +120,11 @@ class NotificationFirestoreService {
   /// Scans Firestore notifications and removes duplicate documents and dummy data
   static Future<int> cleanupDuplicateNotifications() async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return 0;
+      final user = _auth?.currentUser;
+      final db = _firestore;
+      if (user == null || db == null) return 0;
 
-      final snap = await FirebaseFirestore.instance
+      final snap = await db
           .collection('users')
           .doc(user.uid)
           .collection('notifications')
@@ -150,7 +165,7 @@ class NotificationFirestoreService {
       }
 
       if (duplicateRefs.isNotEmpty) {
-        final batch = _firestore.batch();
+        final batch = db.batch();
         for (final ref in duplicateRefs) {
           batch.delete(ref);
         }
@@ -181,16 +196,17 @@ class NotificationFirestoreService {
               n.id.startsWith('daily_record_pending')),
     );
 
-    final user = _auth.currentUser;
-    if (user != null) {
+    final user = _auth?.currentUser;
+    final db = _firestore;
+    if (user != null && db != null) {
       try {
-        final snap = await _firestore
+        final snap = await db
             .collection('users')
             .doc(user.uid)
             .collection('notifications')
             .get();
 
-        final batch = _firestore.batch();
+        final batch = db.batch();
         var deletedCount = 0;
         for (final doc in snap.docs) {
           final id = doc.id;
@@ -216,7 +232,8 @@ class NotificationFirestoreService {
   }
 
   static Future<void> saveNotification(NotificationModel notification) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
+    final db = _firestore;
     final key = _notificationKey(notification);
     final index = _localNotifications.indexWhere(
       (n) => n.id == notification.id || _notificationKey(n) == key,
@@ -227,9 +244,9 @@ class NotificationFirestoreService {
       _localNotifications.insert(0, notification);
     }
 
-    if (user != null) {
+    if (user != null && db != null) {
       try {
-        await _firestore
+        await db
             .collection('users')
             .doc(user.uid)
             .collection('notifications')
@@ -251,10 +268,11 @@ class NotificationFirestoreService {
       );
     }
 
-    final user = _auth.currentUser;
-    if (user != null) {
+    final user = _auth?.currentUser;
+    final db = _firestore;
+    if (user != null && db != null) {
       try {
-        await _firestore
+        await db
             .collection('users')
             .doc(user.uid)
             .collection('notifications')
@@ -273,17 +291,18 @@ class NotificationFirestoreService {
       );
     }
 
-    final user = _auth.currentUser;
-    if (user != null) {
+    final user = _auth?.currentUser;
+    final db = _firestore;
+    if (user != null && db != null) {
       try {
-        final snap = await _firestore
+        final snap = await db
             .collection('users')
             .doc(user.uid)
             .collection('notifications')
             .where('status', isEqualTo: NotificationStatus.unread.name)
             .get();
 
-        final batch = _firestore.batch();
+        final batch = db.batch();
         for (final doc in snap.docs) {
           batch.update(doc.reference, {'status': NotificationStatus.read.name});
         }
@@ -303,10 +322,11 @@ class NotificationFirestoreService {
           : NotificationStatus.pinned;
       _localNotifications[index] = current.copyWith(status: newStatus);
 
-      final user = _auth.currentUser;
-      if (user != null) {
+      final user = _auth?.currentUser;
+      final db = _firestore;
+      if (user != null && db != null) {
         try {
-          await _firestore
+          await db
               .collection('users')
               .doc(user.uid)
               .collection('notifications')
@@ -327,10 +347,11 @@ class NotificationFirestoreService {
       );
     }
 
-    final user = _auth.currentUser;
-    if (user != null) {
+    final user = _auth?.currentUser;
+    final db = _firestore;
+    if (user != null && db != null) {
       try {
-        await _firestore
+        await db
             .collection('users')
             .doc(user.uid)
             .collection('notifications')
@@ -347,10 +368,11 @@ class NotificationFirestoreService {
   static Future<void> deleteNotification(String notificationId) async {
     _localNotifications.removeWhere((n) => n.id == notificationId);
 
-    final user = _auth.currentUser;
-    if (user != null) {
+    final user = _auth?.currentUser;
+    final db = _firestore;
+    if (user != null && db != null) {
       try {
-        await _firestore
+        await db
             .collection('users')
             .doc(user.uid)
             .collection('notifications')
@@ -366,14 +388,15 @@ class NotificationFirestoreService {
 
   // --- Reminders Stream & CRUD ---
   static Stream<List<ReminderModel>> streamReminders() {
-    final user = _auth.currentUser;
-    if (user == null) {
+    final user = _auth?.currentUser;
+    final db = _firestore;
+    if (user == null || db == null) {
       return Stream<List<ReminderModel>>.value(
         List<ReminderModel>.unmodifiable(_localReminders),
       );
     }
 
-    return _firestore
+    return db
         .collection('users')
         .doc(user.uid)
         .collection('reminders')
@@ -398,10 +421,11 @@ class NotificationFirestoreService {
   static Future<void> createReminder(ReminderModel reminder) async {
     _localReminders.insert(0, reminder);
 
-    final user = _auth.currentUser;
-    if (user != null) {
+    final user = _auth?.currentUser;
+    final db = _firestore;
+    if (user != null && db != null) {
       try {
-        await _firestore
+        await db
             .collection('users')
             .doc(user.uid)
             .collection('reminders')
@@ -420,10 +444,11 @@ class NotificationFirestoreService {
       final updated = current.copyWith(isCompleted: !current.isCompleted);
       _localReminders[index] = updated;
 
-      final user = _auth.currentUser;
-      if (user != null) {
+      final user = _auth?.currentUser;
+      final db = _firestore;
+      if (user != null && db != null) {
         try {
-          await _firestore
+          await db
               .collection('users')
               .doc(user.uid)
               .collection('reminders')
@@ -441,10 +466,11 @@ class NotificationFirestoreService {
   static Future<void> deleteReminder(String reminderId) async {
     _localReminders.removeWhere((r) => r.id == reminderId);
 
-    final user = _auth.currentUser;
-    if (user != null) {
+    final user = _auth?.currentUser;
+    final db = _firestore;
+    if (user != null && db != null) {
       try {
-        await _firestore
+        await db
             .collection('users')
             .doc(user.uid)
             .collection('reminders')
@@ -457,13 +483,33 @@ class NotificationFirestoreService {
   }
 
   // --- Settings Stream & Update ---
+  static Future<NotificationSettingsModel> getSettings() async {
+    final user = _auth?.currentUser;
+    final db = _firestore;
+    if (user == null || db == null) return _localSettings;
+
+    try {
+      final doc = await db
+          .collection('users')
+          .doc(user.uid)
+          .collection('notification_settings')
+          .doc('general')
+          .get();
+      if (doc.exists && doc.data() != null) {
+        _localSettings = NotificationSettingsModel.fromJson(doc.data()!);
+      }
+    } catch (_) {}
+    return _localSettings;
+  }
+
   static Stream<NotificationSettingsModel> streamSettings() {
-    final user = _auth.currentUser;
-    if (user == null) {
+    final user = _auth?.currentUser;
+    final db = _firestore;
+    if (user == null || db == null) {
       return Stream.value(_localSettings);
     }
 
-    return _firestore
+    return db
         .collection('users')
         .doc(user.uid)
         .collection('notification_settings')
@@ -480,10 +526,11 @@ class NotificationFirestoreService {
   static Future<void> updateSettings(NotificationSettingsModel settings) async {
     _localSettings = settings;
 
-    final user = _auth.currentUser;
-    if (user != null) {
+    final user = _auth?.currentUser;
+    final db = _firestore;
+    if (user != null && db != null) {
       try {
-        await _firestore
+        await db
             .collection('users')
             .doc(user.uid)
             .collection('notification_settings')
