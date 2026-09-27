@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
 
 class AppDesign {
@@ -147,7 +148,10 @@ class AppDesign {
     required VoidCallback onTap,
   }) {
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
       borderRadius: BorderRadius.circular(16),
       child: Column(
         children: [
@@ -188,15 +192,20 @@ class AppDesign {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: Colors.white70, size: 14),
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Colors.white70,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Colors.white70,
+              ),
             ),
           ),
         ],
