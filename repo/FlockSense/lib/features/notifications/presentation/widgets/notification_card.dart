@@ -53,12 +53,42 @@ class NotificationCard extends StatelessWidget {
     }
   }
 
+  Widget _buildBadge(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withAlpha(20),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final priorityColor = _getPriorityColor(notification.priority);
     final icon = _getTypeIcon(notification.type);
     final isUnread = notification.status == NotificationStatus.unread;
     final isPinned = notification.status == NotificationStatus.pinned;
+
+    final metadata = notification.metadata ?? {};
+    final rawRecs = metadata['recommendations'];
+    final recommendations = rawRecs is List
+        ? rawRecs.map((e) => e.toString()).toList()
+        : <String>[];
+    final hasRecommendations = recommendations.isNotEmpty;
+    final phase = metadata['phase']?.toString();
+    final targetWeight = metadata['targetWeightGrams'];
+    final feedTarget = metadata['totalEstimatedFeedKg'];
+    final isDailyRecordPrompt = notification.id.startsWith('daily_record_pending') ||
+        notification.actionUrl == '/daily-record';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -81,8 +111,7 @@ class NotificationCard extends StatelessWidget {
           if (isUnread) {
             await NotificationFirestoreService.markAsRead(notification.id);
           }
-          if (notification.id.startsWith('daily_record_pending') ||
-              notification.actionUrl == '/daily-record') {
+          if (isDailyRecordPrompt) {
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => const DailyRecordsDashboardScreen(),
@@ -138,10 +167,118 @@ class NotificationCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               notification.body,
-              maxLines: 2,
+              maxLines: isDailyRecordPrompt ? 4 : 2,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 11, color: Colors.black87),
             ),
+            if (phase != null || targetWeight != null || feedTarget != null) ...[
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  if (phase != null)
+                    _buildBadge('Phase: $phase', const Color(0xFF1B5E20)),
+                  if (targetWeight != null)
+                    _buildBadge('Target: ${targetWeight}g', Colors.blue.shade800),
+                  if (feedTarget != null)
+                    _buildBadge('Daily Feed: ${feedTarget}kg', Colors.orange.shade900),
+                ],
+              ),
+            ],
+            if (hasRecommendations) ...[
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1B5E20).withAlpha(15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color(0xFF1B5E20).withAlpha(40),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(
+                          Icons.lightbulb_outline,
+                          size: 14,
+                          color: Color(0xFF1B5E20),
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          "Today's Recommendations",
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1B5E20),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    ...recommendations.take(3).map(
+                          (rec) => Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "• ",
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF1B5E20),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    rec,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                  ],
+                ),
+              ),
+            ],
+            if (isDailyRecordPrompt) ...[
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 28,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1B5E20),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  icon: const Icon(Icons.edit_calendar, size: 14),
+                  label: const Text(
+                    'Enter Daily Data',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const DailyRecordsDashboardScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
             const SizedBox(height: 6),
             Text(
               DateFormat('dd MMM yyyy, hh:mm a').format(notification.createdAt),
