@@ -11,8 +11,9 @@ import 'package:flock_sense/features/calendar/presentation/screens/calendar_dash
 import 'package:flock_sense/features/ai/presentation/screens/ai_screen.dart';
 import 'package:flock_sense/features/finance/presentation/screens/finance_dashboard_screen.dart';
 import 'package:flock_sense/features/notifications/presentation/screens/notification_center_screen.dart';
+import 'package:flock_sense/features/health/presentation/screens/health_screen.dart';
 import 'package:flock_sense/features/reports/presentation/screens/reports_dashboard_screen.dart';
-import 'package:flock_sense/features/settings/presentation/screens/settings_dashboard_screen.dart';
+import 'package:flock_sense/features/onboarding/presentation/screens/onboarding_screen.dart';
 
 // Uses the icon categories from the uploaded reference image:
 // FlockSense, Dashboard, Farms & Sheds, Flocks/Batches,
@@ -90,10 +91,16 @@ class MoreScreen extends StatelessWidget {
       Color(0xFFF57F17),
     ),
     _MoreItem(
-      'Settings',
-      Icons.settings_outlined,
-      'App preferences',
-      Color(0xFF455A64),
+      'Health',
+      Icons.health_and_safety_outlined,
+      'Diseases & biosecurity',
+      Color(0xFF0D9488),
+    ),
+    _MoreItem(
+      'App Tour',
+      Icons.explore_outlined,
+      '5 core pillars walkthrough',
+      Color(0xFF0F766E),
     ),
   ];
 
@@ -207,14 +214,21 @@ class _MoreCard extends StatelessWidget {
               ),
             );
             return;
+          case 'Health':
+          case 'Health & Biosecurity':
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const HealthScreen()),
+            );
+            return;
           case 'Dashboard':
             onNavigateToTab?.call(0);
             return;
-          case 'Settings':
+          case 'App Tour':
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const SettingsDashboardScreen(),
+                builder: (_) => const OnboardingScreen(isReplay: true),
               ),
             );
             return;
