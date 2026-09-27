@@ -100,7 +100,11 @@ class _BatchCommandCenterScreenState extends State<BatchCommandCenterScreen> {
     if (!confirmed || !mounted) return;
 
     try {
-      await BatchService.updateBatch(widget.farmId, widget.batchId, {'status': 'completed'});
+      await BatchService.completeBatch(
+        farmId: widget.farmId,
+        batchId: widget.batchId,
+        completionDate: DateTime.now(),
+      );
       if (!mounted) return;
       await BatchCompletionReportService.promptAndHandleBatchCompletion(
         context: context,
@@ -798,6 +802,99 @@ class _BatchCommandCenterScreenState extends State<BatchCommandCenterScreen> {
                                     ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        if (b != null && b.status == 'active' && (b.currentBirds <= 0 || ageDays >= 35))
+                          Container(
+                            margin: const EdgeInsets.only(top: 14),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEFF6FF),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFF93C5FD)),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFDBEAFE),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(
+                                    Icons.point_of_sale_rounded,
+                                    color: Color(0xFF2563EB),
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        b.currentBirds <= 0
+                                            ? 'All Birds Harvested'
+                                            : 'Flock Market Ready (Day $ageDays)',
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF1E40AF),
+                                        ),
+                                      ),
+                                      Text(
+                                        b.currentBirds <= 0
+                                            ? 'Finalize and complete flock cycle.'
+                                            : 'Log final bird sales to complete batch.',
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          color: Color(0xFF1E3A8A),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    if (b.currentBirds <= 0) {
+                                      _completeBatch(b);
+                                    } else {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => BirdSalesScreen(
+                                            farmId: widget.farmId,
+                                            batchId: widget.batchId,
+                                            batchName: widget.batchName,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF2563EB),
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    b.currentBirds <= 0 ? 'Complete' : 'Sell Birds',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),

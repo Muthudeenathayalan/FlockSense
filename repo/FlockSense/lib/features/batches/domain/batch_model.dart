@@ -29,6 +29,8 @@ class BatchModel {
   final String? vehicleNumber;
   final String status;
   final String? notes;
+  final DateTime? completedAt;
+  final String? completionNotes;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -60,6 +62,8 @@ class BatchModel {
     this.vehicleNumber,
     this.status = 'active',
     this.notes,
+    this.completedAt,
+    this.completionNotes,
   });
 
   bool get isActive => status.toLowerCase() == 'active';
@@ -182,6 +186,8 @@ class BatchModel {
       vehicleNumber: json['vehicleNumber'] as String?,
       status: json['status'] as String? ?? 'active',
       notes: json['notes'] as String?,
+      completedAt: json['completedAt'] != null ? parseDate(json['completedAt']) : null,
+      completionNotes: json['completionNotes'] as String?,
       createdAt: parseDate(json['createdAt']),
       updatedAt: parseDate(json['updatedAt']),
     );
@@ -214,6 +220,8 @@ class BatchModel {
     'vehicleNumber': vehicleNumber,
     'status': status,
     'notes': notes,
+    if (completedAt != null) 'completedAt': completedAt!.toIso8601String(),
+    if (completionNotes != null) 'completionNotes': completionNotes,
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
   };
@@ -244,6 +252,8 @@ class BatchModel {
     String? vehicleNumber,
     String? status,
     String? notes,
+    DateTime? completedAt,
+    String? completionNotes,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -277,6 +287,8 @@ class BatchModel {
       vehicleNumber: vehicleNumber ?? this.vehicleNumber,
       status: status ?? this.status,
       notes: notes ?? this.notes,
+      completedAt: completedAt ?? this.completedAt,
+      completionNotes: completionNotes ?? this.completionNotes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

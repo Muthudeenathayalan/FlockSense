@@ -472,6 +472,44 @@ class BatchService {
     }, SetOptions(merge: true));
   }
 
+  /// Closes and marks a batch as completed / harvested.
+  static Future<void> completeBatch({
+    required String farmId,
+    required String batchId,
+    DateTime? completionDate,
+    String? notes,
+  }) async {
+    final user = _auth?.currentUser;
+    if (user == null) throw AuthException('Sign in before completing a batch.');
+
+    final date = completionDate ?? DateTime.now();
+    await updateBatch(farmId, batchId, {
+      'status': 'completed',
+      'completedAt': date.toIso8601String(),
+      'currentBirds': 0,
+      if (notes != null && notes.trim().isNotEmpty) 'completionNotes': notes.trim(),
+    });
+  }
+
+  /// Reopens a previously completed batch back to active status.
+  static Future<void> reactivateBatch({
+    required String farmId,
+    required String batchId,
+    int? currentBirds,
+  }) async {
+    final user = _auth?.currentUser;
+    if (user == null) throw AuthException('Sign in before reactivating a batch.');
+
+    final updates = <String, dynamic>{
+      'status': 'active',
+      'completedAt': null,
+    };
+    if (currentBirds != null) {
+      updates['currentBirds'] = currentBirds;
+    }
+    await updateBatch(farmId, batchId, updates);
+  }
+
   static Future<void> deleteBatch(String farmId, String batchId) async {
     final user = _auth?.currentUser;
     if (user == null) throw AuthException('Sign in before deleting a batch.');

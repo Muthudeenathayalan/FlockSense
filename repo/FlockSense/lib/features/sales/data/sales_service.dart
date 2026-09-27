@@ -95,6 +95,34 @@ class SalesService {
       if (birdsSold <= 0) {
         throw ValidationException('Birds sold must be greater than zero.');
       }
+      if (pricePerBird < 0) {
+        throw ValidationException('Price per bird cannot be negative.');
+      }
+      if (averageWeightKg < 0) {
+        throw ValidationException('Average weight cannot be negative.');
+      }
+
+      final batchRef = _db
+          .collection('users')
+          .doc(user.uid)
+          .collection('farms')
+          .doc(farmId)
+          .collection('batches')
+          .doc(batchId);
+
+      final batchSnap = await batchRef.get();
+      if (!batchSnap.exists) {
+        throw NotFoundException('Batch not found.');
+      }
+      final currentBirds =
+          (batchSnap.data()?['currentBirds'] as num?)?.toInt() ??
+          (batchSnap.data()?['totalBirds'] as num?)?.toInt() ??
+          0;
+      if (birdsSold > currentBirds) {
+        throw ValidationException(
+          'Cannot sell $birdsSold birds; only $currentBirds live birds remain in this batch.',
+        );
+      }
 
       final totalValue = birdsSold * pricePerBird;
       final now = DateTime.now();
@@ -117,33 +145,54 @@ class SalesService {
       );
 
       final salesDocRef = _salesRef(user.uid, farmId, batchId).doc(record.id);
-      final batchRef = _db
-          .collection('users')
-          .doc(user.uid)
-          .collection('farms')
-          .doc(farmId)
-          .collection('batches')
-          .doc(batchId);
 
       await salesDocRef.set(record.toJson());
 
       // Update currentBirds in batch and mark completed if all birds sold
       try {
-        final batchSnap = await batchRef.get();
-        if (batchSnap.exists) {
-          final current =
-              (batchSnap.data()?['currentBirds'] as num?)?.toInt() ??
-              (batchSnap.data()?['totalBirds'] as num?)?.toInt() ??
-              0;
-          final updated = (current - birdsSold).clamp(0, 9999999);
-          final updateMap = <String, dynamic>{
-            'currentBirds': updated,
+        final updated = (currentBirds - birdsSold).clamp(0, 9999999);
+        final updateMap = <String, dynamic>{
+          'currentBirds': updated,
+          'updatedAt': FieldValue.serverTimestamp(),
+        };
+        if (updated <= 0) {
+          updateMap['status'] = 'completed';
+          updateMap['completedAt'] = date.toIso8601String();
+        }
+        await batchRef.set(updateMap, SetOptions(merge: true));
+
+        // Auto-record sale as Income in the user's Finance transactions
+        try {
+          final txId = 'sale_${record.id}';
+          await _db
+              .collection('users')
+              .doc(user.uid)
+              .collection('finance_transactions')
+              .doc(txId)
+              .set({
+            'id': txId,
+            'farmId': farmId,
+            'batchId': batchId,
+            'ownerId': user.uid,
+            'type': 'income',
+            'category': 'Bird Sales',
+            'date': date.toIso8601String(),
+            'customerOrSupplier': customerName.trim(),
+            'quantity': birdsSold.toDouble(),
+            'unitPrice': pricePerBird,
+            'totalAmount': totalValue,
+            'paymentMethod': 'Cash',
+            'paymentStatus': 'paid',
+            'paidAmount': totalValue,
+            'invoiceNumber':
+                'INV-SALE-${record.id.length > 5 ? record.id.substring(0, 5) : record.id}',
+            'notes':
+                'Sold $birdsSold birds ($averageWeightKg kg avg weight)',
+            'createdAt': FieldValue.serverTimestamp(),
             'updatedAt': FieldValue.serverTimestamp(),
-          };
-          if (updated <= 0) {
-            updateMap['status'] = 'completed';
-          }
-          await batchRef.set(updateMap, SetOptions(merge: true));
+          }, SetOptions(merge: true));
+        } catch (fErr) {
+          debugPrint('[SalesService] Auto-finance transaction error: $fErr');
         }
 
         // Synchronize with Daily Record on that sale date if one exists
@@ -274,6 +323,14 @@ class SalesService {
       }
 
       await salesDocRef.delete();
+      try {
+        await _db
+            .collection('users')
+            .doc(user.uid)
+            .collection('finance_transactions')
+            .doc('sale_$recordId')
+            .delete();
+      } catch (_) {}
     } catch (e) {
       debugPrint('SalesService.deleteSalesRecord failed: $e');
       throw ExceptionMapper.mapException(e);

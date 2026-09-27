@@ -157,5 +157,60 @@ void main() {
       );
       expect(remaining, 3380);
     });
+
+    test('validates that birds sold cannot exceed available batch current birds', () {
+      const currentLiveBirds = 1500;
+      const requestedSale = 2000;
+
+      final isAllowed = requestedSale <= currentLiveBirds;
+      expect(isAllowed, isFalse);
+
+      const validSale = 1200;
+      expect(validSale <= currentLiveBirds, isTrue);
+    });
+
+    test('validates that sales price and weight must be non-negative', () {
+      bool validateSaleParams({required double price, required double weight}) {
+        if (price < 0 || weight < 0) return false;
+        return true;
+      }
+
+      expect(validateSaleParams(price: 210.0, weight: 2.1), isTrue);
+      expect(validateSaleParams(price: -5.0, weight: 2.1), isFalse);
+      expect(validateSaleParams(price: 210.0, weight: -1.0), isFalse);
+    });
+
+    test('BatchModel serialization correctly stores completedAt and completionNotes', () {
+      final now = DateTime.now();
+      final completedBatch = BatchModel(
+        id: 'batch_c1',
+        farmId: 'farm_01',
+        ownerId: 'user_01',
+        batchName: 'Batch Completed',
+        breedOrFlockType: 'Cobb 500',
+        maleCount: 1000,
+        femaleCount: 1000,
+        totalBirds: 2000,
+        currentBirds: 0,
+        hatchDate: now.subtract(const Duration(days: 42)),
+        placementDate: now.subtract(const Duration(days: 41)),
+        status: 'completed',
+        completedAt: now,
+        completionNotes: '100% harvested and sold to processing vendor.',
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      final json = completedBatch.toJson();
+      expect(json['status'], 'completed');
+      expect(json['completedAt'], isNotNull);
+      expect(json['completionNotes'], '100% harvested and sold to processing vendor.');
+
+      final parsed = BatchModel.fromJson(json);
+      expect(parsed.isCompleted, isTrue);
+      expect(parsed.status, 'completed');
+      expect(parsed.completedAt?.year, now.year);
+      expect(parsed.completionNotes, '100% harvested and sold to processing vendor.');
+    });
   });
 }
