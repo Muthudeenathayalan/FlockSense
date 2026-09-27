@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -64,25 +65,41 @@ class AuthService {
   static const bool isPhoneOtpAvailable = true;
   static const bool isEmailPasswordAvailable = true;
 
-  /// Email OTP is disabled until Cloud Functions backend is connected.
-  /// Client-side OTP generation in Firestore is strictly prohibited for security.
-  static const bool isEmailOtpAvailable = false;
+  /// Email OTP is supported via backend Cloud Functions (sendEmailOtp / verifyEmailOtp).
+  static const bool isEmailOtpAvailable = true;
 
-  // ── Email OTP (Backend Required) ──────────────────────────────────────────
-  /// Sends an Email OTP via secure backend.
-  /// Throws [UnsupportedError] until the Cloud Function endpoint is configured.
+  // ── Email OTP (Backend Callable Cloud Functions) ──────────────────────────
+  /// Sends an Email OTP via secure Cloud Functions backend.
   static Future<String> sendEmailOtp(String email) async {
-    throw UnsupportedError(
-      'Email OTP requires a secure backend (Cloud Functions). Please use Phone OTP or Google Sign-In.',
-    );
+    try {
+      final callable = FirebaseFunctions.instance.httpsCallable('sendEmailOtp');
+      final result = await callable.call({'email': email.trim().toLowerCase()});
+      final data = result.data;
+      if (data is Map) {
+        return data['message'] as String? ?? 'Verification code sent';
+      }
+      return 'Verification code sent';
+    } catch (e) {
+      throw Exception('Failed to send verification code: $e');
+    }
   }
 
-  /// Verifies an Email OTP securely.
-  /// Throws [UnsupportedError] until the Cloud Function endpoint is configured.
+  /// Verifies an Email OTP securely via Cloud Functions.
   static Future<bool> verifyEmailOtp(String email, String entered) async {
-    throw UnsupportedError(
-      'Email OTP verification must be processed server-side via Cloud Functions.',
-    );
+    try {
+      final callable = FirebaseFunctions.instance.httpsCallable('verifyEmailOtp');
+      final result = await callable.call({
+        'email': email.trim().toLowerCase(),
+        'otp': entered.trim(),
+      });
+      final data = result.data;
+      if (data is Map) {
+        return (data['verified'] as bool?) ?? false;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
   }
 
   // ── Phone OTP (Firebase phone auth) ──────────────────────────────────────
