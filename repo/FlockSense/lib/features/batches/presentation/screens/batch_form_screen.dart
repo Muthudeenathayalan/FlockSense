@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flock_sense/core/exceptions/app_exceptions.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/features/batches/data/batch_service.dart';
 import 'package:flock_sense/features/batches/presentation/screens/batch_command_center_screen.dart';
@@ -35,6 +36,7 @@ class _BatchFormScreenState extends State<BatchFormScreen> {
   String? _selectedFlockType;
   DateTime? _hatchDate;
   DateTime? _placementDate;
+  DateTime? _targetDeliveryDate;
   int _step = 0;
   bool _saving = false;
   String? _countError;
@@ -140,10 +142,13 @@ class _BatchFormScreenState extends State<BatchFormScreen> {
     super.dispose();
   }
 
-  Future<void> _pickDate({required bool hatch}) async {
-    final initial = hatch
+  Future<void> _pickDate({required int dateType}) async {
+    // 0 = hatch date, 1 = placement date, 2 = delivery date
+    final initial = dateType == 0
         ? (_hatchDate ?? DateTime.now())
-        : (_placementDate ?? DateTime.now());
+        : (dateType == 1
+            ? (_placementDate ?? _hatchDate ?? DateTime.now())
+            : (_targetDeliveryDate ?? (_hatchDate != null ? _hatchDate!.add(const Duration(days: 42)) : DateTime.now().add(const Duration(days: 42)))));
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
@@ -153,10 +158,14 @@ class _BatchFormScreenState extends State<BatchFormScreen> {
     if (picked == null) return;
 
     setState(() {
-      if (hatch) {
+      if (dateType == 0) {
         _hatchDate = picked;
-      } else {
+        _placementDate ??= picked;
+        _targetDeliveryDate ??= picked.add(const Duration(days: 42));
+      } else if (dateType == 1) {
         _placementDate = picked;
+      } else {
+        _targetDeliveryDate = picked;
       }
     });
   }
@@ -164,15 +173,22 @@ class _BatchFormScreenState extends State<BatchFormScreen> {
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
+      if (_selectedShedId == null || _selectedShedId!.trim().isEmpty) {
+        throw ValidationException('A shed must be assigned to this batch.');
+      }
+      final resolvedDeliveryDate = _targetDeliveryDate ??
+          (_hatchDate != null ? _hatchDate!.add(const Duration(days: 42)) : null);
+
       final batch = await BatchService.createBatch(
         farmId: widget.farmId,
-        shedId: _selectedShedId,
+        shedId: _selectedShedId!,
         batchName: _batchNameController.text.trim(),
         lengthFt: _lengthFt,
         widthFt: _breadthFt,
         sizeUnit: _sizeUnit,
         hatchDate: _hatchDate!,
         placementDate: _placementDate!,
+        targetDeliveryDate: resolvedDeliveryDate,
         maleCount: _maleCount,
         femaleCount: _femaleCount,
         breedOrFlockType: _selectedFlockType!,
@@ -212,6 +228,14 @@ class _BatchFormScreenState extends State<BatchFormScreen> {
 
   void _next() {
     if (_step == 0) {
+      if (_availableSheds.isEmpty || _selectedShedId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please create and select a shed for this batch first.'),
+          ),
+        );
+        return;
+      }
       final valid = _stepOneKey.currentState?.validate() ?? false;
       if (!valid || _selectedFlockType == null) return;
       if (_totalFlock <= 0) {
@@ -242,6 +266,14 @@ class _BatchFormScreenState extends State<BatchFormScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Placement date cannot be earlier than hatch date'),
+        ),
+      );
+      return;
+    }
+    if (_targetDeliveryDate != null && _targetDeliveryDate!.isBefore(_hatchDate!)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Delivery date cannot be earlier than hatch date'),
         ),
       );
       return;
@@ -299,7 +331,9 @@ class _BatchFormScreenState extends State<BatchFormScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: FilledButton(
-                    onPressed: _saving ? null : _next,
+                    onPressed: (_saving || (_step == 0 && _availableSheds.isEmpty))
+                        ? null
+                        : _next,
                     child: _saving
                         ? const SizedBox(
                             width: 20,
@@ -321,6 +355,87 @@ class _BatchFormScreenState extends State<BatchFormScreen> {
   }
 
   Widget _stepOne() {
+    if (_availableSheds.isEmpty) {
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        children: [
+          _SectionCard(
+            title: 'Shed Required First',
+            subtitle: 'Batches must be housed inside an existing shed.',
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
+              child: Column(
+                children: [
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.domain_add_rounded,
+                      size: 32,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No Sheds in Farm',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'In FlockSense, a shed must be created before you can create and place batches. Please add your first shed now.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF64748B),
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  FilledButton.icon(
+                    onPressed: () async {
+                      if (_farm != null) {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ShedFormScreen(
+                              farmId: _farm!.id,
+                              farm: _farm,
+                            ),
+                          ),
+                        );
+                        _loadInitialData();
+                      }
+                    },
+                    icon: const Icon(Icons.add_rounded, size: 18),
+                    label: const Text(
+                      'Create Shed First',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Form(
       key: _stepOneKey,
       child: ListView(
@@ -332,85 +447,31 @@ class _BatchFormScreenState extends State<BatchFormScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (_availableSheds.isNotEmpty) ...[
-                  Text(
-                    'Assign to Shed',
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _availableSheds.map((s) {
-                      final isSelected = _selectedShedId == s.id;
-                      return ChoiceChip(
-                        avatar: Icon(
-                          Icons.domain_rounded,
-                          size: 16,
-                          color: isSelected ? Colors.white : AppColors.primary,
-                        ),
-                        label: Text('${s.name} (${s.lengthFt.toInt()}×${s.widthFt.toInt()} ft)'),
-                        selected: isSelected,
-                        onSelected: (_) => _onShedSelected(s),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 16),
-                ] else ...[
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFFBEB),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFFDE68A)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.domain_add_rounded,
-                          size: 22,
-                          color: Color(0xFFD97706),
-                        ),
-                        const SizedBox(width: 10),
-                        const Expanded(
-                          child: Text(
-                            'Step 2: No sheds found. Add a Shed first to house this flock.',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF92400E),
-                            ),
-                          ),
-                        ),
-                        FilledButton.tonal(
-                          onPressed: () async {
-                            if (_farm != null) {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ShedFormScreen(
-                                    farmId: _farm!.id,
-                                    farm: _farm,
-                                  ),
-                                ),
-                              );
-                              _loadInitialData();
-                            }
-                          },
-                          style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: const Text('Add Shed', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                Text(
+                  'Assign to Shed *',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _availableSheds.map((s) {
+                    final isSelected = _selectedShedId == s.id;
+                    return ChoiceChip(
+                      avatar: Icon(
+                        Icons.domain_rounded,
+                        size: 16,
+                        color: isSelected ? Colors.white : AppColors.primary,
+                      ),
+                      label: Text('${s.name} (${s.lengthFt.toInt()}×${s.widthFt.toInt()} ft)'),
+                      selected: isSelected,
+                      onSelected: (_) => _onShedSelected(s),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _batchNameController,
                   decoration: const InputDecoration(labelText: 'Batch name'),
@@ -590,16 +651,50 @@ class _BatchFormScreenState extends State<BatchFormScreen> {
                 _DateField(
                   label: 'Hatch date *',
                   date: _hatchDate,
-                  onTap: () => _pickDate(hatch: true),
+                  onTap: () => _pickDate(dateType: 0),
                   hasError: _step == 1 && _hatchDate == null,
                 ),
                 const SizedBox(height: 12),
                 _DateField(
-                  label: 'Placement / Delivery date *',
+                  label: 'Placement date *',
                   date: _placementDate,
-                  onTap: () => _pickDate(hatch: false),
+                  onTap: () => _pickDate(dateType: 1),
                   hasError: _step == 1 && _placementDate == null,
                 ),
+                const SizedBox(height: 12),
+                _DateField(
+                  label: 'Target Delivery date *',
+                  date: _targetDeliveryDate ?? (_hatchDate != null ? _hatchDate!.add(const Duration(days: 42)) : null),
+                  onTap: () => _pickDate(dateType: 2),
+                  hasError: false,
+                ),
+                if (_hatchDate != null) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0FDF4),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFBBF7D0)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.timelapse_rounded, size: 16, color: Color(0xFF166534)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Cycle: ${(_targetDeliveryDate ?? _hatchDate!.add(const Duration(days: 42))).difference(_hatchDate!).inDays} Days (Hatchery to Delivery)',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF166534),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _hatchNameController,
