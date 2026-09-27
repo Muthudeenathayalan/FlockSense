@@ -1,3 +1,0 @@
-class DailyEntryFeature {
-  DailyEntryFeature._();
-}

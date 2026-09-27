@@ -1,3 +1,0 @@
-class BatchesFeature {
-  BatchesFeature._();
-}

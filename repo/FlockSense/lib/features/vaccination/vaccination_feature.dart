@@ -1,3 +1,0 @@
-class VaccinationFeature {
-  VaccinationFeature._();
-}
