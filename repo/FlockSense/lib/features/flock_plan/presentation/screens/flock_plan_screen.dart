@@ -11,7 +11,7 @@ import 'package:flock_sense/features/flock_plan/presentation/widgets/day_analyti
 import 'package:flock_sense/features/inventory/presentation/screens/inventory_dashboard_screen.dart';
 import 'package:flock_sense/features/performance/presentation/screens/batch_performance_screen.dart';
 import 'package:flock_sense/features/reports/presentation/screens/reports_dashboard_screen.dart';
-import 'package:flock_sense/features/vaccination/presentation/screens/vaccination_screen.dart';
+import 'package:flock_sense/features/vaccine/presentation/screens/vaccine_records_screen.dart';
 
 class FlockPlanScreen extends StatefulWidget {
   const FlockPlanScreen({
@@ -205,7 +205,13 @@ class _FlockPlanScreenState extends State<FlockPlanScreen>
       case '/vaccine':
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const VaccinationScreen()),
+          MaterialPageRoute(
+            builder: (_) => VaccineRecordsScreen(
+              farmId: widget.farmId,
+              batchId: widget.batch.id,
+              batchName: widget.batch.batchName,
+            ),
+          ),
         ).then((_) => _loadData());
         break;
       case '/inventory':
@@ -284,7 +290,7 @@ class _FlockPlanScreenState extends State<FlockPlanScreen>
           tabs: [
             Tab(text: "Today (Day $flockAge)"),
             const Tab(text: "This Week"),
-            const Tab(text: "42-Day Chart"),
+            Tab(text: "${widget.batch.cycleTargetDays}-Day Chart"),
           ],
         ),
         actions: [
@@ -1347,7 +1353,7 @@ class _FlockPlanScreenState extends State<FlockPlanScreen>
                 Padding(
                   padding: const EdgeInsets.only(right: 6),
                   child: ChoiceChip(
-                    label: const Text('All 42 Days'),
+                    label: Text('All ${chart.length} Days'),
                     selected: _masterChartFilterWeek == 0,
                     selectedColor: AppColors.primary,
                     labelStyle: TextStyle(
@@ -1358,7 +1364,7 @@ class _FlockPlanScreenState extends State<FlockPlanScreen>
                     onSelected: (_) => setState(() => _masterChartFilterWeek = 0),
                   ),
                 ),
-                ...List.generate(6, (i) {
+                ...List.generate((chart.length / 7).ceil(), (i) {
                   final w = i + 1;
                   final isSel = _masterChartFilterWeek == w;
                   return Padding(
