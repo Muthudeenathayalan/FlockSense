@@ -11,8 +11,14 @@ import 'package:flock_sense/core/models/sync_status.dart';
 class ShedService {
   ShedService._();
 
-  static final _db = FirebaseFirestore.instance;
-  static final _auth = FirebaseAuth.instance;
+  static FirebaseFirestore get _db => FirebaseFirestore.instance;
+  static FirebaseAuth? get _auth {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
 
   static CollectionReference<Map<String, dynamic>> _shedsRef(
     String uid,
@@ -28,7 +34,7 @@ class ShedService {
 
   /// Real-time list of sheds for a farm. Works offline via Firestore cache.
   static Stream<List<ShedModel>> watchSheds(String farmId) {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) return const Stream.empty();
 
     return _shedsRef(user.uid, farmId)
@@ -131,7 +137,7 @@ class ShedService {
   /// Sync-status stream — hasPendingWrites signals a local write not yet
   /// confirmed by the server.
   static Stream<SyncStatus> watchSyncStatus(String farmId) {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) return Stream.value(SyncStatus.synced);
 
     return _shedsRef(user.uid, farmId)
@@ -154,7 +160,7 @@ class ShedService {
     int? capacity,
     String? notes,
   }) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) {
       throw AuthException('Sign in before creating a shed.');
     }
@@ -257,7 +263,7 @@ class ShedService {
     String shedId,
     Map<String, dynamic> updates,
   ) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) throw AuthException('Sign in before updating a shed.');
 
     await _shedsRef(user.uid, farmId).doc(shedId).update({
@@ -269,7 +275,7 @@ class ShedService {
   // ── DELETE ────────────────────────────────────────────────────────────────
 
   static Future<List<ShedModel>> getShedsByFarmId(String farmId) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) return [];
 
     final snapshot = await _shedsRef(user.uid, farmId).get();
@@ -317,7 +323,7 @@ class ShedService {
   }
 
   static Future<void> deleteShed(String farmId, String shedId) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) throw AuthException('Sign in before deleting a shed.');
 
     await _shedsRef(user.uid, farmId).doc(shedId).delete();
