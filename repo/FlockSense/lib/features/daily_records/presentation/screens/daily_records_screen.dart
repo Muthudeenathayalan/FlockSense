@@ -8,6 +8,7 @@ import 'package:flock_sense/features/daily_records/domain/daily_record_model.dar
 import 'package:flock_sense/features/daily_records/presentation/screens/daily_record_form_screen.dart';
 import 'package:flock_sense/features/performance/presentation/screens/batch_performance_screen.dart';
 import 'package:flock_sense/features/performance/presentation/screens/daily_record_detail_screen.dart';
+import 'package:flock_sense/core/widgets/sync_status_banner.dart';
 
 class DailyRecordsScreen extends StatefulWidget {
   const DailyRecordsScreen({
@@ -118,73 +119,81 @@ class _DailyRecordsScreenState extends State<DailyRecordsScreen> {
           ),
         ],
       ),
-      body: StreamBuilder<List<DailyRecordModel>>(
-        stream: DailyRecordService.watchDailyRecords(
-          farmId: widget.farmId,
-          batchId: widget.batchId,
-        ),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            );
-          }
-
-          final records = snapshot.data ?? [];
-          if (records.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        gradient: AppDesign.actionGreen,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(
-                        Icons.calendar_today_outlined,
-                        size: 36,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    const Text(
-                      'No daily records yet',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Start tracking mortality, feed, water, health, and weight.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
+      body: Column(
+        children: [
+          const SyncStatusBanner(),
+          Expanded(
+            child: StreamBuilder<List<DailyRecordModel>>(
+              stream: DailyRecordService.watchDailyRecords(
+                farmId: widget.farmId,
+                batchId: widget.batchId,
               ),
-            );
-          }
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting &&
+                    !snapshot.hasData) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  );
+                }
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: records.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (context, index) => _DailyRecordCard(
-              record: records[index],
-              batchName: widget.batchName,
+                final records = snapshot.data ?? [];
+                if (records.isEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              gradient: AppDesign.actionGreen,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Icon(
+                              Icons.calendar_today_outlined,
+                              size: 36,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          const Text(
+                            'No daily records yet',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Start tracking mortality, feed, water, health, and weight.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                return ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: records.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) => _DailyRecordCard(
+                    record: records[index],
+                    batchName: widget.batchName,
+                  ),
+                );
+              },
             ),
-          );
-        },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
