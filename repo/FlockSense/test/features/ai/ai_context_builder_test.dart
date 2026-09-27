@@ -276,6 +276,9 @@ void main() {
     });
 
     test('Live Gemini accurately analyzes Firebase telemetry values', () async {
+      final key = await GeminiService.getStoredApiKey();
+      if (key == null || key.isEmpty) return; // Safely skip if no API key configured yet
+
       const liveSnapshot = '''=== FLOCKSENSE REAL-TIME FIREBASE FARM TELEMETRY ===
 Farmer/Account: Muthu Deenathayalan
 Active Farm: Green Valley Facility [Environment Controlled (EC)]
