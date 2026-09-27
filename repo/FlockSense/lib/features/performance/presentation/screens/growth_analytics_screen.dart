@@ -25,6 +25,7 @@ import 'package:flock_sense/features/performance/presentation/widgets/lag_analys
 import 'package:flock_sense/features/performance/presentation/widgets/timelines/medicine_usage_timeline.dart';
 import 'package:flock_sense/features/performance/presentation/widgets/timelines/vaccination_timeline_widget.dart';
 import 'package:flock_sense/features/performance/services/analytics_export_service.dart';
+import 'package:flock_sense/core/widgets/sync_status_banner.dart';
 
 class GrowthAnalyticsScreen extends ConsumerWidget {
   const GrowthAnalyticsScreen({super.key});
@@ -135,7 +136,11 @@ class GrowthAnalyticsScreen extends ConsumerWidget {
             : null,
         orElse: () => null,
       ),
-      body: analyticsAsync.when(
+      body: Column(
+        children: [
+          const SyncStatusBanner(),
+          Expanded(
+            child: analyticsAsync.when(
         loading: () => const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -518,6 +523,9 @@ class GrowthAnalyticsScreen extends ConsumerWidget {
           );
         },
       ),
+    ),
+  ],
+),
     );
   }
 
