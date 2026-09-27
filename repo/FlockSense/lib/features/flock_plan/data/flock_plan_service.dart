@@ -55,7 +55,7 @@ class FlockPlanService {
     required int day,
   }) {
     final std = FlockLifecycleStandard.getForDay(day);
-    final liveBirds = batch.currentBirds > 0 ? batch.currentBirds : (batch.totalBirds > 0 ? batch.totalBirds : 1000);
+    final liveBirds = batch.currentBirds > 0 ? batch.currentBirds : batch.totalBirds;
     final totalFeedKg = FlockLifecycleStandard.calculateDailyFeedKg(day, liveBirds);
     final totalWaterLiters = FlockLifecycleStandard.calculateDailyWaterLiters(day, liveBirds);
 
@@ -901,9 +901,9 @@ class FlockPlanService {
     );
   }
 
-  /// Returns the master 42-day lifecycle chart dataset for the batch.
+  /// Returns the master lifecycle chart dataset dynamically sized to the batch cycle.
   static List<DailyFlockPlan> getFullCycleChartSync(BatchModel batch, [List<DailyRecordModel>? records]) {
-    final liveBirds = batch.currentBirds > 0 ? batch.currentBirds : (batch.totalBirds > 0 ? batch.totalBirds : 1000);
+    final liveBirds = batch.currentBirds > 0 ? batch.currentBirds : batch.totalBirds;
     final totalMortality = (batch.totalBirds - liveBirds).clamp(0, batch.totalBirds);
     final mortPct = batch.totalBirds > 0 ? (totalMortality / batch.totalBirds) * 100.0 : 0.0;
     final list = <DailyFlockPlan>[];
@@ -915,7 +915,8 @@ class FlockPlanService {
       }
     }
 
-    for (int day = 1; day <= 42; day++) {
+    final totalDays = batch.cycleTargetDays;
+    for (int day = 1; day <= totalDays; day++) {
       final std = FlockLifecycleStandard.getForDay(day);
       final totalFeedKg = FlockLifecycleStandard.calculateDailyFeedKg(day, liveBirds);
       final totalWaterLiters = FlockLifecycleStandard.calculateDailyWaterLiters(day, liveBirds);
