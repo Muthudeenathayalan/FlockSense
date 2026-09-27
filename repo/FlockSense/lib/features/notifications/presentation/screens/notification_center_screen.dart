@@ -10,6 +10,7 @@ import 'package:flock_sense/features/notifications/presentation/widgets/notifica
 import 'package:flock_sense/features/notifications/presentation/widgets/notification_kpi_header.dart';
 import 'package:flock_sense/features/notifications/presentation/widgets/notification_settings_dialog.dart';
 import 'package:flock_sense/features/notifications/presentation/widgets/reminder_form_dialog.dart';
+import 'package:flock_sense/core/widgets/sync_status_banner.dart';
 
 class NotificationCenterScreen extends ConsumerStatefulWidget {
   const NotificationCenterScreen({super.key});
@@ -183,6 +184,7 @@ class _NotificationCenterScreenState
       ),
       body: Column(
         children: [
+          const SyncStatusBanner(),
           Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
