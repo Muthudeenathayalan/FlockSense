@@ -12,6 +12,7 @@ import 'package:flock_sense/features/notifications/data/models/notification_mode
 import 'package:flock_sense/features/notifications/data/services/notification_firestore_service.dart';
 import 'package:flock_sense/features/notifications/data/services/smart_alert_evaluator.dart';
 import 'package:flock_sense/features/notifications/data/services/data_anomaly_detector_service.dart';
+import 'package:flock_sense/core/services/sync_service.dart';
 
 class DailyRecordService {
   DailyRecordService._();
@@ -292,7 +293,20 @@ class DailyRecordService {
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     }
-    await batch.commit();
+    try {
+      await batch.commit();
+      unawaited(SyncService().removePendingById('daily_${batchId}_$recordId'));
+    } catch (e) {
+      debugPrint('[DailyRecordService] Commit error or offline queue: $e');
+      await SyncService().enqueueDailyRecord(
+        uid: uid,
+        farmId: farmId,
+        batchId: batchId,
+        recordId: recordId,
+        data: record.toJson(),
+        isUpdate: existingSnapshot.exists,
+      );
+    }
 
     // Automatic Inventory Stock Deductions
     try {

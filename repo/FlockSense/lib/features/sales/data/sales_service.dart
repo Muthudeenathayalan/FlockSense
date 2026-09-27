@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flock_sense/core/exceptions/app_exceptions.dart';
+import 'package:flock_sense/core/services/sync_service.dart';
 import 'package:flock_sense/features/daily_records/data/daily_record_service.dart';
 import 'package:flock_sense/features/sales/domain/sales_record_model.dart';
 
@@ -146,7 +148,19 @@ class SalesService {
 
       final salesDocRef = _salesRef(user.uid, farmId, batchId).doc(record.id);
 
-      await salesDocRef.set(record.toJson());
+      try {
+        await salesDocRef.set(record.toJson());
+        unawaited(SyncService().removePendingById('sale_${batchId}_${record.id}'));
+      } catch (e) {
+        debugPrint('[SalesService] Sales doc offline queue: $e');
+        await SyncService().enqueueSalesRecord(
+          uid: user.uid,
+          farmId: farmId,
+          batchId: batchId,
+          saleId: record.id,
+          data: record.toJson(),
+        );
+      }
 
       // Update currentBirds in batch and mark completed if all birds sold
       try {

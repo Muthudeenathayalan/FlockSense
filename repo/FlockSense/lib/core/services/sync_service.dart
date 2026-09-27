@@ -12,6 +12,13 @@ enum PendingOpType {
   shedCreate,
   shedUpdate,
   shedDelete,
+  dailyRecordCreate,
+  dailyRecordUpdate,
+  dailyRecordDelete,
+  batchCreate,
+  batchUpdate,
+  salesRecordCreate,
+  financeTransactionCreate,
 }
 
 /// A single queued write that needs to be sent to Firestore when online.
@@ -44,7 +51,10 @@ class PendingOperation {
   factory PendingOperation.fromJson(Map<String, dynamic> json) {
     return PendingOperation(
       id: json['id'] as String,
-      type: PendingOpType.values.firstWhere((e) => e.name == json['type']),
+      type: PendingOpType.values.firstWhere(
+        (e) => e.name == json['type'],
+        orElse: () => PendingOpType.dailyRecordCreate,
+      ),
       path: json['path'] as String,
       data: Map<String, dynamic>.from(json['data'] as Map),
       queuedAt: DateTime.parse(json['queuedAt'] as String),
@@ -86,8 +96,8 @@ class PendingOperation {
 ///
 /// 3. This SyncService sits on top of that as a lightweight coordinator:
 ///    - It holds a queue of operations that carry semantic meaning (e.g.
-///      "the user queued a farm update at 14:32") that you can surface in
-///      UI as a pending-write badge or sync status banner.
+///      "the user queued a daily telemetry update at 14:32") that you can
+///      surface in UI as a pending-write badge or sync status banner.
 ///    - When connectivity is confirmed, it drains the queue by issuing real
 ///      Firestore writes (which at that point the SDK sends to the server).
 ///    - It is intentionally thin: it does NOT duplicate the SDK's replay
@@ -99,8 +109,22 @@ class SyncService {
   static final SyncService _instance = SyncService._();
   factory SyncService() => _instance;
 
-  final _firestore = FirebaseFirestore.instance;
-  final _auth = FirebaseAuth.instance;
+  static FirebaseFirestore? get _firestore {
+    try {
+      return FirebaseFirestore.instance;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static FirebaseAuth? get _auth {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
+
   final _cache = CacheService();
 
   static const _queueKey = 'pending_ops';
@@ -132,6 +156,7 @@ class SyncService {
     } catch (e) {
       debugPrint('[SyncService] Queue load error (starting empty): $e');
       _queue = [];
+      _pendingCountController.add(0);
     }
   }
 
@@ -147,22 +172,104 @@ class SyncService {
     }
   }
 
-  /// Add a write to the pending queue (called by FarmService / ShedService
-  /// when they detect they're offline).
+  /// Add a write to the pending queue (called by services when they detect offline).
   Future<void> enqueue(PendingOperation op) async {
-    _queue.add(op);
+    final idx = _queue.indexWhere((item) => item.id == op.id);
+    if (idx >= 0) {
+      _queue[idx] = op;
+    } else {
+      _queue.add(op);
+    }
     await _saveQueue();
     debugPrint(
       '[SyncService] Enqueued ${op.type.name}: ${op.path}. Queue size: ${_queue.length}',
     );
   }
 
+  /// Add a daily record operation to the sync queue
+  Future<void> enqueueDailyRecord({
+    required String uid,
+    required String farmId,
+    required String batchId,
+    required String recordId,
+    required Map<String, dynamic> data,
+    bool isUpdate = false,
+  }) async {
+    final path = 'users/$uid/farms/$farmId/batches/$batchId/dailyRecords/$recordId';
+    await enqueue(
+      PendingOperation(
+        id: 'daily_${batchId}_$recordId',
+        type: isUpdate ? PendingOpType.dailyRecordUpdate : PendingOpType.dailyRecordCreate,
+        path: path,
+        data: data,
+        queuedAt: DateTime.now(),
+      ),
+    );
+  }
+
+  /// Add a batch operation to the sync queue
+  Future<void> enqueueBatch({
+    required String uid,
+    required String farmId,
+    required String batchId,
+    required Map<String, dynamic> data,
+    bool isUpdate = false,
+  }) async {
+    final path = 'users/$uid/farms/$farmId/batches/$batchId';
+    await enqueue(
+      PendingOperation(
+        id: 'batch_${farmId}_$batchId',
+        type: isUpdate ? PendingOpType.batchUpdate : PendingOpType.batchCreate,
+        path: path,
+        data: data,
+        queuedAt: DateTime.now(),
+      ),
+    );
+  }
+
+  /// Add a sales record operation to the sync queue
+  Future<void> enqueueSalesRecord({
+    required String uid,
+    required String farmId,
+    required String batchId,
+    required String saleId,
+    required Map<String, dynamic> data,
+  }) async {
+    final path = 'users/$uid/farms/$farmId/batches/$batchId/salesRecords/$saleId';
+    await enqueue(
+      PendingOperation(
+        id: 'sale_${batchId}_$saleId',
+        type: PendingOpType.salesRecordCreate,
+        path: path,
+        data: data,
+        queuedAt: DateTime.now(),
+      ),
+    );
+  }
+
+  /// Remove a pending operation by ID once it has been verified
+  Future<void> removePendingById(String id) async {
+    _queue.removeWhere((o) => o.id == id);
+    await _saveQueue();
+  }
+
+  /// Clear the entire queue (useful for test resets or user sign-out)
+  Future<void> clearQueue() async {
+    _queue.clear();
+    await _saveQueue();
+  }
+
+  /// Returns unmodifiable snapshot of current queue
+  List<PendingOperation> get queue => List.unmodifiable(_queue);
+
   /// Called by connectivityProvider listener in main_shell_screen when
-  /// the device comes back online.
+  /// the device comes back online, or manually via "Sync Now" button.
   Future<void> syncPendingOperations() async {
     if (_queue.isEmpty) return;
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) return;
+    final db = _firestore;
+    if (db == null) return;
 
     debugPrint(
       '[SyncService] Starting sync of ${_queue.length} pending operations',
@@ -194,16 +301,25 @@ class SyncService {
   }
 
   Future<void> _executeOperation(PendingOperation op) async {
-    final ref = _firestore.doc(op.path);
+    final db = _firestore;
+    if (db == null) return;
+    final ref = db.doc(op.path);
     switch (op.type) {
       case PendingOpType.farmCreate:
       case PendingOpType.farmUpdate:
       case PendingOpType.shedCreate:
       case PendingOpType.shedUpdate:
+      case PendingOpType.dailyRecordCreate:
+      case PendingOpType.dailyRecordUpdate:
+      case PendingOpType.batchCreate:
+      case PendingOpType.batchUpdate:
+      case PendingOpType.salesRecordCreate:
+      case PendingOpType.financeTransactionCreate:
         await ref.set(op.data, SetOptions(merge: true));
         break;
       case PendingOpType.farmDelete:
       case PendingOpType.shedDelete:
+      case PendingOpType.dailyRecordDelete:
         await ref.delete();
         break;
     }
