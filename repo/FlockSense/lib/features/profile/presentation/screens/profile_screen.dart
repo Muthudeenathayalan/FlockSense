@@ -7,6 +7,8 @@ import 'package:flock_sense/core/theme/app_colors.dart';
 import 'package:flock_sense/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:flock_sense/features/profile/presentation/screens/notification_settings_screen.dart';
 import 'package:flock_sense/features/profile/presentation/screens/app_settings_screen.dart';
+import 'package:flock_sense/features/profile/presentation/screens/feedback_screen.dart';
+import 'package:flock_sense/features/profile/presentation/screens/privacy_security_screen.dart';
 import 'package:flock_sense/features/support/presentation/screens/help_support_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -240,18 +242,50 @@ class ProfileScreen extends ConsumerWidget {
                   _divider(),
                   _menuTile(
                     context,
+                    Icons.security_outlined,
+                    'Privacy & Security',
+                    'Data ownership & protection',
+                    Colors.blueGrey,
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PrivacySecurityScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _divider(),
+                  _menuTile(
+                    context,
+                    Icons.feedback_outlined,
+                    'Send Feedback',
+                    'Report issue or suggest feature',
+                    Colors.orange,
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const FeedbackScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _divider(),
+                  _menuTile(
+                    context,
                     Icons.info_outline,
                     'About FlockSense',
-                    'Version 1.0.0',
+                    'Version 1.1.0+2',
                     Colors.grey,
                     () {
                       showAboutDialog(
                         context: context,
                         applicationName: 'FlockSense',
-                        applicationVersion: '1.0.0',
+                        applicationVersion: '1.1.0+2',
                         children: [
                           const Text(
-                            'FlockSense helps you run small commercial poultry farms efficiently.',
+                            'FlockSense helps you run small and medium commercial poultry farms efficiently.',
                           ),
                         ],
                       );
