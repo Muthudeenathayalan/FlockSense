@@ -10,12 +10,20 @@ import 'package:flock_sense/features/daily_records/domain/daily_record_model.dar
 import 'package:flock_sense/features/inventory/data/inventory_service.dart';
 import 'package:flock_sense/features/notifications/data/models/notification_model.dart';
 import 'package:flock_sense/features/notifications/data/services/notification_firestore_service.dart';
+import 'package:flock_sense/features/notifications/data/services/smart_alert_evaluator.dart';
+import 'package:flock_sense/features/notifications/data/services/data_anomaly_detector_service.dart';
 
 class DailyRecordService {
   DailyRecordService._();
 
-  static final _db = FirebaseFirestore.instance;
-  static final _auth = FirebaseAuth.instance;
+  static FirebaseFirestore get _db => FirebaseFirestore.instance;
+  static FirebaseAuth? get _auth {
+    try {
+      return FirebaseAuth.instance;
+    } catch (_) {
+      return null;
+    }
+  }
 
   static CollectionReference<Map<String, dynamic>> _dailyRecordsRef(
     String uid,
@@ -89,7 +97,7 @@ class DailyRecordService {
     double? dgRunningHours,
     String? dgName,
   }) async {
-    final uid = _auth.currentUser?.uid ?? 'local_user';
+    final uid = _auth?.currentUser?.uid ?? 'local_user';
 
     if (farmId.trim().isEmpty || farmId == 'default_farm') {
       throw ValidationException('A valid farm must be selected to save a daily record.');
@@ -342,6 +350,24 @@ class DailyRecordService {
       }
     }
 
+    // Instant Anomaly Detection: Send push notifications if any abnormal user data is detected
+    try {
+      unawaited(
+        DataAnomalyDetectorService.detectAndDispatchAnomalies(
+          record: record,
+          farmId: farmId,
+          batchId: batchId,
+        ),
+      );
+    } catch (e) {
+      debugPrint('[DailyRecordService] Anomaly detection error: $e');
+    }
+
+    // Trigger instant evaluation of Smart Alerts (inventory, finance, reminders, etc.)
+    try {
+      unawaited(SmartAlertEvaluator.evaluateSmartAlerts());
+    } catch (_) {}
+
     return record;
   }
 
@@ -362,7 +388,7 @@ class DailyRecordService {
     required String recordId,
     required DateTime recordDate,
   }) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) {
       throw AuthException('Sign in before deleting daily records.');
     }
@@ -390,7 +416,7 @@ class DailyRecordService {
     required String batchId,
   }) async* {
     yield const [];
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) return;
 
     try {
@@ -503,7 +529,7 @@ class DailyRecordService {
     required String farmId,
     required String batchId,
   }) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) return [];
 
     final snapshot = await _dailyRecordsRef(user.uid, farmId, batchId).get();
@@ -523,7 +549,7 @@ class DailyRecordService {
     required String batchId,
     required DateTime recordDate,
   }) async {
-    final uid = _auth.currentUser?.uid ?? 'local_user';
+    final uid = _auth?.currentUser?.uid ?? 'local_user';
 
     final recordId = _formatRecordDate(recordDate);
     final snapshot = await _dailyRecordsRef(
@@ -538,7 +564,7 @@ class DailyRecordService {
   static Future<int> getTodayMortalityCount(String uid) async {
     final effectiveUid = uid.isNotEmpty
         ? uid
-        : (_auth.currentUser?.uid ?? 'local_user');
+        : (_auth?.currentUser?.uid ?? 'local_user');
     final farms = await _db
         .collection('users')
         .doc(effectiveUid)
@@ -581,7 +607,7 @@ class DailyRecordService {
     required String batchId,
     required DateTime beforeDate,
   }) async {
-    final uid = _auth.currentUser?.uid ?? 'local_user';
+    final uid = _auth?.currentUser?.uid ?? 'local_user';
 
     final snapshot = await _dailyRecordsRef(uid, farmId, batchId)
         .where('recordDate', isLessThan: _formatRecordDate(beforeDate))
@@ -597,7 +623,7 @@ class DailyRecordService {
     required String farmId,
     required String batchId,
   }) async {
-    final uid = _auth.currentUser?.uid ?? 'local_user';
+    final uid = _auth?.currentUser?.uid ?? 'local_user';
 
     final snapshot = await _dailyRecordsRef(
       uid,
@@ -627,7 +653,7 @@ class DailyRecordService {
     required String batchId,
     required DateTime editedDate,
   }) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) return;
 
     try {
@@ -691,7 +717,7 @@ class DailyRecordService {
     required String farmId,
     required String batchId,
   }) {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) return Stream.value(SyncStatus.synced);
 
     return _dailyRecordsRef(user.uid, farmId, batchId)
@@ -712,7 +738,7 @@ class DailyRecordService {
     required int previousMortality,
     required int previousClosing,
   }) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user == null) return;
 
     final recordId = _formatRecordDate(recordDate);
