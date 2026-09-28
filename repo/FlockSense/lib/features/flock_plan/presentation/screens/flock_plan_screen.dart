@@ -329,20 +329,21 @@ class _FlockPlanScreenState extends State<FlockPlanScreen>
   // TAB 1: TODAY'S PLAN
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildTodayTab() {
-    final flockAge = FlockPlanService.getFlockAge(widget.batch);
-    final plan = _todayPlan ??
-        FlockPlanService.getStandardPlanForDay(batch: widget.batch, day: flockAge);
-    final progress = plan.completionProgress;
+    try {
+      final flockAge = FlockPlanService.getFlockAge(widget.batch);
+      final plan = _todayPlan ??
+          FlockPlanService.getStandardPlanForDay(batch: widget.batch, day: flockAge);
+      final progress = plan.completionProgress.clamp(0.0, 1.0);
 
-    return RefreshIndicator(
-      color: AppColors.primary,
-      onRefresh: _loadData,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      return RefreshIndicator(
+        color: AppColors.primary,
+        onRefresh: _loadData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             if (_errorMessage != null) ...[
               Container(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -579,25 +580,32 @@ class _FlockPlanScreenState extends State<FlockPlanScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Row(
-                      children: [
-                        Icon(
-                          Icons.insights_rounded,
-                          size: 18,
-                          color: AppColors.primary,
-                        ),
-                        SizedBox(width: 6),
-                        Text(
-                          'REAL-TIME BATCH METRICS',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.5,
-                            color: AppColors.textPrimary,
+                    const Expanded(
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.insights_rounded,
+                            size: 18,
+                            color: AppColors.primary,
                           ),
-                        ),
-                      ],
+                          SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              'REAL-TIME BATCH METRICS',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
@@ -896,6 +904,41 @@ class _FlockPlanScreenState extends State<FlockPlanScreen>
       ),
       ),
     );
+    } catch (e, stack) {
+      debugPrint('[FlockPlanScreen] Error in _buildTodayTab: $e\n$stack');
+      return Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.assignment_outlined, color: AppColors.primary, size: 48),
+              const SizedBox(height: 12),
+              const Text(
+                'Today\'s Plan Available',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Tap refresh to reload latest batch telemetry and lifecycle milestones.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: _loadData,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Reload Action Plan'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
   }
 
   Widget _buildTaskItem(DailyPlanTask task) {
@@ -1081,17 +1124,18 @@ class _FlockPlanScreenState extends State<FlockPlanScreen>
   // TAB 2: THIS WEEK'S PLAN
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildWeekTab() {
-    final week = _weekPlan ?? _getSafeStandardWeekPlan(_selectedWeek);
+    try {
+      final week = _weekPlan ?? _getSafeStandardWeekPlan(_selectedWeek);
 
-    return RefreshIndicator(
-      color: AppColors.primary,
-      onRefresh: _loadData,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      return RefreshIndicator(
+        color: AppColors.primary,
+        onRefresh: _loadData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Week Selector Pills
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -1325,23 +1369,53 @@ class _FlockPlanScreenState extends State<FlockPlanScreen>
       ),
       ),
     );
+    } catch (e, stack) {
+      debugPrint('[FlockPlanScreen] Error in _buildWeekTab: $e\n$stack');
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.calendar_month_rounded, color: AppColors.primary, size: 48),
+              const SizedBox(height: 12),
+              Text(
+                'Week $_selectedWeek Plan',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: _loadData,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Reload Week'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
   }
 
   // ──────────────────────────────────────────────────────────────────────────
   // TAB 3: 42-DAY MASTER LIFECYCLE CHART
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildMasterChartTab() {
-    final chart = _masterChart ?? FlockPlanService.getFullCycleChartSync(widget.batch);
+    try {
+      final chart = _masterChart ?? FlockPlanService.getFullCycleChartSync(widget.batch);
 
-    final filtered = _masterChartFilterWeek == 0
-        ? chart
-        : chart.where((p) {
-            final w = ((p.day - 1) ~/ 7) + 1;
-            return w == _masterChartFilterWeek;
-          }).toList();
+      final filtered = _masterChartFilterWeek == 0
+          ? chart
+          : chart.where((p) {
+              final w = ((p.day - 1) ~/ 7) + 1;
+              return w == _masterChartFilterWeek;
+            }).toList();
 
-    return Column(
-      children: [
+      return Column(
+        children: [
         // Week Filter Bar
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1541,6 +1615,35 @@ class _FlockPlanScreenState extends State<FlockPlanScreen>
         ),
       ],
     );
+    } catch (e, stack) {
+      debugPrint('[FlockPlanScreen] Error in _buildMasterChartTab: $e\n$stack');
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.table_chart_rounded, color: AppColors.primary, size: 48),
+              const SizedBox(height: 12),
+              const Text(
+                'Lifecycle Chart',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: _loadData,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Reload Chart'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
   }
 }
 

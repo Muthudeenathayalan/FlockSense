@@ -562,7 +562,7 @@ class PdfGenerator {
               borderRadius: const pw.BorderRadius.all(pw.Radius.circular(12)),
               border: pw.Border.all(color: kCardBorder),
             ),
-            child: records.isNotEmpty
+            child: records.length >= 2
                 ? pw.Chart(
                     grid: pw.CartesianGrid(
                       xAxis: pw.FixedAxis(
@@ -604,7 +604,12 @@ class PdfGenerator {
                     ],
                   )
                 : pw.Center(
-                    child: pw.Text('No weight growth records available.'),
+                    child: pw.Text(
+                      records.isEmpty
+                          ? 'No weight growth records available.'
+                          : 'Weight growth curve requires at least 2 daily records to plot trend (Day 1 logged).',
+                      style: pw.TextStyle(font: regular, fontSize: 8.5, color: kGreyText),
+                    ),
                   ),
           ),
           pw.SizedBox(height: 8),
@@ -803,7 +808,7 @@ class PdfGenerator {
               borderRadius: const pw.BorderRadius.all(pw.Radius.circular(12)),
               border: pw.Border.all(color: kCardBorder),
             ),
-            child: records.isNotEmpty
+            child: records.length >= 2
                 ? pw.Chart(
                     grid: pw.CartesianGrid(
                       xAxis: pw.FixedAxis(
@@ -828,7 +833,14 @@ class PdfGenerator {
                       ),
                     ],
                   )
-                : pw.Center(child: pw.Text('No feed consumption records.')),
+                : pw.Center(
+                    child: pw.Text(
+                      records.isEmpty
+                          ? 'No feed consumption records.'
+                          : 'Daily feed chart requires at least 2 daily records to plot intake trend (Day 1 logged).',
+                      style: pw.TextStyle(font: regular, fontSize: 8.5, color: kGreyText),
+                    ),
+                  ),
           ),
           pw.SizedBox(height: 8),
 
@@ -975,7 +987,7 @@ class PdfGenerator {
               borderRadius: const pw.BorderRadius.all(pw.Radius.circular(12)),
               border: pw.Border.all(color: kCardBorder),
             ),
-            child: records.isNotEmpty
+            child: records.length >= 2
                 ? pw.Chart(
                     grid: pw.CartesianGrid(
                       xAxis: pw.FixedAxis(
@@ -1000,7 +1012,14 @@ class PdfGenerator {
                       ),
                     ],
                   )
-                : pw.Center(child: pw.Text('No water consumption records.')),
+                : pw.Center(
+                    child: pw.Text(
+                      records.isEmpty
+                          ? 'No water consumption records.'
+                          : 'Daily water chart requires at least 2 daily records to plot intake trend (Day 1 logged).',
+                      style: pw.TextStyle(font: regular, fontSize: 8.5, color: kGreyText),
+                    ),
+                  ),
           ),
           pw.SizedBox(height: 8),
 
@@ -1155,7 +1174,7 @@ class PdfGenerator {
               borderRadius: const pw.BorderRadius.all(pw.Radius.circular(12)),
               border: pw.Border.all(color: kCardBorder),
             ),
-            child: records.isNotEmpty
+            child: records.length >= 2
                 ? pw.Chart(
                     grid: pw.CartesianGrid(
                       xAxis: pw.FixedAxis(
@@ -1181,7 +1200,14 @@ class PdfGenerator {
                       ),
                     ],
                   )
-                : pw.Center(child: pw.Text('No mortality records.')),
+                : pw.Center(
+                    child: pw.Text(
+                      records.isEmpty
+                          ? 'No mortality records.'
+                          : 'Daily mortality chart requires at least 2 daily records to plot trend (Day 1 logged).',
+                      style: pw.TextStyle(font: regular, fontSize: 8.5, color: kGreyText),
+                    ),
+                  ),
           ),
           pw.SizedBox(height: 8),
 
@@ -1561,35 +1587,45 @@ class PdfGenerator {
                 'Feed Expenses',
                 'Starter & Finisher Pellets',
                 '₹${feedCost.toStringAsFixed(0)}',
-                '${((feedCost / data.totalExpenses) * 100).toStringAsFixed(1)}%',
+                data.totalExpenses > 0
+                    ? '${((feedCost / data.totalExpenses) * 100).clamp(0.0, 100.0).toStringAsFixed(1)}%'
+                    : '0.0%',
                 bold,
               ),
               _tableRow4(
                 'Chick Purchase',
                 'Day-Old Chicks (${data.batch.totalBirds} Birds)',
                 '₹${chickCost.toStringAsFixed(0)}',
-                '${((chickCost / data.totalExpenses) * 100).toStringAsFixed(1)}%',
+                data.totalExpenses > 0
+                    ? '${((chickCost / data.totalExpenses) * 100).clamp(0.0, 100.0).toStringAsFixed(1)}%'
+                    : '0.0%',
                 bold,
               ),
               _tableRow4(
                 'Medicines & Tonic',
                 'Veterinary Antibiotics & Vitamins',
                 '₹${medCost.toStringAsFixed(0)}',
-                '${((medCost / data.totalExpenses) * 100).toStringAsFixed(1)}%',
+                data.totalExpenses > 0
+                    ? '${((medCost / data.totalExpenses) * 100).clamp(0.0, 100.0).toStringAsFixed(1)}%'
+                    : '0.0%',
                 bold,
               ),
               _tableRow4(
                 'Vaccines',
                 'Live & Inactivated Vaccines',
                 '₹${vaccineCost.toStringAsFixed(0)}',
-                '${((vaccineCost / data.totalExpenses) * 100).toStringAsFixed(1)}%',
+                data.totalExpenses > 0
+                    ? '${((vaccineCost / data.totalExpenses) * 100).clamp(0.0, 100.0).toStringAsFixed(1)}%'
+                    : '0.0%',
                 bold,
               ),
               _tableRow4(
                 'Labour & Utilities',
                 'Electricity, Transport & Wages',
                 '₹${miscCost.toStringAsFixed(0)}',
-                '${((miscCost / data.totalExpenses) * 100).toStringAsFixed(1)}%',
+                data.totalExpenses > 0
+                    ? '${((miscCost / data.totalExpenses) * 100).clamp(0.0, 100.0).toStringAsFixed(1)}%'
+                    : '0.0%',
                 bold,
               ),
             ],
