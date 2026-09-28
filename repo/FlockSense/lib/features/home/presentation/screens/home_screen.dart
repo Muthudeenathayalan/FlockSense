@@ -153,6 +153,7 @@ class HomeScreen extends ConsumerWidget {
                   // Active Batches Carousel
                   HomeActiveBatchesSection(
                     activeBatches: activeBatches,
+                    recentRecords: data.recentRecords,
                     onAddBatch: navigateToAddBatch,
                   ),
                   const SizedBox(height: HomeTokens.gapSection),

@@ -43,13 +43,13 @@ Future<void> main() async {
   // 4. SyncService — drains app-level pending queue when back online.
   await SyncService().initialize();
 
-  await NotificationService.initialize();
-
-  try {
-    await FcmTokenService.saveTokenToFirestore();
-  } catch (e) {
-    debugPrint('FcmTokenService save token error: $e');
-  }
-
+  // Mount UI immediately so screens render with zero blocking delay
   runApp(const ProviderScope(child: App()));
+
+  // 5. Asynchronous post-launch services (non-blocking)
+  NotificationService.initialize().then((_) {
+    return FcmTokenService.saveTokenToFirestore();
+  }).catchError((e) {
+    debugPrint('Background Notification/FCM init error: $e');
+  });
 }

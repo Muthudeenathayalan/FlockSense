@@ -10,6 +10,7 @@ import 'package:flock_sense/features/home/presentation/screens/home_screen.dart'
 import 'package:flock_sense/features/more/presentation/screens/more_screen.dart';
 import 'package:flock_sense/features/notifications/data/services/notification_firestore_service.dart';
 import 'package:flock_sense/features/notifications/data/services/smart_alert_evaluator.dart';
+import 'package:flock_sense/features/notifications/domain/notification_providers.dart';
 import 'package:flock_sense/features/profile/presentation/screens/profile_screen.dart';
 import 'package:flock_sense/config/routes/app_routes.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
@@ -92,34 +93,47 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
                 )
               : null),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (i) => setState(() => _currentIndex = i),
-        elevation: 16,
-        height: 72,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: HenIcon(size: 22),
-            selectedIcon: HenIcon(size: 22),
-            label: 'Farms',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.grid_view_outlined),
-            selectedIcon: Icon(Icons.grid_view),
-            label: 'More',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-      ),
+      bottomNavigationBar: () {
+        final unreadCount = ref.watch(notificationStatsProvider).unreadCount;
+        return NavigationBar(
+          selectedIndex: _currentIndex,
+          onDestinationSelected: (i) => setState(() => _currentIndex = i),
+          elevation: 16,
+          height: 72,
+          destinations: [
+            const NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            const NavigationDestination(
+              icon: HenIcon(size: 22),
+              selectedIcon: HenIcon(size: 22),
+              label: 'Farms',
+            ),
+            NavigationDestination(
+              icon: Badge.count(
+                count: unreadCount,
+                isLabelVisible: unreadCount > 0,
+                backgroundColor: const Color(0xFFEF4444),
+                child: const Icon(Icons.grid_view_outlined),
+              ),
+              selectedIcon: Badge.count(
+                count: unreadCount,
+                isLabelVisible: unreadCount > 0,
+                backgroundColor: const Color(0xFFEF4444),
+                child: const Icon(Icons.grid_view),
+              ),
+              label: 'More',
+            ),
+            const NavigationDestination(
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
+        );
+      }(),
     );
   }
 

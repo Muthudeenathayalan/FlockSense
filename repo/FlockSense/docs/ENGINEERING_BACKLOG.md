@@ -94,7 +94,7 @@ This backlog documents legitimate, verified improvements, refactorings, bug fixe
 | **FS-074** | Reports | Extract `ReportPreviewModal` widget from reports screen | P3 | Medium | Optional | Todo |
 | **FS-075** | Reports | Unit test report export builders, generators, and data formatting | P2 | Medium | Required | Done |
 | **FS-076** | Notifications | Prevent duplicate smart alert creation for identical events on same day | P0 | Medium | Required | Todo |
-| **FS-077** | Notifications | Add real-time unread notification count badge on navigation bar | P1 | Small | Required | Todo |
+| **FS-077** | Notifications | Add real-time unread notification count badge on navigation bar | P1 | Small | Required | Done |
 | **FS-078** | Notifications | Handle missing or invalid FCM token gracefully without throwing | P0 | Small | Required | Todo |
 | **FS-079** | Notifications | Improve notification center empty state and filter by alert type | P4 | Small | Optional | Todo |
 | **FS-080** | Notifications | Unit test smart alert evaluator trigger conditions | P2 | Medium | Required | Todo |

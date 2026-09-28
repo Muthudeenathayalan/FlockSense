@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flock_sense/features/batches/domain/batch_model.dart';
 import 'package:flock_sense/features/batches/presentation/screens/batch_command_center_screen.dart';
+import 'package:flock_sense/features/daily_records/domain/daily_record_model.dart';
 import 'package:flock_sense/features/home/presentation/widgets/common/home_section_header.dart';
 import 'package:flock_sense/features/home/presentation/widgets/common/home_tokens.dart';
 
@@ -18,10 +19,12 @@ class HomeActiveBatchesSection extends StatelessWidget {
   const HomeActiveBatchesSection({
     super.key,
     required this.activeBatches,
+    this.recentRecords = const <DailyRecordModel>[],
     required this.onAddBatch,
   });
 
   final List<BatchModel> activeBatches;
+  final List<DailyRecordModel> recentRecords;
   final VoidCallback onAddBatch;
 
   @override
@@ -76,6 +79,7 @@ class HomeActiveBatchesSection extends StatelessWidget {
               itemBuilder: (context, i) => _BatchAvatarCard(
                 batch: activeBatches[i],
                 index: i,
+                recentRecords: recentRecords,
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -98,11 +102,13 @@ class _BatchAvatarCard extends StatelessWidget {
   const _BatchAvatarCard({
     required this.batch,
     required this.index,
+    this.recentRecords = const <DailyRecordModel>[],
     required this.onTap,
   });
 
   final BatchModel batch;
   final int index;
+  final List<DailyRecordModel> recentRecords;
   final VoidCallback onTap;
 
   List<Color> get _gradient => _kBatchGradients[index % _kBatchGradients.length];
@@ -132,8 +138,22 @@ class _BatchAvatarCard extends StatelessWidget {
   }
 
   String get _fcrValue {
-    final fcr = 1.65 - (index * 0.03).clamp(0.0, 0.15);
-    return fcr.toStringAsFixed(2);
+    final batchRecords = recentRecords.where((r) => r.batchId == batch.id).toList();
+    if (batchRecords.isEmpty || batch.currentBirds <= 0) {
+      return '--';
+    }
+    double totalFeed = 0;
+    double latestWeightKg = 0;
+    for (final r in batchRecords) {
+      totalFeed += r.feedConsumedKg;
+      if (r.avgWeightGrams > 0) {
+        final w = r.avgWeightGrams / 1000.0;
+        if (w > latestWeightKg) latestWeightKg = w;
+      }
+    }
+    final totalGain = latestWeightKg * batch.currentBirds;
+    if (totalGain <= 0 || totalFeed <= 0) return '--';
+    return (totalFeed / totalGain).toStringAsFixed(2);
   }
 
   @override
@@ -268,7 +288,7 @@ class _BatchAvatarCard extends StatelessWidget {
               _AlignedBatchMetricRow(
                 icon: Icons.grass_outlined,
                 label: 'FCR:',
-                value: '$_fcrValue ratio',
+                value: _fcrValue == '--' ? '--' : '$_fcrValue ratio',
               ),
               const Spacer(),
               Row(
