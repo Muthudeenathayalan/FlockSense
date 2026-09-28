@@ -9,7 +9,6 @@ import 'package:flock_sense/features/auth/presentation/screens/auth_wrapper.dart
 import 'package:flock_sense/features/farms/presentation/providers/farm_providers.dart';
 import 'package:flock_sense/features/home/presentation/providers/home_dashboard_provider.dart';
 import 'package:flock_sense/features/home/presentation/screens/home_screen.dart';
-import 'package:flock_sense/features/main_shell/presentation/screens/main_shell_screen.dart';
 import 'package:flock_sense/features/notifications/domain/notification_providers.dart';
 
 void main() {
