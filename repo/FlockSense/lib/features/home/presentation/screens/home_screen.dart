@@ -4,6 +4,7 @@ import 'package:flock_sense/config/routes/app_routes.dart';
 import 'package:flock_sense/features/auth/presentation/providers/auth_provider.dart';
 import 'package:flock_sense/features/batches/domain/batch_model.dart';
 import 'package:flock_sense/features/batches/presentation/screens/batch_form_screen.dart';
+import 'package:flock_sense/features/farms/presentation/providers/farm_providers.dart';
 import 'package:flock_sense/features/home/presentation/widgets/home_action_plan_button.dart';
 import 'package:flock_sense/features/home/presentation/providers/home_dashboard_provider.dart';
 import 'package:flock_sense/features/home/presentation/widgets/common/home_tokens.dart';
@@ -87,100 +88,166 @@ class HomeScreen extends ConsumerWidget {
       }
     }
 
-    return Scaffold(
-      backgroundColor: HomeTokens.background,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(
-          parent: AlwaysScrollableScrollPhysics(),
-        ),
-        slivers: [
-          // 1. Top Header Banner
-          HomeCommandHeader(
-            displayName: displayName,
-            onNotificationTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const NotificationCenterScreen(),
+    try {
+      return Scaffold(
+        backgroundColor: HomeTokens.background,
+        body: CustomScrollView(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          slivers: [
+            // 1. Top Header Banner
+            HomeCommandHeader(
+              displayName: displayName,
+              onNotificationTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const NotificationCenterScreen(),
+                ),
               ),
             ),
-          ),
 
-          // 2. Aligned Content Body
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                HomeTokens.screenGutter,
-                14,
-                HomeTokens.screenGutter,
-                88,
+            // 2. Aligned Content Body
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  HomeTokens.screenGutter,
+                  14,
+                  HomeTokens.screenGutter,
+                  88,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Facility Context Switcher (Compact Button)
+                    HomeFarmSwitcherBar(
+                      activeFarmName: data.activeFarm?.farmName ??
+                          (data.farms.isNotEmpty
+                              ? data.farms.first.farmName
+                              : 'Main Facility'),
+                      totalFarms: data.farms.length,
+                      data: data,
+                    ),
+                    const SizedBox(height: 6),
+
+                    // Interactive Live Telemetry Health Button (Compact Button)
+                    HomeTelemetryButton(
+                      todayMortality: data.todayMortality,
+                      activeBatchesCount: data.activeBatchCount,
+                      data: data,
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Today's Action Plan Button (when active flock exists)
+                    if (activeBatches.isNotEmpty) ...[
+                      HomeActionPlanButton(
+                        batch: activeBatches.first,
+                        farmId: targetFarmId,
+                        farmName: data.activeFarm?.farmName ?? 'Main Facility',
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+
+                    // 2x2 Executive KPIs with locked baseline alignment
+                    HomeKpiGrid(data: data),
+                    const SizedBox(height: HomeTokens.gapSection),
+
+                    // Active Batches Carousel
+                    HomeActiveBatchesSection(
+                      activeBatches: activeBatches,
+                      recentRecords: data.recentRecords,
+                      onAddBatch: navigateToAddBatch,
+                    ),
+                    const SizedBox(height: HomeTokens.gapSection),
+
+                    // Segmented Telemetry Analytics Charts (Locked Y-axis width)
+                    HomePerformanceAnalyticsPanel(
+                      data: data,
+                      onAddBatch: navigateToAddBatch,
+                    ),
+                    const SizedBox(height: HomeTokens.gapSection),
+
+                    // Real-time AI Biosecurity & Telemetry Diagnostics
+                    HomeAiDiagnosticsSection(data: data),
+                    const SizedBox(height: HomeTokens.gapSection),
+
+                    // Quick Operations Grid
+                    HomeQuickActionsGrid(activeBatches: activeBatches),
+                    const SizedBox(height: HomeTokens.gapSection),
+
+                    // Active Facility Specs Card
+                    HomeActiveFarmCard(data: data),
+                  ],
+                ),
               ),
+            ),
+          ],
+        ),
+      );
+    } catch (e, stack) {
+      debugPrint('[HomeScreen] Critical build error caught: $e\n$stack');
+      return Scaffold(
+        backgroundColor: HomeTokens.background,
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Facility Context Switcher (Compact Button)
-                  HomeFarmSwitcherBar(
-                    activeFarmName: data.activeFarm?.farmName ??
-                        (data.farms.isNotEmpty
-                            ? data.farms.first.farmName
-                            : 'Main Facility'),
-                    totalFarms: data.farms.length,
-                    data: data,
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: HomeTokens.greenTint,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        'assets/images/flocksense_app_logo.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 6),
-
-                  // Interactive Live Telemetry Health Button (Compact Button)
-                  HomeTelemetryButton(
-                    todayMortality: data.todayMortality,
-                    activeBatchesCount: data.activeBatchCount,
-                    data: data,
+                  const SizedBox(height: 18),
+                  const Text(
+                    'FlockSense Dashboard',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: HomeTokens.textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 8),
-
-                  // Today's Action Plan Button (when active flock exists)
-                  if (activeBatches.isNotEmpty) ...[
-                    HomeActionPlanButton(
-                      batch: activeBatches.first,
-                      farmId: targetFarmId,
-                      farmName: data.activeFarm?.farmName ?? 'Main Facility',
+                  const Text(
+                    'Preparing your farm workspace...',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: HomeTokens.textSecondary,
                     ),
-                    const SizedBox(height: 12),
-                  ],
-
-                  // 2x2 Executive KPIs with locked baseline alignment
-                  HomeKpiGrid(data: data),
-                  const SizedBox(height: HomeTokens.gapSection),
-
-                  // Active Batches Carousel
-                  HomeActiveBatchesSection(
-                    activeBatches: activeBatches,
-                    recentRecords: data.recentRecords,
-                    onAddBatch: navigateToAddBatch,
                   ),
-                  const SizedBox(height: HomeTokens.gapSection),
-
-                  // Segmented Telemetry Analytics Charts (Locked Y-axis width)
-                  HomePerformanceAnalyticsPanel(
-                    data: data,
-                    onAddBatch: navigateToAddBatch,
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      ref.invalidate(homeDashboardDataProvider);
+                      ref.invalidate(farmListProvider);
+                      ref.invalidate(allUserBatchesProvider);
+                    },
+                    icon: const Icon(Icons.refresh_rounded, size: 16),
+                    label: const Text('Refresh Dashboard'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: HomeTokens.primary,
+                      foregroundColor: Colors.white,
+                    ),
                   ),
-                  const SizedBox(height: HomeTokens.gapSection),
-
-                  // Real-time AI Biosecurity & Telemetry Diagnostics
-                  HomeAiDiagnosticsSection(data: data),
-                  const SizedBox(height: HomeTokens.gapSection),
-
-                  // Quick Operations Grid
-                  HomeQuickActionsGrid(activeBatches: activeBatches),
-                  const SizedBox(height: HomeTokens.gapSection),
-
-                  // Active Facility Specs Card
-                  HomeActiveFarmCard(data: data),
                 ],
               ),
             ),
           ),
-        ],
-      ),
-    );
+        ),
+      );
+    }
   }
 }

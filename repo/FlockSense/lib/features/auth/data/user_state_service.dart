@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flock_sense/features/onboarding/presentation/screens/onboarding_screen.dart';
 
 enum UserState { unauthenticated, onboarding, farmSetup, authenticated }
 
@@ -20,24 +22,58 @@ class UserStateService {
     if (user == null) return UserState.unauthenticated;
 
     try {
-      // No GetOptions — uses Firestore default (server, fall back to cache).
-      final doc = await _firestore.collection('users').doc(user.uid).get();
+      // Add a 3-second timeout so it never hangs or leaves the user on a white screen
+      final doc = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .get()
+          .timeout(const Duration(seconds: 3));
 
-      if (!doc.exists || doc.data() == null) return UserState.onboarding;
+      if (!doc.exists || doc.data() == null) {
+        // Automatically initialize missing user profile document so new logins enter the app
+        _firestore.collection('users').doc(user.uid).set({
+          'uid': user.uid,
+          'email': user.email ?? '',
+          'name': user.displayName ?? '',
+          'hasCompletedOnboarding': true,
+          'hasFarm': false,
+          'activeFarmId': null,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true)).catchError((_) {});
+        return UserState.farmSetup;
+      }
 
       final data = doc.data()!;
       final onboarded = data['hasCompletedOnboarding'] as bool? ?? false;
-      if (!onboarded) return UserState.onboarding;
+      if (!onboarded) {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          final hasSeen =
+              prefs.getBool(OnboardingScreen.hasSeenOnboardingKey) ?? false;
+          if (hasSeen) {
+            _firestore.collection('users').doc(user.uid).set({
+              'hasCompletedOnboarding': true,
+              'updatedAt': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true)).catchError((_) {});
+          } else {
+            return UserState.onboarding;
+          }
+        } catch (_) {
+          return UserState.onboarding;
+        }
+      }
 
       final hasFarm = data['hasFarm'] as bool? ?? false;
       final activeFarmId = data['activeFarmId'] as String?;
-      if (!hasFarm || (activeFarmId?.isEmpty ?? true))
+      if (!hasFarm || (activeFarmId?.isEmpty ?? true)) {
         return UserState.farmSetup;
+      }
 
       return UserState.authenticated;
     } catch (_) {
-      // If Firestore fails even with cache, keep the user authenticated
-      // rather than kicking them to login — they're signed in, just offline.
+      // If Firestore fails even with cache or times out, keep the user authenticated
+      // rather than kicking them to login or stuck on white screen — they're signed in.
       if (_auth.currentUser != null) return UserState.authenticated;
       return UserState.unauthenticated;
     }
@@ -48,11 +84,16 @@ class UserStateService {
       if (user == null) {
         yield UserState.unauthenticated;
       } else {
+        // Instantly yield authenticated so the UI never hangs on a blank loading screen
+        yield UserState.authenticated;
         yield* _firestore
             .collection('users')
             .doc(user.uid)
             .snapshots()
-            .asyncMap((_) => getUserState());
+            .asyncMap((_) => getUserState())
+            .handleError((e) {
+              return UserState.authenticated;
+            });
       }
     });
   }
