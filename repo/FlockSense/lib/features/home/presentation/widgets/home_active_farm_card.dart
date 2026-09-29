@@ -152,6 +152,7 @@ class _EmptyFarmCard extends StatelessWidget {
               backgroundColor: HomeTokens.primary,
               foregroundColor: Colors.white,
               elevation: 0,
+              minimumSize: const Size(0, 36),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(HomeTokens.smallRadius),

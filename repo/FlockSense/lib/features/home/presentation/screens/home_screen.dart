@@ -240,6 +240,7 @@ class HomeScreen extends ConsumerWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: HomeTokens.primary,
                       foregroundColor: Colors.white,
+                      minimumSize: const Size(0, 42),
                     ),
                   ),
                 ],
