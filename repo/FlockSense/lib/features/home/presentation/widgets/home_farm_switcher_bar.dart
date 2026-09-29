@@ -19,7 +19,7 @@ class HomeFarmSwitcherBar extends ConsumerWidget {
   final int totalFarms;
   final HomeDashboardData data;
 
-  void _showSwitcher(BuildContext context, WidgetRef ref) {
+  static void showSwitcherSheet(BuildContext context, WidgetRef ref, HomeDashboardData data) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -173,6 +173,9 @@ class HomeFarmSwitcherBar extends ConsumerWidget {
       ),
     );
   }
+
+  void _showSwitcher(BuildContext context, WidgetRef ref) =>
+      showSwitcherSheet(context, ref, data);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

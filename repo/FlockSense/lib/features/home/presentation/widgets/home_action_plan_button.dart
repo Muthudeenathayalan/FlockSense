@@ -5,9 +5,8 @@ import 'package:flock_sense/features/flock_plan/domain/daily_plan_model.dart';
 import 'package:flock_sense/features/flock_plan/presentation/screens/flock_plan_screen.dart';
 import 'package:flock_sense/features/home/presentation/widgets/common/home_tokens.dart';
 
-/// Compact, elegant button for Today's Action Plan on the Home Dashboard.
-/// Replaces the massive embedded 450px card to keep the home screen compact and neat,
-/// while providing immediate 1-tap navigation to the full FlockPlanScreen.
+/// Simple, neat compact pill button for Today's Action Plan on the Home Dashboard.
+/// Auto-sizes to content rather than stretching full-width horizontally.
 class HomeActionPlanButton extends StatefulWidget {
   const HomeActionPlanButton({
     super.key,
@@ -63,128 +62,95 @@ class _HomeActionPlanButtonState extends State<HomeActionPlanButton> {
     final completedCount = plan?.tasks.where((t) => t.isCompleted).length ?? 0;
     final totalCount = plan?.tasks.length ?? 0;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => FlockPlanScreen(
-                batch: widget.batch,
-                farmId: widget.farmId,
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => FlockPlanScreen(
+                  batch: widget.batch,
+                  farmId: widget.farmId,
+                ),
               ),
+            ).then((_) => _fetchLivePlan());
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFD1FAE5), width: 1.2),
+              boxShadow: [
+                BoxShadow(
+                  color: HomeTokens.primaryDark.withValues(alpha: 0.04),
+                  blurRadius: 6,
+                  offset: const Offset(0, 1.5),
+                ),
+              ],
             ),
-          ).then((_) => _fetchLivePlan());
-        },
-        borderRadius: BorderRadius.circular(HomeTokens.cardRadius),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(HomeTokens.cardRadius),
-            border: Border.all(color: const Color(0xFFD1FAE5), width: 1.2),
-            boxShadow: [
-              BoxShadow(
-                color: HomeTokens.primaryDark.withValues(alpha: 0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: HomeTokens.greenTint,
-                  borderRadius: BorderRadius.circular(9),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4.5),
+                  decoration: BoxDecoration(
+                    color: HomeTokens.greenTint,
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  child: const Icon(
+                    Icons.assignment_turned_in_rounded,
+                    color: HomeTokens.primary,
+                    size: 15,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.assignment_turned_in_rounded,
-                  color: HomeTokens.primaryDark,
-                  size: 19,
+                const SizedBox(width: 8),
+                const Text(
+                  "Today's Action Plan",
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: HomeTokens.textPrimary,
+                    letterSpacing: -0.1,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        const Text(
-                          "Today's Action Plan",
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: HomeTokens.textPrimary,
-                            letterSpacing: -0.2,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                          decoration: BoxDecoration(
-                            color: HomeTokens.primaryDark,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            'Day $age',
-                            style: const TextStyle(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      totalCount > 0
-                          ? '$completedCount/$totalCount Tasks Done • Target: ${plan?.targetWeightGrams ?? 0}g'
-                          : '${widget.batch.breedOrFlockType.isNotEmpty ? widget.batch.breedOrFlockType : "Commercial Broiler"} • Standard Protocol',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: HomeTokens.textSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                decoration: BoxDecoration(
-                  color: HomeTokens.greenTint,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'View Plan',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: HomeTokens.primaryDark,
-                      ),
-                    ),
-                    SizedBox(width: 3),
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 9,
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                  decoration: BoxDecoration(
+                    color: HomeTokens.greenTint,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    totalCount > 0 ? 'Day $age • $completedCount/$totalCount' : 'Day $age',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
                       color: HomeTokens.primaryDark,
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                const Text(
+                  'View Plan',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: HomeTokens.primary,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 9,
+                  color: HomeTokens.primary,
+                ),
+              ],
+            ),
           ),
         ),
       ),

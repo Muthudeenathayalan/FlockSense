@@ -18,7 +18,7 @@ class HomeTelemetryButton extends StatelessWidget {
   final int activeBatchesCount;
   final HomeDashboardData data;
 
-  void _openSheet(BuildContext context) {
+  static void openSheet(BuildContext context, HomeDashboardData data) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -29,6 +29,8 @@ class HomeTelemetryButton extends StatelessWidget {
       builder: (_) => TelemetryHealthBottomSheet(data: data),
     );
   }
+
+  void _openSheet(BuildContext context) => openSheet(context, data);
 
   @override
   Widget build(BuildContext context) {

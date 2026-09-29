@@ -12,11 +12,9 @@ import 'package:flock_sense/features/home/presentation/widgets/home_active_batch
 import 'package:flock_sense/features/home/presentation/widgets/home_active_farm_card.dart';
 import 'package:flock_sense/features/home/presentation/widgets/home_ai_diagnostics_section.dart';
 import 'package:flock_sense/features/home/presentation/widgets/home_command_header.dart';
-import 'package:flock_sense/features/home/presentation/widgets/home_farm_switcher_bar.dart';
 import 'package:flock_sense/features/home/presentation/widgets/home_kpi_grid.dart';
 import 'package:flock_sense/features/home/presentation/widgets/home_performance_analytics_panel.dart';
 import 'package:flock_sense/features/home/presentation/widgets/home_quick_actions_grid.dart';
-import 'package:flock_sense/features/home/presentation/widgets/home_telemetry_button.dart';
 import 'package:flock_sense/features/notifications/presentation/screens/notification_center_screen.dart';
 import 'package:flock_sense/features/sheds/data/shed_service.dart';
 import 'package:flock_sense/features/sheds/presentation/screens/shed_form_screen.dart';
@@ -96,9 +94,10 @@ class HomeScreen extends ConsumerWidget {
             parent: AlwaysScrollableScrollPhysics(),
           ),
           slivers: [
-            // 1. Top Header Banner
+            // 1. Top Header Banner with Integrated Facility Switcher & Live Telemetry
             HomeCommandHeader(
               displayName: displayName,
+              data: data,
               onNotificationTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -119,33 +118,14 @@ class HomeScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Facility Context Switcher (Compact Button)
-                    HomeFarmSwitcherBar(
-                      activeFarmName: data.activeFarm?.farmName ??
-                          (data.farms.isNotEmpty
-                              ? data.farms.first.farmName
-                              : 'Main Facility'),
-                      totalFarms: data.farms.length,
-                      data: data,
-                    ),
-                    const SizedBox(height: 6),
-
-                    // Interactive Live Telemetry Health Button (Compact Button)
-                    HomeTelemetryButton(
-                      todayMortality: data.todayMortality,
-                      activeBatchesCount: data.activeBatchCount,
-                      data: data,
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Today's Action Plan Button (when active flock exists)
+                    // Today's Action Plan Button (when active flock exists) - Simple, neat compact pill
                     if (activeBatches.isNotEmpty) ...[
                       HomeActionPlanButton(
                         batch: activeBatches.first,
                         farmId: targetFarmId,
                         farmName: data.activeFarm?.farmName ?? 'Main Facility',
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
                     ],
 
                     // 2x2 Executive KPIs with locked baseline alignment
