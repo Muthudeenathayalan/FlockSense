@@ -32,19 +32,7 @@ This document tracks all completed engineering tasks, bug fixes, refactorings, t
 | 2026-09-13 | FS-066..FS-070 | Finance | Eliminate synthetic fallbacks, integrate live bird sales and feed transactions, extract FinanceSummaryCards (FS-069), render authentic dynamic charts with empty states, replace obsolete screen, and add comprehensive unit tests | `finance_service.dart`, `finance_analytics_engine.dart`, `finance_summary_cards.dart`, `finance_charts.dart`, `finance_dashboard_screen.dart`, `finance_screen.dart`, `transaction_form_dialog.dart`, `finance_analytics_test.dart` | `flutter test` (61/61 passed) | `e930eb4..cca21bd` |
 | 2026-09-13 | FS-015..FS-019 | Farms | Align Farm page UI with reference design: green gradient curved header, 4 header stats, 3 circular-badge mini stat cards, 8-action grid, and structured farm details card | `farm_command_center_screen.dart`, `farm_identity_header.dart`, `farm_operational_summary.dart`, `farm_specs_card.dart` | `flutter test` (61/61 passed) | `8546da6` |
 | 2026-09-25 | FS-130..FS-135 | Home | Modularize Home dashboard from 2,843-line monolith into aligned sub-widgets (HomeCommandHeader, HomeFarmSwitcherBar, HomeTelemetryButton, TelemetryHealthBottomSheet, HomeKpiGrid, HomeActiveBatchesSection, HomePerformanceAnalyticsPanel, HomeAiDiagnosticsSection, HomeQuickActionsGrid, HomeActiveFarmCard); lock card slot baselines, standardize 16dp spatial grid, make telemetry strip an interactive modal button, and add widget test suite | `home_screen.dart`, `lib/features/home/presentation/widgets/*`, `home_dashboard_alignment_and_telemetry_test.dart` | `flutter test test/features/home/` (5/5 passed) | - |
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+| 2026-09-30 | FS-140..FS-145 | Core & Reliability | Restore AppColors token palette, BatchService lifecycle contract, and clean daily records unused fields | pp_colors.dart, atch_service.dart, daily_records_dashboard_screen.dart | lutter analyze --no-fatal-infos (0 errors), lutter test (193/193 passed) | 13371b2 |
+| 2026-09-30 | FS-146..FS-150 | Testing & Docs | Expand verified test suite to 193 passing automated tests across 58 test suites and sync comprehensive project documentation | README.md, docs/TESTING.md, docs/DEVELOPMENT_LOG.md | lutter test (193/193 passed) | - |
 
 ---

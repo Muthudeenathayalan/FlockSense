@@ -4,7 +4,7 @@
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%7C%20Auth%20%7C%20Functions-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
 [![Riverpod](https://img.shields.io/badge/State%20Management-Riverpod-blueviolet)](https://riverpod.dev)
-[![Tests](https://img.shields.io/badge/Tests-58%20Passed-16A34A?logo=checkmarx&logoColor=white)](#-testing--quality-assurance)
+[![Tests](https://img.shields.io/badge/Tests-193%20Passed-16A34A?logo=checkmarx&logoColor=white)](#-testing--quality-assurance)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Author](https://img.shields.io/badge/Author-Muthudeenathayalan-orange?logo=github)](https://github.com/Muthudeenathayalan)
 
@@ -174,15 +174,19 @@ flutter test
 flutter test --coverage
 ```
 
-### Verified Test Suites (58 Passing Tests)
-- **Batches**: Placement validation, bird count arithmetic, shed allocations, farm/shed capacity enforcement (`batch_model_test.dart`).
-- **Daily Records**: Mortality upper/lower bounds, water & feed intake, environmental boundaries, bird weight validation ($0-10,000\text{g}$), safe closing calculations, and JSON clamping (`daily_records_validation_test.dart`).
-- **Growth Analytics**: Commercial FCR formula validation, zero-weight telemetry protection, EPEF calculations, Day 0 chick weight normalization (`growth_analytics_service_test.dart`, `performance_calculator_test.dart`).
-- **Finance**: Transaction validation, pending balance calculations, `isFullyPaid` & `isPartiallyPaid` status evaluation, budget serialization (`finance_analytics_test.dart`).
-- **Farms**: Dimension parsing, square footage derivation, density capacity estimations (`farm_model_test.dart`, `farm_providers_test.dart`).
-- **Feed & Inventory**: Bag quantity conversions, expiry detection, low-stock threshold triggers (`feed_transaction_model_test.dart`, `inventory_model_test.dart`).
-- **Vaccines & Medicine**: Application dates vs placement dates, dosage bounds, financial attribution (`vaccine_medicine_models_test.dart`).
-- **Reports**: Date range boundary filters, deterministic sanitized file naming (`report_types_test.dart`).
+### Verified Test Suites (193 Passing Tests)
+- **Core Poultry Calculators**: European Broiler Index, FCR, ADG, EPEF, uniformity calculators, ammonia thresholds, density and lighting schedules (`european_broiler_index_test.dart`, `ammonia_threshold_helper_test.dart`, `density_calculator_test.dart`, `lighting_program_helper_test.dart`).
+- **Batches & Sales Coupling**: Placement validation, bird count arithmetic, shed allocations, real-time sales bird decrements, closing bird deductions, cumulative balance tracking (`batch_model_test.dart`, `sales_batch_coupling_test.dart`, `sales_record_model_test.dart`).
+- **Sync & Cache Engine**: Offline persistence queue, background network sync, transaction deduplication, robust memory state recovery (`sync_service_test.dart`).
+- **Daily Records & Telemetry**: Mortality bounds, water & feed intake, environmental boundaries, bird weight validation (0-10,000g), safe closing calculations, JSON clamping (`daily_records_validation_test.dart`, `daily_record_ux_test.dart`).
+- **Growth Analytics & Benchmarks**: Commercial FCR formula validation, zero-weight telemetry protection, Cobb 500 / Ross 308 standard growth curves, Day 0 chick weight normalization (`growth_analytics_service_test.dart`, `performance_calculator_test.dart`, `broiler_growth_standards_test.dart`).
+- **Finance & Economics**: Transaction validation, pending balance calculations, `isFullyPaid` & `isPartiallyPaid` status evaluation, budget serialization, cost per bird breakdown (`finance_analytics_test.dart`, `feed_cost_calculator_test.dart`).
+- **Farms & Shed Topology**: Dimension parsing, square footage derivation, density capacity estimations, shed allocation workflows, multi-tier farm distribution (`farm_model_test.dart`, `farm_providers_test.dart`, `shed_model_test.dart`, `batch_shed_workflow_test.dart`).
+- **Feed & Inventory**: Bag quantity conversions, expiry detection, low-stock threshold triggers, allocation tables (`feed_transaction_model_test.dart`, `inventory_model_test.dart`, `feed_allocation_table_test.dart`).
+- **Vaccines, Medicine & Health**: Application dates vs placement dates, dosage bounds, financial attribution, vaccination schedules (`vaccine_medicine_models_test.dart`, `vaccination_schedule_helper_test.dart`).
+- **Authentic Reporting & PDF Export**: Clean fallback generation, farming technique audit, financial leakage detection, deterministic PDF generator, date range filters (`report_service_authentic_data_test.dart`, `pdf_generator_test.dart`, `report_types_test.dart`).
+- **AI Diagnostics & Context**: Dynamic cycle days, prompt context builders, Gemini API integrations, anomaly detection (`ai_context_builder_test.dart`, `gemini_service_test.dart`, `data_anomaly_detector_test.dart`).
+- **Home Dashboard & UI Shell**: Segmented tabs, telemetry sheet triggers, farm switcher transitions, safe initial state (`home_dashboard_alignment_and_telemetry_test.dart`, `home_dashboard_farm_switching_test.dart`, `new_user_dashboard_white_screen_test.dart`).
 
 ---
 
