@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flock_sense/core/theme/app_colors.dart';
-import 'package:flock_sense/features/daily_records/presentation/screens/daily_records_dashboard_screen.dart';
-import 'package:flock_sense/features/batches/presentation/screens/all_batches_screen.dart';
-import 'package:flock_sense/features/farms/presentation/screens/farm_list_screen.dart';
-import 'package:flock_sense/features/performance/presentation/screens/growth_analytics_screen.dart';
-
-import 'package:flock_sense/features/inventory/presentation/screens/inventory_dashboard_screen.dart';
-import 'package:flock_sense/features/calendar/presentation/screens/calendar_dashboard_screen.dart';
-
 import 'package:flock_sense/features/ai/presentation/screens/ai_screen.dart';
-import 'package:flock_sense/features/finance/presentation/screens/finance_dashboard_screen.dart';
+import 'package:flock_sense/features/batches/presentation/screens/batch_list_screen.dart';
+import 'package:flock_sense/features/daily_records/presentation/screens/log_data_entry_center_screen.dart';
+import 'package:flock_sense/features/finance/presentation/screens/finance_screen.dart';
+import 'package:flock_sense/features/farms/presentation/screens/farm_list_screen.dart';
+import 'package:flock_sense/features/inventory/presentation/screens/inventory_dashboard_screen.dart';
+import 'package:flock_sense/features/performance/presentation/screens/growth_analytics_screen.dart';
+import 'package:flock_sense/features/calendar/presentation/screens/calendar_dashboard_screen.dart';
 import 'package:flock_sense/features/notifications/presentation/screens/notification_center_screen.dart';
-import 'package:flock_sense/features/health/presentation/screens/health_screen.dart';
-import 'package:flock_sense/features/reports/presentation/screens/reports_dashboard_screen.dart';
-import 'package:flock_sense/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:flock_sense/features/reports/presentation/screens/reports_screen.dart';
+import 'package:flock_sense/features/settings/presentation/screens/settings_control_centre_screen.dart';
+import 'package:flock_sense/features/vaccine/presentation/screens/vaccine_records_screen.dart';
 
 // Uses the icon categories from the uploaded reference image:
 // FlockSense, Dashboard, Farms & Sheds, Flocks/Batches,
@@ -91,16 +89,10 @@ class MoreScreen extends StatelessWidget {
       Color(0xFFF57F17),
     ),
     _MoreItem(
-      'Health',
-      Icons.health_and_safety_outlined,
-      'Diseases & biosecurity',
-      Color(0xFF0D9488),
-    ),
-    _MoreItem(
-      'App Tour',
-      Icons.explore_outlined,
-      '5 core pillars walkthrough',
-      Color(0xFF0F766E),
+      'Settings',
+      Icons.settings_outlined,
+      'App preferences',
+      Color(0xFF455A64),
     ),
   ];
 
@@ -146,11 +138,10 @@ class _MoreCard extends StatelessWidget {
       onTap: () {
         switch (item.label) {
           case 'Log Data':
-          case 'Daily Records':
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const DailyRecordsDashboardScreen(),
+                builder: (_) => const LogDataEntryCenterScreen(),
               ),
             );
             return;
@@ -162,16 +153,10 @@ class _MoreCard extends StatelessWidget {
               ),
             );
             return;
-          case 'Finance':
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const FinanceDashboardScreen()),
-            );
-            return;
           case 'Reports':
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ReportsDashboardScreen()),
+              MaterialPageRoute(builder: (_) => const ReportsScreen()),
             );
             return;
           case 'Growth Analytics':
@@ -183,7 +168,7 @@ class _MoreCard extends StatelessWidget {
           case 'Flocks & Batches':
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const AllBatchesScreen()),
+              MaterialPageRoute(builder: (_) => const BatchListScreen()),
             );
             return;
           case 'Farms & Sheds':
@@ -192,18 +177,27 @@ class _MoreCard extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const FarmListScreen()),
             );
             return;
+          case 'Calendar':
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CalendarDashboardScreen(),
+              ),
+            );
+            return;
+          case 'Dashboard':
+            onNavigateToTab?.call(0);
+            return;
           case 'AI Advisor':
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const AiScreen()),
             );
             return;
-          case 'Calendar':
+          case 'Finance':
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => const CalendarDashboardScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => const FinanceScreen()),
             );
             return;
           case 'Notifications':
@@ -214,21 +208,11 @@ class _MoreCard extends StatelessWidget {
               ),
             );
             return;
-          case 'Health':
-          case 'Health & Biosecurity':
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const HealthScreen()),
-            );
-            return;
-          case 'Dashboard':
-            onNavigateToTab?.call(0);
-            return;
-          case 'App Tour':
+          case 'Settings':
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => const OnboardingScreen(isReplay: true),
+                builder: (_) => const SettingsControlCentreScreen(),
               ),
             );
             return;
@@ -294,4 +278,54 @@ class _MoreCard extends StatelessWidget {
       ),
     );
   }
+}
+
+void _showExportSheet(BuildContext context) {
+  showModalBottomSheet<void>(
+    context: context,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+    builder: (context) {
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Export', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 12),
+            ListTile(
+              leading: const Icon(Icons.picture_as_pdf),
+              title: const Text('Export as PDF'),
+              onTap: () {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Export to PDF started')),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.table_chart),
+              title: const Text('Export as Excel'),
+              onTap: () {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Export to Excel started')),
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Close'),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }

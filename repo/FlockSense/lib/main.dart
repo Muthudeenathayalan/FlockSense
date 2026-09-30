@@ -1,28 +1,32 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flock_sense/app/app.dart';
 import 'package:flock_sense/config/firebase_options.dart';
 import 'package:flock_sense/core/services/cache_service.dart';
-import 'package:flock_sense/core/services/fcm_token_service.dart';
 import 'package:flock_sense/core/services/notification_service.dart';
 import 'package:flock_sense/core/services/sync_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Firebase core init.
+  // 1. Firebase core init (never change this block per project constraints).
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Enable App Check debug provider for development devices so the app
+  // can obtain App Check tokens when enforcement is enabled in the project.
+  // This uses the debug provider and should only be used in development.
   try {
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-    }
-  } catch (e) {
-    if (!e.toString().contains('duplicate-app')) {
-      rethrow;
-    }
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: AndroidProvider.debug,
+      appleProvider: AppleProvider.debug,
+    );
+  } catch (_) {
+    // If App Check package isn't available at runtime or activation fails,
+    // continue without blocking app startup — we'll rely on Firestore
+    // offline persistence and show graceful fallbacks where needed.
   }
 
   // 2. Enable Firestore OFFLINE PERSISTENCE.
@@ -43,13 +47,8 @@ Future<void> main() async {
   // 4. SyncService — drains app-level pending queue when back online.
   await SyncService().initialize();
 
-  // Mount UI immediately so screens render with zero blocking delay
-  runApp(const ProviderScope(child: App()));
+  // 5. Notification system initialization.
+  await NotificationService.initialize();
 
-  // 5. Asynchronous post-launch services (non-blocking)
-  NotificationService.initialize().then((_) {
-    return FcmTokenService.saveTokenToFirestore();
-  }).catchError((e) {
-    debugPrint('Background Notification/FCM init error: $e');
-  });
+  runApp(const ProviderScope(child: App()));
 }

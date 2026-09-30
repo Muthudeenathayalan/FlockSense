@@ -1,22 +1,14 @@
-import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flock_sense/features/batches/domain/batch_model.dart';
 import 'package:flock_sense/core/exceptions/app_exceptions.dart';
 
 class BatchService {
   BatchService._();
 
-  static FirebaseFirestore get _db => FirebaseFirestore.instance;
-  static FirebaseAuth? get _auth {
-    try {
-      return FirebaseAuth.instance;
-    } catch (_) {
-      return null;
-    }
-  }
+  static final _db = FirebaseFirestore.instance;
+  static final _auth = FirebaseAuth.instance;
 
   static CollectionReference<Map<String, dynamic>> _batchesRef(
     String uid,
@@ -29,166 +21,39 @@ class BatchService {
       .collection('batches');
 
   static Stream<List<BatchModel>> watchBatches(String farmId) {
-    final user = _auth?.currentUser;
-    if (user == null || farmId.trim().isEmpty) {
-      return Stream.value(<BatchModel>[]);
-    }
+    final user = _auth.currentUser;
+    if (user == null) return const Stream.empty();
 
     return _batchesRef(user.uid, farmId)
+        .orderBy('createdAt', descending: false)
         .snapshots()
         .map(
-          (snap) {
-            final seen = <String>{};
-            final list = <BatchModel>[];
-            for (final d in snap.docs) {
-              if (seen.add(d.id)) {
-                list.add(
-                  BatchModel.fromJson({
-                    'id': d.id,
-                    'farmId': farmId,
-                    ...d.data(),
-                  }),
-                );
-              }
-            }
-            list.sort((a, b) => b.placementDate.compareTo(a.placementDate));
-            return list;
-          },
+          (snap) =>
+              snap.docs.map((d) => BatchModel.fromJson(d.data())).toList(),
         );
   }
 
-  static Stream<BatchModel?> watchBatch(String farmId, String batchId) {
-    final user = _auth?.currentUser;
-    if (user == null || farmId.trim().isEmpty || batchId.trim().isEmpty) {
-      return Stream.value(null);
-    }
+  static Stream<List<BatchModel>> watchUserBatches() {
+    final user = _auth.currentUser;
+    if (user == null) return const Stream.empty();
 
-    return _batchesRef(user.uid, farmId).doc(batchId).snapshots().map((doc) {
-      if (!doc.exists || doc.data() == null) return null;
-      return BatchModel.fromJson({
-        'id': doc.id,
-        'farmId': farmId,
-        ...doc.data()!,
-      });
-    });
-  }
-
-  /// Real-time stream of ALL batches across all farms owned by the user.
-  /// Uses direct subcollection listeners so no Firestore collection group index is required.
-  static Stream<List<BatchModel>> watchAllUserBatches(String uid) {
-    final controller = StreamController<List<BatchModel>>.broadcast();
-    StreamSubscription? farmsSub;
-    final Map<String, StreamSubscription> batchSubs = {};
-    final Map<String, List<BatchModel>> farmBatches = {};
-
-    void emit() {
-      if (controller.isClosed) return;
-      final all = <BatchModel>[];
-      for (final list in farmBatches.values) {
-        all.addAll(list);
-      }
-      final seen = <String>{};
-      final uniqueBatches = <BatchModel>[];
-      for (final b in all) {
-        if (seen.add(b.id)) {
-          uniqueBatches.add(b);
-        }
-      }
-      uniqueBatches.sort((a, b) {
-        if (a.isActive && !b.isActive) return -1;
-        if (!a.isActive && b.isActive) return 1;
-        return b.placementDate.compareTo(a.placementDate);
-      });
-      controller.add(uniqueBatches);
-    }
-
-    farmsSub = _db
-        .collection('users')
-        .doc(uid)
-        .collection('farms')
+    return _db
+        .collectionGroup('batches')
+        .where('ownerId', isEqualTo: user.uid)
         .snapshots()
-        .listen((farmSnap) {
-          final currentFarmIds = farmSnap.docs.map((d) => d.id).toSet();
-
-          final removedFarmIds =
-              batchSubs.keys.where((id) => !currentFarmIds.contains(id)).toList();
-          for (final farmId in removedFarmIds) {
-            batchSubs[farmId]?.cancel();
-            batchSubs.remove(farmId);
-            farmBatches.remove(farmId);
-          }
-
-          if (currentFarmIds.isEmpty) {
-            farmBatches.clear();
-            emit();
-            return;
-          }
-
-          for (final farmId in currentFarmIds) {
-            if (!batchSubs.containsKey(farmId)) {
-              batchSubs[farmId] = _batchesRef(uid, farmId).snapshots().listen(
-                (batchSnap) {
-                  farmBatches[farmId] = batchSnap.docs.map((doc) {
-                    return BatchModel.fromJson({
-                      'id': doc.id,
-                      'farmId': farmId,
-                      ...doc.data(),
-                    });
-                  }).toList();
-                  emit();
-                },
-                onError: (e) {
-                  debugPrint('[watchAllUserBatches] Error on farm $farmId: $e');
-                },
-              );
-            }
-          }
-          emit();
-        }, onError: (e) {
-          debugPrint('[watchAllUserBatches] Error watching farms: $e');
-        });
-
-    controller.onCancel = () {
-      farmsSub?.cancel();
-      for (final sub in batchSubs.values) {
-        sub.cancel();
-      }
-      batchSubs.clear();
-      farmBatches.clear();
-    };
-
-    return controller.stream;
+        .map(
+          (snap) =>
+              snap.docs.map((d) => BatchModel.fromJson(d.data())).toList(),
+        );
   }
 
   static Future<BatchModel?> getBatchById(String farmId, String batchId) async {
-    final user = _auth?.currentUser;
+    final user = _auth.currentUser;
     if (user == null) return null;
 
     final snapshot = await _batchesRef(user.uid, farmId).doc(batchId).get();
     if (!snapshot.exists) return null;
-    return BatchModel.fromJson({
-      'id': snapshot.id,
-      'farmId': farmId,
-      ...snapshot.data()!,
-    });
-  }
-
-  /// Get all batches for a specific farm
-  static Future<List<BatchModel>> getBatchesByFarmId(String farmId) async {
-    final user = _auth?.currentUser;
-    if (user == null) return [];
-
-    final snap = await _batchesRef(user.uid, farmId).get();
-    final seen = <String>{};
-    final list = <BatchModel>[];
-    for (final d in snap.docs) {
-      if (seen.add(d.id)) {
-        list.add(
-          BatchModel.fromJson({'id': d.id, 'farmId': farmId, ...d.data()}),
-        );
-      }
-    }
-    return list;
+    return BatchModel.fromJson(snapshot.data()!);
   }
 
   /// Returns the total number of active batches for the current user.
@@ -248,7 +113,7 @@ class BatchService {
     required String sizeUnit,
     required DateTime hatchDate,
     required DateTime placementDate,
-    DateTime? targetDeliveryDate,
+    DateTime? expectedEndDate,
     required int maleCount,
     required int femaleCount,
     required String breedOrFlockType,
@@ -260,17 +125,13 @@ class BatchService {
     String? vehicleNumber,
     String? notes,
   }) async {
+    final user = _auth.currentUser;
+    if (user == null) throw AuthException('Sign in before creating a batch.');
+
     final totalBirds = maleCount + femaleCount;
     if (totalBirds <= 0) {
       throw ValidationException('Total birds must be greater than zero.');
     }
-
-    if (shedId == null || shedId.trim().isEmpty) {
-      throw ValidationException('A shed must be assigned to this batch.');
-    }
-
-    final user = _auth?.currentUser;
-    if (user == null) throw AuthException('Sign in before creating a batch.');
 
     final trimmedBatchName = batchName.trim();
     if (trimmedBatchName.isEmpty) {
@@ -299,8 +160,7 @@ class BatchService {
         'sizeUnit': sizeUnit,
         'hatchDate': hatchDate.toIso8601String(),
         'placementDate': placementDate.toIso8601String(),
-        if (targetDeliveryDate != null)
-          'targetDeliveryDate': targetDeliveryDate.toIso8601String(),
+        'expectedEndDate': expectedEndDate?.toIso8601String(),
         'maleCount': maleCount,
         'femaleCount': femaleCount,
         'totalBirds': totalBirds,
@@ -333,7 +193,7 @@ class BatchService {
         sizeUnit: sizeUnit,
         hatchDate: hatchDate,
         placementDate: placementDate,
-        targetDeliveryDate: targetDeliveryDate,
+        expectedEndDate: expectedEndDate,
         maleCount: maleCount,
         femaleCount: femaleCount,
         totalBirds: totalBirds,
@@ -371,8 +231,7 @@ class BatchService {
       'sizeUnit': sizeUnit,
       'hatchDate': hatchDate.toIso8601String(),
       'placementDate': placementDate.toIso8601String(),
-      if (targetDeliveryDate != null)
-        'targetDeliveryDate': targetDeliveryDate.toIso8601String(),
+      'expectedEndDate': expectedEndDate?.toIso8601String(),
       'maleCount': maleCount,
       'femaleCount': femaleCount,
       'totalBirds': totalBirds,
@@ -386,6 +245,7 @@ class BatchService {
       'vehicleNumber': vehicleNumber,
       'status': 'active',
       'notes': notes?.trim(),
+      'imageUrl': null,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     };
@@ -405,7 +265,7 @@ class BatchService {
       sizeUnit: sizeUnit,
       hatchDate: hatchDate,
       placementDate: placementDate,
-      targetDeliveryDate: targetDeliveryDate,
+      expectedEndDate: expectedEndDate,
       maleCount: maleCount,
       femaleCount: femaleCount,
       totalBirds: totalBirds,
@@ -463,104 +323,32 @@ class BatchService {
     String batchId,
     Map<String, dynamic> updates,
   ) async {
-    final user = _auth?.currentUser;
+    final user = _auth.currentUser;
     if (user == null) throw AuthException('Sign in before updating a batch.');
 
-    await _batchesRef(user.uid, farmId).doc(batchId).set({
+    await _batchesRef(user.uid, farmId).doc(batchId).update({
       ...updates,
       'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-  }
-
-  /// Closes and marks a batch as completed / harvested.
-  static Future<void> completeBatch({
-    required String farmId,
-    required String batchId,
-    DateTime? completionDate,
-    String? notes,
-  }) async {
-    final user = _auth?.currentUser;
-    if (user == null) throw AuthException('Sign in before completing a batch.');
-
-    final date = completionDate ?? DateTime.now();
-    await updateBatch(farmId, batchId, {
-      'status': 'completed',
-      'completedAt': date.toIso8601String(),
-      'currentBirds': 0,
-      if (notes != null && notes.trim().isNotEmpty) 'completionNotes': notes.trim(),
     });
   }
 
-  /// Reopens a previously completed batch back to active status.
-  static Future<void> reactivateBatch({
-    required String farmId,
-    required String batchId,
-    int? currentBirds,
-  }) async {
-    final user = _auth?.currentUser;
-    if (user == null) throw AuthException('Sign in before reactivating a batch.');
-
-    final updates = <String, dynamic>{
-      'status': 'active',
-      'completedAt': null,
-    };
-    if (currentBirds != null) {
-      updates['currentBirds'] = currentBirds;
-    }
-    await updateBatch(farmId, batchId, updates);
-  }
-
   static Future<void> deleteBatch(String farmId, String batchId) async {
-    final user = _auth?.currentUser;
+    final user = _auth.currentUser;
     if (user == null) throw AuthException('Sign in before deleting a batch.');
 
-    final batchDocRef = _batchesRef(user.uid, farmId).doc(batchId);
-
-    // Delete nested daily records subcollection
-    try {
-      final recordsSnap = await batchDocRef.collection('dailyRecords').get();
-      for (final doc in recordsSnap.docs) {
-        await doc.reference.delete();
-      }
-    } catch (e) {
-      debugPrint('[BatchService] Error cleaning up batch daily records: $e');
-    }
-
-    await batchDocRef.delete();
-    debugPrint('[BatchService] Batch $batchId and linked daily records deleted');
-
-    // Clean up stored preferences if this batch was saved as last selected
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final lastBatch = prefs.getString('flocksense_last_batch_${user.uid}');
-      if (lastBatch == batchId) {
-        await prefs.remove('flocksense_last_batch_${user.uid}');
-      }
-    } catch (_) {}
+    await _batchesRef(user.uid, farmId).doc(batchId).delete();
+    debugPrint('[BatchService] Batch $batchId deleted');
   }
 
   static Future<List<BatchModel>> getBatchesForFarm(String farmId) async {
-    final user = _auth?.currentUser;
+    final user = _auth.currentUser;
     if (user == null) return const [];
 
     final snapshot = await _batchesRef(
       user.uid,
       farmId,
     ).orderBy('createdAt', descending: true).get();
-    final seen = <String>{};
-    final list = <BatchModel>[];
-    for (final d in snapshot.docs) {
-      if (seen.add(d.id)) {
-        list.add(
-          BatchModel.fromJson({
-            'id': d.id,
-            'farmId': farmId,
-            ...d.data(),
-          }),
-        );
-      }
-    }
-    return list;
+    return snapshot.docs.map((d) => BatchModel.fromJson(d.data())).toList();
   }
 
   static Future<Map<String, List<BatchModel>>> getBatchesGroupedByFarm(
@@ -570,20 +358,9 @@ class BatchService {
     final result = <String, List<BatchModel>>{};
     for (final farmId in farmIds) {
       final snapshot = await _batchesRef(uid, farmId).get();
-      final seen = <String>{};
-      final list = <BatchModel>[];
-      for (final d in snapshot.docs) {
-        if (seen.add(d.id)) {
-          list.add(
-            BatchModel.fromJson({
-              'id': d.id,
-              'farmId': farmId,
-              ...d.data(),
-            }),
-          );
-        }
-      }
-      result[farmId] = list;
+      result[farmId] = snapshot.docs
+          .map((d) => BatchModel.fromJson(d.data()))
+          .toList();
     }
     return result;
   }
